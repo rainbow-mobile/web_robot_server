@@ -34,7 +34,6 @@ router.get('/versions/:filename',(req,res) =>{
 
 router.post('/update',(req,res) =>{
     try{
-        console.log(req.body);
         if(req.body.auth == undefined || req.body.program == undefined || req.body.new_version == undefined){
             console.log("???dddd?????");
             res.status(400).send({message:'Required body is missing',body:req.body});
@@ -42,7 +41,6 @@ router.post('/update',(req,res) =>{
             console.log("????????");
             res.status(401).send({message:'Required body is missing',body:req.body});
         }else{
-            console.log(req.body);
             var logjson = new Object();
             const date = moment();
             const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
@@ -52,7 +50,7 @@ router.post('/update',(req,res) =>{
             logjson["prev_version"] = req.body.cur_version;
             logjson["new_version"] = req.body.new_version;
 
-            process.stopProcess(req.body.path).then(() =>{
+            process.stopProcess(req.body.program).then(() =>{
                 update.updateFile(req.body).then((result) =>{
                     console.log('File Download and updated successfully ',result);
     
