@@ -9,8 +9,6 @@ const router = express.Router();
 const filesystem = require("../src/filesystem");
 const fs = require('fs');
 
-const config_path = '/home/rainbow/Desktop/config.json';
-
 router.use(bodyParser.json());
 router.use(cors());
 

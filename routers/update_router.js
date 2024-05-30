@@ -9,10 +9,11 @@ const filesystem = require("../src/filesystem");
 const fs = require('fs');
 const moment = require('moment');
 const update = require('../src/update.js');
-const process = require('../process/runTest.js')
+const process = require('../process/runTest.js');
+const spath = require('../setting.json');
 
-const update_path = '/home/rainbow/Desktop/Program/update.json';
-const log_path = '/home/rainbow/Desktop/Program/log.json';
+const update_path = spath.update_path;
+const log_path = spath.log_path;
 const update_json = require(update_path);
 const log_json = require(log_path);
 
@@ -80,7 +81,7 @@ router.post('/update',(req,res) =>{
     
                     if(req.body.program == "test"){
                         console.log("start");
-                        process.restartTest('/home/rainbow/Desktop/Program/test')
+                        process.restartTest(program_path+'/test')
                     }
                     console.log("done");
                 }).catch((error) =>{
@@ -113,7 +114,7 @@ router.post('/update',(req,res) =>{
 
 
 router.get('/start/test',(req,res) =>{
-    const exePath = path.join('/home/rainbow/Desktop/Program/test');
+    const exePath = path.join(spath.program_path+'/test');
     process.startTest(exePath).then(() =>{
         res.send(true);
     }).catch((err) =>{
@@ -123,7 +124,7 @@ router.get('/start/test',(req,res) =>{
 });
 
 router.get('/stop/test',(req,res) =>{
-    const exePath = path.join('/home/rainbow/Desktop/Program/test');
+    const exePath = path.join(spath.program_path+'/test');
     process.stopTest(exePath).then(() =>{
         console.log("?");
         res.send(true);
@@ -134,7 +135,7 @@ router.get('/stop/test',(req,res) =>{
 });
 
 router.get('/restart/test',(req,res) =>{
-    const exePath = path.join('/home/rainbow/Desktop/Program/test');
+    const exePath = path.join(spath.program_path+'/test');
     process.restartTest(exePath).then(() =>{
         res.send(true);
     }).catch((err) =>{

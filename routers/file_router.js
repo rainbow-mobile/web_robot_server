@@ -8,8 +8,7 @@ const multer = require('multer');
 const router = express.Router();
 const filesystem = require("../src/filesystem");
 const fs = require('fs');
-
-const config_path = '/home/rainbow/Desktop/config.json';
+const spath = require('../setting.json');
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -30,7 +29,7 @@ const getDirectoryTree = (dirPath) => {
 
 router.get('/local', (req, res) => {
     console.log("get local home");
-    const directoryPath = '/home/rainbow/'; // 이 경로를 PC의 경로로 설정
+    const directoryPath = spath.home_path; // 이 경로를 PC의 경로로 설정
     const directoryTree = getDirectoryTree(directoryPath);
     console.log(directoryTree);
     res.json(directoryTree);
