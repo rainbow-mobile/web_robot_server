@@ -26,29 +26,6 @@ function startProcess(filename,path){
         }
     });
 }
-function startTest(path){
-    return new Promise((resolve,reject) =>{
-        try{
-            if(process[test]){
-                reject({message:'process test already running'})
-            }else{
-                process_test = spawn(path);
-                process_test.on('exit', (code) => {
-                    console.log(`process_test exited with code ${code}`);
-                    process_test = null;
-                });
-                process_test.on('close', (code) => {
-                    console.log(`process_test closed with code ${code}`);
-                    process_test = null;
-                });
-                resolve();
-            }
-        }catch(error){
-            console.error("Start Process Error : ",error);
-            reject({message:'process test run failed'})
-        }
-    });
-}
 function stopProcessAll(path){
     return new Promise((resolve,reject) =>{
         try{

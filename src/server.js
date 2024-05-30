@@ -24,36 +24,6 @@ app.use(express.static(path.join(__dirname,"maps")));
 app.use(cors());
 
 
-app.get('/start/test',(req,res) =>{
-    const exePath = path.join('/home/rainbow/Desktop/Program/test');
-    process.startTest(exePath).then(() =>{
-        res.send(true);
-    }).catch((err) =>{
-        console.error("startTest error : ",err);
-        res.status(500).send({message:'fail to start test'})
-    });
-});
-
-  app.get('/stop/test',(req,res) =>{
-    console.log("stop")
-    process.stopTest().then(() =>{
-        res.send(true);
-    }).catch((err) =>{
-        res.status(500).send(err)
-    });
-});
-
-app.get('/restart/test',(req,res) =>{
-    const exePath = path.join('/home/rainbow/Desktop/Program/test');
-    process.restartTest(exePath).then(() =>{
-        res.send(true);
-    }).catch((err) =>{
-        console.error(err);
-        res.status(500).send(err)
-    });
-});
-  
-
 app.listen(port, function(){
     console.log('listening on '+port);
 });

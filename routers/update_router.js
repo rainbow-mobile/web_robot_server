@@ -35,7 +35,7 @@ router.get('/versions/:filename',(req,res) =>{
 router.post('/update',(req,res) =>{
     try{
         console.log(req.body);
-        if(req.body.auth == undefined || req.body.program == undefined || req.body.new_version == undefined || req.body.auth == undefined){
+        if(req.body.auth == undefined || req.body.program == undefined || req.body.new_version == undefined){
             console.log("???dddd?????");
             res.status(400).send({message:'Required body is missing',body:req.body});
         }else if(req.body.program == "" || req.body.new_version == "0.0.0" || req.body.path == ""){
@@ -52,7 +52,7 @@ router.post('/update',(req,res) =>{
             logjson["prev_version"] = req.body.cur_version;
             logjson["new_version"] = req.body.new_version;
 
-            process.stopTest().then(() =>{
+            process.stopProcess(req.body.path).then(() =>{
                 update.updateFile(req.body).then((result) =>{
                     console.log('File Download and updated successfully ',result);
     
@@ -79,10 +79,8 @@ router.post('/update',(req,res) =>{
                         console.error("UpdateJson : ",error);
                     })
     
-                    if(req.body.program == "test"){
-                        console.log("start");
-                        process.restartTest(program_path+'/test')
-                    }
+                    console.log("start");
+                    process.restartProcess(req.body.path)
                     console.log("done");
                 }).catch((error) =>{
                     console.log("updatefile error :",log_path,logjson,log_json);
@@ -108,7 +106,7 @@ router.post('/update',(req,res) =>{
 
     }catch(error){
         console.error("Post : ",error);
-        res.status(500).send({message:'Required body is missing',body:req.body});
+        res.status(500).send({message:'Failed',error:error,body:req.body});
     }
 });
 
