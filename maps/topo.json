@@ -1,0 +1,105 @@
+[
+    {
+        "attrib": "Route",
+        "id": "0::0:Route0",
+        "linked": [
+        ],
+        "pose": [
+            482,
+            277,
+            0.7853981852531433
+        ]
+    },
+    {
+        "attrib": "Route",
+        "id": "0::1:Route1",
+        "linked": [
+        ],
+        "pose": [
+            548,
+            306,
+            0
+        ]
+    },
+    {
+        "attrib": "Route",
+        "id": "0::2:Route2",
+        "linked": [
+            "0:Charging:0:Charging0"
+        ],
+        "pose": [
+            548,
+            277,
+            3.1415927410125732
+        ]
+    },
+    {
+        "attrib": "Route",
+        "id": "0::3:Route3",
+        "linked": [
+        ],
+        "pose": [
+            0,
+            0,
+            2.1588712055742482e+29
+        ]
+    },
+    {
+        "attrib": "Route",
+        "id": "0::4:Route4",
+        "linked": [
+        ],
+        "pose": [
+            556,
+            575,
+            0
+        ]
+    },
+    {
+        "attrib": "Route",
+        "id": "0::5:Route5",
+        "linked": [
+        ],
+        "pose": [
+            562,
+            576,
+            0
+        ]
+    },
+    {
+        "attrib": "Charging",
+        "id": "0:Charging:0:Charging0",
+        "linked": [
+        ],
+        "pose": [
+            504,
+            352,
+            0.059928152710199356
+        ]
+    },
+    {
+        "attrib": "Serving",
+        "id": "0:DEFAULT:2:서빙0",
+        "linked": [
+            "0::4:Route4"
+        ],
+        "pose": [
+            500,
+            500,
+            -1.5707963705062866
+        ]
+    },
+    {
+        "attrib": "Resting",
+        "id": "0:Resting:1:Resting0",
+        "linked": [
+            "0:Charging:0:Charging0",
+            "0:DEFAULT:2:서빙0"
+        ],
+        "pose": [
+            514,
+            435,
+            1.2360594272613525
+        ]
+    }
+]
