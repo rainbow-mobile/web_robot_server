@@ -1,12 +1,35 @@
 const {spawn, exec} = require('child_process');
 
-let process_test = null;
+let process = {"test":null,"MAIN_MOBILE":null};
 
+
+function startProcess(filename,path){
+    return new Promise((resolve,reject) =>{
+        try{
+            if(process[filename]){
+                reject({message:'process test already running'})
+            }else{
+                process[filename] = spawn(path);
+                process[filename].on('exit', (code) => {
+                    console.log(`process[`+filename+`] exited with code ${code}`);
+                    process[filename] = null;
+                });
+                process[filename].on('close', (code) => {
+                    console.log(`process[`+filename+`] closed with code ${code}`);
+                    process[filename] = null;
+                });
+                resolve();
+            }
+        }catch(error){
+            console.error(`process[`+filename+`] Error : `,error);
+            reject({message:'process start failed'});
+        }
+    });
+}
 function startTest(path){
     return new Promise((resolve,reject) =>{
         try{
-            if(process_test){
-                console.log("processtest running")
+            if(process[test]){
                 reject({message:'process test already running'})
             }else{
                 process_test = spawn(path);
@@ -26,7 +49,7 @@ function startTest(path){
         }
     });
 }
-function stopTestAll(path){
+function stopProcessAll(path){
     return new Promise((resolve,reject) =>{
         try{
             const cmd = 'ps aux | grep '+path+' | awk \'{print $2}\' | xargs kill -9';
@@ -38,54 +61,54 @@ function stopTestAll(path){
         }
     });
 }
-async function stopTest(){
+async function stopProcess(filename){
     return new Promise((resolve,reject) =>{
         try{
-            if(process_test){
-                process_test.on('exit', (code) => {
-                    process_test = null;
+            if(process[filename]){
+                process[filename].on('exit', (code) => {
+                    process[filename] = null;
                     resolve();
                 });
-                process_test.on('close', (code) => {
-                    process_test = null;
+                process[filename].on('close', (code) => {
+                    process[filename] = null;
                     resolve();
                 });
-                process_test.kill(9);
+                process[filename].kill(9);
             }else{
                 console.log("no kill")
                 resolve();
             }
         }catch(error){
-            console.error("Start Process Error : ",error);
+            console.error("Stop process[filename] Error : ",error);
             reject();
         }
     });
 }
 
-async function restartTest(path){
+async function restartProcess(filename,path){
     return new Promise((resolve,reject) =>{
         try{
-            stopTest().then(()=>{
-                startTest(path).then(() =>{
+            stopProcess(filename).then(()=>{
+                startProcess(filename,path).then(() =>{
                     resolve();
                 }).catch((err) =>{
                     console.error(err);
-                    reject({message:'process test run failed'})
+                    reject({message:'process '+filename+' run failed'})
                 })  
             }).catch((err) =>{
                 console.error(err);
                 reject();
             })
         }catch(error){
-            console.error("Start Process Error : ",error);
-            reject({message:'process test run failed'})
+            console.error("restart '+filename+'  Error : ",error);
+            reject({message:'process '+filename+'  run failed'})
         }
     });
 }
 
 module.exports = {
-    startTest: startTest,
-    stopTest: stopTest,
-    stopTestAll: stopTestAll,
-    restartTest: restartTest
+    startProcess: startProcess,
+    stopProcess: stopProcess,
+    stopProcessAll: stopProcessAll,
+    restartProcess: restartProcess
 }

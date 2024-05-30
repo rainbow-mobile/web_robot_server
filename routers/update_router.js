@@ -113,33 +113,32 @@ router.post('/update',(req,res) =>{
 });
 
 
-router.get('/start/test',(req,res) =>{
-    const exePath = path.join(spath.program_path+'/test');
-    process.startTest(exePath).then(() =>{
+router.get('/start/:filename',(req,res) =>{
+    const exePath = path.join(spath.program_path+'/'+req.params.filename);
+    process.startProcess(req.params.filename,exePath).then(() =>{
         res.send(true);
     }).catch((err) =>{
-        console.error("startTest error : ",err);
+        console.error("startProcess error : ",err);
         res.status(500).send(err)
     });
 });
 
-router.get('/stop/test',(req,res) =>{
-    const exePath = path.join(spath.program_path+'/test');
-    process.stopTest(exePath).then(() =>{
-        console.log("?");
+router.get('/stop/:filename',(req,res) =>{
+    const exePath = path.join(spath.program_path+'/'+req.params.filename);
+    process.stopProcess(req.params.filename).then(() =>{
         res.send(true);
     }).catch((err) =>{
-        console.log("err?",err);
+        console.log("stopProcess error : ",err);
         res.status(500).send(err)
     });
 });
 
-router.get('/restart/test',(req,res) =>{
-    const exePath = path.join(spath.program_path+'/test');
-    process.restartTest(exePath).then(() =>{
+router.get('/restart/:filename',(req,res) =>{
+    const exePath = path.join(spath.program_path+'/'+req.params.filename);
+    process.restartProcess(req.params.filename,exePath).then(() =>{
         res.send(true);
     }).catch((err) =>{
-        console.error(err);
+        console.error("restartProcess error : ",err);
         res.status(500).send(err)
     });
 });
