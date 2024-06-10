@@ -11,11 +11,11 @@ const moment = require('moment');
 const update = require('../src/update.js');
 const process = require('../process/runTest.js');
 const spath = require('../setting.json');
-
-const update_path = spath.update_path;
-const log_path = spath.log_path;
-const update_json = require(update_path);
-const log_json = require(log_path);
+const db = require('../src/version.js')
+// const update_path = spath.update_path;
+// const log_path = spath.log_path;
+// const update_json = require(update_path);
+// const log_json = require(log_path);
 
 
 router.use(bodyParser.json());
@@ -23,80 +23,94 @@ router.use(cors());
   
 router.get('/versions/:filename',(req,res) =>{
     if(req.params.filename != ''){
-        const data = update_json[req.params.filename];
-        console.log(data);
-        res.send({data:data,filename:req.params.filename});
+        const sql = 'select * from curversion where program = \''+req.params.filename+'\';';
+        db.setQuery(sql).then((result) =>{
+            console.log(result[0]);
+            const date = moment(result[0].date);
+            const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
+            res.send({data:{...result[0],date:date_str},filename:req.params.filename});
+        }).catch((error) =>{
+            res.status(500).send()
+        })
     }else{
         res.status(400).send({message:'params filename is missing',filename:req.params.filename})
     }
 })
 
 
-router.post('/update',(req,res) =>{
+router.post('/update',async(req,res) =>{
     try{
+        console.log("==========================UPDATE ");
         if(req.body.auth == undefined || req.body.program == undefined || req.body.new_version == undefined){
             console.log("???dddd?????");
+            console.log(req.body);
             res.status(400).send({message:'Required body is missing',body:req.body});
         }else if(req.body.program == "" || req.body.new_version == "0.0.0" || req.body.path == ""){
             console.log("????????");
             res.status(401).send({message:'Required body is missing',body:req.body});
         }else{
-            var logjson = new Object();
             const date = moment();
             const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
 
-            logjson["date"] = date_str;
-            logjson["author"] = req.body.auth;
-            logjson["prev_version"] = req.body.cur_version;
-            logjson["new_version"] = req.body.new_version;
+            console.log(req.body);
 
-            process.stopProcess(req.body.program).then(() =>{
-                update.updateFile(req.body).then((result) =>{
-                    console.log('File Download and updated successfully ',result);
+            process.stopProcess(req.body.program).then(async() =>{
+                process.checkBusy(req.body.path).then(async() =>{
+                    update.updateFile(req.body).then(async(result) =>{
+                        console.log('File Download and updated successfully ',req.body.path);
     
-                    //json set
-                    update_json[req.body.program].prev_version = update_json[req.body.program].version;
-                    update_json[req.body.program].version = req.body.new_version;
-                    update_json[req.body.program].date = date_str;
+                        res.send({message:'update successfully done',log:{new_version:req.body.new_version,cur_version:req.body.cur_version,date:date_str}});
     
-                    logjson["result"] = 'success';
+                        process.chmod(req.body.path).then(async() =>{
+                            const sql_version = "UPDATE curversion set version='"+req.body.new_version+"', prev_version='"+req.body.cur_version+"' where program='"+req.body.program+"';";
+                            console.log(sql_version);
+        
+                            await db.setQuery(sql_version).then((result) =>{
+        
+                            }).catch((err) =>{
+                                console.error("sqlVersion err: ",err);
+                            })
+                            const sql_log = "INSERT log_"+req.body.program+" (new_version, prev_version, result) values ('"+req.body.new_version+"', '"+req.body.cur_version+"','success');";
+                            console.log(sql_log);
     
-                    const ff = req.body.program;
-                    if(Array.isArray(log_json[ff])){
-                        log_json[ff].push(logjson);
-                    }
+                            await db.setQuery(sql_log).then((result) =>{
+                                
+                            }).catch((err) =>{
+                                console.error("sqlLog err: ",err);
+                            })
+        
+            
+                            console.log("start ");
+                            process.restartProcess(req.body.program,req.body.path).then((r) =>{
+                                console.log("done");
+                            }).catch((err) =>{
+                                console.log("fail",err);
+                            })
     
-                    res.send({message:'update successfully done',log:logjson});
-    
-                    update.updateJson(log_path,log_json).then((result) =>{
+                        }).catch((err) =>{
+                            console.error("THIS?",err);
+                        })
                     }).catch((error) =>{
-                        console.error("UpdateJson : ",error);
-                    })
-                    update.updateJson(update_path,update_json).then((result) =>{
-                    }).catch((error) =>{
-                        console.error("UpdateJson : ",error);
-                    })
+                        console.log("updatefile error :",log_path,logjson,log_json);
+                        logjson["result"] = 'failed';
+                        const ff = req.body.program;
+                        
+                        if(Array.isArray(log_json[ff])){
+                            log_json[ff].push(logjson);
+                        }
     
-                    console.log("start");
-                    process.restartProcess(req.body.path)
-                    console.log("done");
+                        update.updateJson(log_path,log_json).then((result) =>{
+                        }).catch((error) =>{
+                            console.error("UpdateJson : ",error);
+                        })
+        
+                        console.error("UpdateFile : ", error);
+                        res.status(500).send({message:'Got Error',error:error});
+                    });
                 }).catch((error) =>{
-                    console.log("updatefile error :",log_path,logjson,log_json);
-                    logjson["result"] = 'failed';
-                    const ff = req.body.program;
-                    
-                    if(Array.isArray(log_json[ff])){
-                        log_json[ff].push(logjson);
-                    }
-
-                    update.updateJson(log_path,log_json).then((result) =>{
-                    }).catch((error) =>{
-                        console.error("UpdateJson : ",error);
-                    })
-    
-                    console.error("UpdateFile : ", error);
-                    res.status(500).send({message:'Got Error',error:error});
-                });
+                    console.error(error);
+                    res.status(500).send();
+                })
             }).catch((err) =>{
                 console.error("stopTest error : ", err);
             })
@@ -111,8 +125,12 @@ router.post('/update',(req,res) =>{
 
 router.get('/start/:filename',(req,res) =>{
     const exePath = path.join(spath.program_path+'/'+req.params.filename);
-    process.startProcess(req.params.filename,exePath).then(() =>{
-        res.send(true);
+    process.startProcess(req.params.filename,exePath).then((message) =>{
+        if(message){
+            res.send(message);
+        }else{
+            res.send(true);
+        }
     }).catch((err) =>{
         console.error("startProcess error : ",err);
         res.status(500).send(err)

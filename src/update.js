@@ -3,6 +3,7 @@ const fsp = require('fs').promises;
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const http = require('http');
 const axios = require('axios');
 
 async function updateJson(path, data){
@@ -25,21 +26,28 @@ async function updateFile(data){
     const url = 'http://192.168.1.88:11335/update/' + data.program + '/' + data.new_version;
     try{
         const writer = fs.createWriteStream(data.path);
+        console.log(data.path, url);
         const response = await axios({
             url,
             method: 'GET',
-            responseType: 'stream'
+            responseType: 'stream',
+            proxy:false,
+            agent: http.Agent({keepAlive:true})
         });
         response.data.pipe(writer);
+        console.log(new Date());
 
         return new Promise((resolve, reject) =>{
-            writer.on('finish',() => { writer.end(); console.log("?????????????????????");resolve('done')});
-            writer.on('error',reject);
+            writer.on('finish',() => {
+                console.log(new Date()); writer.end(); console.log("?????????????????????"); resolve('done')});
+            writer.on('end',()  => { writer.end(); console.log("!!!!!!!!!!!!!!!!!!!!!"); });
+            writer.on('error',(err) => { console.error(err); reject()});
         });
     }catch(error){
         console.error("UPDATEFILE ERROR",error);
     }
 }
+
 module.exports = {
     updateJson: updateJson,
     updateFile: updateFile

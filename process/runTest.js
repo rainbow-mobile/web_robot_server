@@ -1,23 +1,26 @@
 const {spawn, exec} = require('child_process');
 
 let process = {"test":null,"MAIN_MOBILE":null};
+let running = {'test':false,'MAIN_MOBILE':false
+};
 
-
-function startProcess(filename,path){
+async function startProcess(filename,path){
     return new Promise((resolve,reject) =>{
         try{
-            if(process[filename]){
-                reject({message:'process test already running'})
+            if(running[filename]){
+                resolve({message:'process test already running'})
             }else{
+                console.log(path);
                 process[filename] = spawn(path);
                 process[filename].on('exit', (code) => {
                     console.log(`process[`+filename+`] exited with code ${code}`);
-                    process[filename] = null;
+                    running[filename] = false;
                 });
                 process[filename].on('close', (code) => {
                     console.log(`process[`+filename+`] closed with code ${code}`);
-                    process[filename] = null;
+                    running[filename] = false;
                 });
+                running[filename] = true;
                 resolve();
             }
         }catch(error){
@@ -26,12 +29,60 @@ function startProcess(filename,path){
         }
     });
 }
-function stopProcessAll(path){
+async function chmod(path){
+    return new Promise((resolve,reject) =>{
+        try{
+            const cmd = 'chmod +x '+path;
+            const cc = exec(cmd);
+            cc.on('close', (code) => {
+                console.log("chmod all ");
+                resolve();
+            });
+        }catch(error){
+            console.error("Start Process Error : ",error);
+            reject({message:'process test all failed'})
+        }
+    });
+}
+async function checkBusy(path){
+    return new Promise((resolve,reject) =>{
+        try{
+            const cmd = 'lsof '+path;
+            // const cmd = "ifconfig";
+            const cc = exec(cmd,(error,stdout,stderr) =>{
+                if (error) {
+                  console.error(`Error executing lsof:`,error);
+                //   reject();
+                }
+                if (stdout) {
+                    console.log(`File is busy. Processes using the file:\n`,stdout);
+                    if(stdout == ""){
+                        resolve();
+                    }else{
+                        reject({message:'file is busy'})
+                    }
+                } else {
+                  console.log('File is not busy.');
+                  resolve();
+                }
+            });
+        }catch(error){
+            console.error("Check Busy Error : ",error);
+            reject({message:'process test all failed'})
+        }
+    });
+}
+async function stopProcessAll(path){
     return new Promise((resolve,reject) =>{
         try{
             const cmd = 'ps aux | grep '+path+' | awk \'{print $2}\' | xargs kill -9';
-            exec(cmd);
-            resolve();
+            const kill = exec(cmd);
+            kill.on('finish', (code) => {
+                console.log("stop all ");
+                resolve();
+            });
+            // console.log("stop all ");
+            // resolve();
         }catch(error){
             console.error("Start Process Error : ",error);
             reject({message:'process test all failed'})
@@ -41,13 +92,16 @@ function stopProcessAll(path){
 async function stopProcess(filename){
     return new Promise((resolve,reject) =>{
         try{
-            if(process[filename]){
+            if(running[filename]){
+                console.log("need kill");
                 process[filename].on('exit', (code) => {
-                    process[filename] = null;
-                    resolve();
+                    console.log("stop process exit")
+                    running[filename] = false;
+                    // resolve();
                 });
                 process[filename].on('close', (code) => {
-                    process[filename] = null;
+                    console.log("stop process close")
+                    running[filename] = false;
                     resolve();
                 });
                 process[filename].kill(9);
@@ -56,7 +110,7 @@ async function stopProcess(filename){
                 resolve();
             }
         }catch(error){
-            console.error("Stop process[filename] Error : ",error);
+            console.error("Stop process Error : ",error);
             reject();
         }
     });
@@ -87,5 +141,7 @@ module.exports = {
     startProcess: startProcess,
     stopProcess: stopProcess,
     stopProcessAll: stopProcessAll,
-    restartProcess: restartProcess
+    restartProcess: restartProcess,
+    chmod: chmod,
+    checkBusy:checkBusy
 }
