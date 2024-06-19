@@ -4,7 +4,7 @@ const axios = require('axios');
 const network = require('network');
 const moment = require('moment')
 let mac_address;
-const _url = 'http://192.168.1.88:11335/';
+const _url = 'http://10.108.1.10:11335/';
 
 var info;
 var now_status;
@@ -26,10 +26,10 @@ async function getServerInfo(){
                 console.log("robotName = ",response.data.name);
                 console.log("============================================");
             }catch(error){
-                console.error(error);
+                console.error("getServerInfo catch error");
             }
         }).catch((err) =>{
-            console.error(err);
+            console.error("getServerInfo getMacAddress error");
         })
     }else{
         try{
