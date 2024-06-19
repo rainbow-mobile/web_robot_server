@@ -84,10 +84,13 @@ async function transformDataToJson(data){
     }
 }
 router.post('/setting',async(req,res) =>{
+    console.log("post setting in");
     const config_path = path.join("/home","rainbow","config.json");
     const newbody = await transformDataToJson(req.body);
     filesystem.saveJson(config_path,newbody).then(async(data) =>{
         const ee = await transformDataToUI(data);
+        console.log("/?????????????????????????");
+        console.log(ee);
         res.send(ee);
     }).catch((error) =>{
         res.status(500).send(error);
