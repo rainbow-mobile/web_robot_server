@@ -27,7 +27,7 @@ router.get('/versions/:filename',(req,res) =>{
         db.setQuery(sql).then((result) =>{
             console.log(result[0]);
             const date = moment(result[0].date);
-            const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
+            const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
             res.send({data:{...result[0],date:date_str},filename:req.params.filename});
         }).catch((error) =>{
             res.status(500).send()
@@ -51,7 +51,7 @@ router.post('/update',async(req,res) =>{
             res.status(401).send({message:'Required body is missing',body:req.body});
         }else{
             const date = moment();
-            const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
+            const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
 
             console.log(req.body);
 

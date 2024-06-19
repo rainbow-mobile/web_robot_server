@@ -20,7 +20,7 @@ router.use(cors());
 
 router.post('/status',async(req,res) =>{
     const date = moment();
-    const date_str = date.format('YYYY-MM-DD HH:mm:ss').toString();
+    const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
     monitor.setStatus({...req.body,date:date_str});
     res.send();
 })

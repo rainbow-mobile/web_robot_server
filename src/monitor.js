@@ -74,11 +74,8 @@ function createData(){
 async function postData(){
     if(info && now_status){
         const data = createData();
-        console.log(data);
         try{
-            console.log("post");
             const response = await axios.post(_url+"status",data);
-            console.log("response");
         }catch(error){
             console.error(error);
         }
@@ -87,7 +84,6 @@ async function postData(){
 
 async function checkSleep(){
     if(info && now_status){
-        console.log(moment.duration(moment().diff(moment(now_status.date))).seconds());
         if(moment.duration(moment().diff(moment(now_status.date))).seconds() < 3){
             postData();
         }

@@ -1,4 +1,5 @@
 const socket = require('ws');
+const moment = require('moment');
 const store = require('../../interfaces/stateManager');
 
 const slam_socket = new socket.Server({port:8111});
@@ -31,7 +32,15 @@ slam_socket.on('connection',(socket) =>{
 })
 
 function sendJog(data){
-    slam_socket.clients.se
+    console.log(data.time);
+    const time = new Date(data.time).getTime();
+    // console.log(new Date(data.time),d);
+    // const date = moment(d);
+    // const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
+    // console.log(date,date_str);
+
+    console.log({...data,time:time});
+    slam_socket.socket?.send({...data,time:time});
 }
 
 module.exports = {

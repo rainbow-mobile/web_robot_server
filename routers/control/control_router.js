@@ -11,7 +11,7 @@ router.use(bodyParser.json());
 router.use(cors());
 
 router.post("/jog/manual",(req,res) =>{
-    slam.sendJog(res);
+    slam.sendJog(req.body);
     res.send();
 });
 
