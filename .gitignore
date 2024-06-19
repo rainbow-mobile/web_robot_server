@@ -170,3 +170,4 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node,java
+package-lock.json
