@@ -18,10 +18,10 @@ router.use(cors());
 router.use(compression())
 
 function getCloud(name){
-    return path.join(home_path,"map",name,"cloud.csv").toString();
+    return path.join(home_path,"maps",name,"cloud.csv").toString();
 }
 function getTopo(name){
-    return path.join(home_path,"map",name,"topo.json").toString();
+    return path.join(home_path,"maps",name,"topo.json").toString();
 }
 
 //맵 cloud.csv 요청
