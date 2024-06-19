@@ -9,6 +9,7 @@ const filesystem = require("../../src/filesystem.js");
 const fs = require('fs');
 const moment = require('moment');
 const update = require('../../src/update.js');
+const os = require('os');
 const process = require('../../process/runTest.js');
 const spath = require('../../setting.json');
 const db = require('../../src/version.js')
@@ -54,16 +55,18 @@ router.post('/update',async(req,res) =>{
             const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
 
             console.log(req.body);
+            const body = {...req.body, path:os.homedir() + req.body.path};
+            console.log(body);
 
-            process.stopProcess(req.body.program).then(async() =>{
-                process.checkBusy(req.body.path).then(async() =>{
-                    update.updateFile(req.body).then(async(result) =>{
-                        console.log('File Download and updated successfully ',req.body.path);
+            process.stopProcess(body.program).then(async() =>{
+                process.checkBusy(body.path).then(async() =>{
+                    update.updateFile(body).then(async(result) =>{
+                        console.log('File Download and updated successfully ',body.path);
     
-                        res.send({message:'update successfully done',log:{new_version:req.body.new_version,cur_version:req.body.cur_version,date:date_str}});
+                        res.send({message:'update successfully done',log:{new_version:body.new_version,cur_version:body.cur_version,date:date_str}});
     
-                        process.chmod(req.body.path).then(async() =>{
-                            const sql_version = "UPDATE curversion set version='"+req.body.new_version+"', prev_version='"+req.body.cur_version+"' where program='"+req.body.program+"';";
+                        process.chmod(body.path).then(async() =>{
+                            const sql_version = "UPDATE curversion set version='"+body.new_version+"', prev_version='"+body.cur_version+"' where program='"+body.program+"';";
                             console.log(sql_version);
         
                             await db.setQuery(sql_version).then((result) =>{
@@ -71,7 +74,7 @@ router.post('/update',async(req,res) =>{
                             }).catch((err) =>{
                                 console.error("sqlVersion err: ",err);
                             })
-                            const sql_log = "INSERT log_"+req.body.program+" (new_version, prev_version, result) values ('"+req.body.new_version+"', '"+req.body.cur_version+"','success');";
+                            const sql_log = "INSERT log_"+body.program+" (new_version, prev_version, result) values ('"+body.new_version+"', '"+body.cur_version+"','success');";
                             console.log(sql_log);
     
                             await db.setQuery(sql_log).then((result) =>{
@@ -82,7 +85,7 @@ router.post('/update',async(req,res) =>{
         
             
                             console.log("start ");
-                            process.restartProcess(req.body.program,req.body.path).then((r) =>{
+                            process.restartProcess(body.program,body.path).then((r) =>{
                                 console.log("done");
                             }).catch((err) =>{
                                 console.log("fail",err);
@@ -94,7 +97,7 @@ router.post('/update',async(req,res) =>{
                     }).catch((error) =>{
                         console.log("updatefile error :",log_path,logjson,log_json);
                         logjson["result"] = 'failed';
-                        const ff = req.body.program;
+                        const ff = body.program;
                         
                         if(Array.isArray(log_json[ff])){
                             log_json[ff].push(logjson);
