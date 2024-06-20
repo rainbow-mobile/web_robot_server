@@ -2,7 +2,7 @@ const socket = require('ws');
 const moment = require('moment');
 const store = require('../../interfaces/stateManager');
 
-const slam_socket = new socket.Server({port:8111});
+const slam_socket = new socket.Server({port:11337});
 var slam;
 
 slam_socket.on('open',function open(){
