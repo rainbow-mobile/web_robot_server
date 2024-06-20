@@ -5,9 +5,7 @@ const store = require('../../interfaces/stateManager');
 const slam_socket = new socket.Server({port:11337});
 var slam;
 
-slam_socket.on('open',function open(){
-    console.log("websocket connected");
-})
+
 slam_socket.on('connection',(socket) =>{
     console.log("connected");
     slam = socket;
