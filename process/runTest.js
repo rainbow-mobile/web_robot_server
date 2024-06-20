@@ -20,6 +20,10 @@ async function startProcess(filename,path){
                     console.log(`process[`+filename+`] closed with code ${code}`);
                     running[filename] = false;
                 });
+                process[filename].on('error', (code) =>{
+                    console.log(`process[`+filename+`] got error with code ${code}`);
+                    running[filename] = false;
+                })
                 running[filename] = true;
                 resolve();
             }
