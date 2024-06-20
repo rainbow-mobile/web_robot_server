@@ -2,6 +2,7 @@
 const wifi = require('node-wifi');
 const os = require('os');
 const dns = require('dns')
+const moment = require('moment');
 const { exec } = require('child_process');
 const { connect } = require('http2');
 // Wi-Fi 초기화
@@ -69,6 +70,9 @@ async function getNetwork(){
                 reject();
             }else{
                 try{
+                    const date2 = moment();
+                    const date_str2 = date2.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
+                    console.log("network get", date_str2);
                     const networks = stdout.split(/\n\s*\n/);
                     for(const i in networks){
                         const json = await transNMCLI(networks[i]);
@@ -119,14 +123,24 @@ async function getNetwork(){
 
                     //wifi
 
+                    const date3 = moment();
+                    const date_str3 = date3.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
+                    console.log("network before getcurrentwifi", date_str3);
                     const wifi_detail = await getCurrentWifi();
                     // console.log(wifi_detail);
 
+                    const date4 = moment();
+                    const date_str4 = date4.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
+                    console.log("network after getcurrentwifi", date_str4);
                     if(wifi_detail[0]){
                         net_infos.wifi.signal_level = wifi_detail[0].signal_level;
                         net_infos.wifi.quality = wifi_detail[0].quality;
                         net_infos.wifi.security = wifi_detail[0].security;
                     }
+                    const date = moment();
+                    const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
+                    
+                    console.log("network done", date_str);
                     resolve(net_infos);
                 }catch(error){
                     console.error(error);

@@ -25,7 +25,6 @@ router.get('/setting',async(req,res) =>{
 
 async function transformDataToUI(data){
     if(data != undefined && data != {}){
-        console.log(data);
         const new_default = {
             ROBOT_SIZE_MAX_X:data.default.ROBOT_SIZE_MAX_X,
             ROBOT_SIZE_MAX_Y:data.default.ROBOT_SIZE_MAX_Y,
@@ -160,7 +159,6 @@ router.post('/setting/preset/add/:id', (req,res) =>{
     if(req.params.id == null || req.params.id == undefined){
         res.status(400).send();
     }else{
-        console.log("ddddddddddddddddd")
         const filename = "preset_"+req.params.id+".json";
         const config_path = path.join("/home","rainbow",filename);
         filesystem.saveJson(config_path,req.body).then(async(data) =>{
