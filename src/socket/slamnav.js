@@ -46,16 +46,12 @@ function stringifyAllValues(obj) {
     return obj;
   }
 function sendJog(data){
-    console.log(data.time);
     const time = new Date(data.time).getTime();
     // console.log(new Date(data.time),d);
     // const date = moment(d);
     // const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
     // console.log(date,date_str);
     const stringifiedObj = stringifyAllValues({...data,time:time});
-        
-    console.log(stringifiedObj);
-
     slam_socket.clients.forEach(client=>{
         client.send(JSON.stringify(stringifiedObj));
     });
