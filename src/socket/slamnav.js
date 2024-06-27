@@ -33,6 +33,7 @@ slam_io.on('connection', (socket) => {
   slamnav = socket;
 
   socket.on('mapping_cloud',(cloud) =>{
+    console.log("cloudin");
       mapping_io.emit("mapping",cloud);
   })
 
@@ -85,6 +86,7 @@ function Mapping(data){
         }
     })
 }
+
 function sendCommand(data){
     slamnav.emit(data.command,data.body);
 }
