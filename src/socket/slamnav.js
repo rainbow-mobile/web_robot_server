@@ -71,7 +71,7 @@ function stringifyAllValues(obj) {
 function Mapping(data){
     return new Promise((resolve, reject) =>{
         if(slamnav != null){
-            slamnav.emit('mapping',data);
+            slamnav.emit('mapping',stringifyAllValues(data));
     
             slamnav.once('mapping',(data) =>{
                 // console.log("response : ",data);
@@ -95,7 +95,7 @@ function sendCommand(data){
 function Localization(data){
     return new Promise((resolve, reject) =>{
         if(slamnav != null){
-            slamnav.emit('localization',data);
+            slamnav.emit('localization',stringifyAllValues(data));
     
             slamnav.once('localization',(data) =>{
                 // console.log("response : ",data);
