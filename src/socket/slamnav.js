@@ -10,6 +10,7 @@ const app = express();
 const server = http.createServer(app);
 const server2 = http.createServer(app);
 
+
 const slam_io = socketIo(server,{
   pingTimeout: 6000 // 2분
 });
