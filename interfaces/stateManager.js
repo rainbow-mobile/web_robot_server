@@ -16,7 +16,7 @@ class StateManager {
             motor:[
                 {
                     connection: "false",
-                    status: "0",
+                    status: "4",
                     temp: "0",
                 },
                 {

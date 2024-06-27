@@ -10,6 +10,7 @@ const router = express.Router();
 const filesystem = require("../../src/filesystem");
 const fs = require('fs');
 const compression = require('compression')
+const slam = require('../../src/socket/slamnav');
 
 const map_path = '/home/rainbow/map';
 const home_path = '/home/rainbow';
@@ -24,6 +25,54 @@ function getTopo(name){
     return path.join(home_path,"maps",name,"topo.json").toString();
 }
 
+//매핑 시작 요청
+router.get('/mapping/start',async(req,res) =>{
+    const time = new Date().getTime();
+    slam.Mapping({
+        "command":"start",
+        "time":time
+    }).then((data) =>{
+        // console.log("startmapping get : ",data);
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send('startmapping failed')
+    });
+});
+
+//매핑 종료 요청
+router.get('/mapping/stop',async(req,res) =>{
+    const time = new Date().getTime();
+    slam.Mapping({
+        "command":"stop",
+        "time":time
+    }).then((data) =>{
+        // console.log("stopmapping get : ",data);
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send('stopmapping failed')
+    });
+});
+
+//매핑 종료(저장) 요청
+router.get('/mapping/save/:name',async(req,res) =>{
+    const time = new Date().getTime();
+    slam.Mapping({
+        "command":"save",
+        "name":req.params.name,
+        "time":time
+    }).then((data) =>{
+        // console.log("savemapping get : ",data);
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send('savemapping failed')
+    });
+});
+
+
+
 //맵 cloud.csv 요청
 router.get('/map/cloud/:map_name',(req,res) =>{
     const path = getCloud(req.params.map_name);
@@ -32,6 +81,7 @@ router.get('/map/cloud/:map_name',(req,res) =>{
             res.sendStatus(404);
         }else{
             filesystem.readCsv(path).then((data) =>{
+                console.log("data:",data);
                 res.send(data);
             }).catch((error) =>{
                 res.status(500).send(error);
