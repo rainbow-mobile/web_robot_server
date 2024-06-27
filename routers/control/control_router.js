@@ -11,7 +11,14 @@ router.use(bodyParser.json());
 router.use(cors());
 
 router.post("/jog/manual",(req,res) =>{
-    slam.sendCommand(req.body);
+    // console.log(req.body);
+    const time = new Date().getTime();
+    slam.sendCommand("move", {
+        vx:req.body.vx,
+        vy: req.body.vy,
+        wz: req.body.wz,
+        time: time
+    });
     res.send();
 });
 

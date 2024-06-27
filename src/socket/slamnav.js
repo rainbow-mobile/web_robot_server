@@ -91,8 +91,11 @@ function Mapping(data){
     })
 }
 
-function sendCommand(data){
-    slamnav.emit(data.command,data.body);
+function sendCommand(cmd, data){
+  console.log(cmd,data);
+  if(slamnav != null){
+    slamnav.emit(cmd,stringifyAllValues(data));
+  }
 }
 
 function Localization(data){
