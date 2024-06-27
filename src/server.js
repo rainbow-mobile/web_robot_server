@@ -11,6 +11,7 @@ const network = require('../src/network');
 const app = express();
 app.use(compression());
 const port = 11334;
+const WebSocket = require('ws');
 
 
 //routers
@@ -35,7 +36,65 @@ app.use(express.static('/home/rainbow/RB_MOBILE'));
 app.use(express.static(path.join(__dirname,"maps")));
 app.use(cors());
 
+const qtServerUrl = 'ws://127.0.0.1:10333'; // Qt 서버 주소
+const port1 = 10334;
+// const wss = new WebSocket.Server({ port: port1 });
 
+// wss.on('connection', function connection(ws) {
+//     console.log('Client connected');
+
+//     const qtSocket = new WebSocket(qtServerUrl);
+
+//     qtSocket.on('open', function open() {
+//         console.log('Connected to Qt server');
+//     });
+
+//     qtSocket.on('message', function message(data) {
+//         ws.send(data);
+//     });
+
+//     qtSocket.on('close', function close() {
+//         console.log('Disconnected from Qt server');
+//         ws.close();
+//     });
+
+//     ws.on('close', function close() {
+//         console.log('Client disconnected');
+//         qtSocket.close();
+//     });
+// });
+
+
+// test();
+
+// function test(){
+//     try{
+//         const qtSocket = new WebSocket(qtServerUrl);
+//         qtSocket.on('open', function open() {
+//             console.log('Connected to Qt server');
+//         });
+    
+//         qtSocket.on('message', function message(data) {
+//             console.log(data);
+//         });
+
+//         qtSocket.on('error', function error(error){
+//             console.error(error);
+//         })
+    
+//         qtSocket.on('close', function close() {
+//             console.log('Disconnected from Qt server');
+//             // ws.close();
+//         });  
+
+//         console.log(`WebSocket intermediary server running on ws://localhost:${port1}`);
+              
+//     }catch(err){
+//         console.error("EEEEEEEEE",err);
+//     }
+
+
+// }
 
 
 network.scan();

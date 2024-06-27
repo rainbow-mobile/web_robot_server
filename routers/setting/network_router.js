@@ -17,7 +17,6 @@ router.use(cors());
 router.get('/network/current',(req,res) =>{
     const date = moment();
     const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
-    
     console.log("network start", date_str);
     network.getNetwork().then((data) =>{
         res.send(data);
