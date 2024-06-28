@@ -34,10 +34,13 @@ slam_io.on('connection', (socket) => {
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
+    console.log("lidarin");
       mapping_io.emit("lidar",cloud);
   })
+
+
   socket.on('mapping_cloud',(cloud) =>{
-    console.log("cloudin");
+      console.log("cloudin");
       mapping_io.emit("mapping",cloud);
   })
 
@@ -104,10 +107,10 @@ function Localization(data){
             slamnav.emit('localization',stringifyAllValues(data));
     
             slamnav.once('localization',(data) =>{
-                // console.log("response : ",data);
                 resolve(data);
                 clearTimeout(timeoutId);
             })
+
             const timeoutId = setTimeout(() => {
                 console.log("timeout?");
                 reject();
