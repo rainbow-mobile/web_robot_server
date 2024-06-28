@@ -43,6 +43,7 @@ slam_io.on('connection', (socket) => {
 
   socket.on('status',(data) =>{
     store.setState(data);
+    mapping_io.emit("status",data);
   })
 
   socket.on('disconnect', () => {
