@@ -45,6 +45,10 @@ slam_io.on('connection', (socket) => {
       mapping_io.emit("mapping",cloud);
   })
 
+  socket.on('status',(data) =>{
+    console.log("status : ",status);
+  })
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
     slamnav = null;
