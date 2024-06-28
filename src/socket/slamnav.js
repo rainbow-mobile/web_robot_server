@@ -29,24 +29,20 @@ server2.listen(10334, () => {
 
 slam_io.on('connection', (socket) => {
   socket.request = null;
-
   console.log('slam_io Client connected',socket.id);
-
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
     console.log("lidarin", cloud.length );
       mapping_io.emit("lidar",cloud);
   })
-
-
   socket.on('mapping_cloud',(cloud) =>{
       console.log("cloudin", cloud.length);
       mapping_io.emit("mapping",cloud);
   })
 
   socket.on('status',(data) =>{
-    console.log("status : ",data);
+    store.setState(data);
   })
 
   socket.on('disconnect', () => {
