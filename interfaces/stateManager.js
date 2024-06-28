@@ -53,6 +53,7 @@ class StateManager {
     }
   
     setState(newState) {
+      console.log(newState);
       this.state = { ...this.state, ...newState };
     }
   }

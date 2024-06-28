@@ -33,11 +33,11 @@ slam_io.on('connection', (socket) => {
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
-    console.log("lidarin", cloud.length );
+    // console.log("lidarin", cloud.length );
       mapping_io.emit("lidar",cloud);
   })
   socket.on('mapping_cloud',(cloud) =>{
-      console.log("cloudin", cloud.length);
+      // console.log("cloudin", cloud.length);
       mapping_io.emit("mapping",cloud);
   })
 
