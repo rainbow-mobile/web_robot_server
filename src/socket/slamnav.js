@@ -46,7 +46,7 @@ slam_io.on('connection', (socket) => {
   })
 
   socket.on('status',(data) =>{
-    console.log("status : ",status);
+    console.log("status : ",data);
   })
 
   socket.on('disconnect', () => {
