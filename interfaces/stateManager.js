@@ -53,7 +53,7 @@ class StateManager {
     }
   
     setState(newState) {
-      console.log(newState);
+      // console.log(newState);
       const state = JSON.parse(newState);
       this.state = { ...this.state, ...state };
     }
