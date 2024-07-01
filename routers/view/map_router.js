@@ -12,7 +12,6 @@ const fs = require('fs');
 const compression = require('compression')
 const slam = require('../../src/socket/slamnav');
 
-const map_path = '/home/rainbow/map';
 const home_path = '/home/rainbow';
 router.use(bodyParser.json());
 router.use(cors());
@@ -164,7 +163,7 @@ router.post('/savemap/:name/:file',uploadMiddleware, (req,res) => {
 });
 
 router.get('/map/list',(req,res) =>{
-    filesystem.getDirectoryTree(map_path).then((result) =>{
+    filesystem.getMapTree(home_path + "/maps").then((result) =>{
         res.send(result);
     }).catch((error) =>{
         res.status(500).send();

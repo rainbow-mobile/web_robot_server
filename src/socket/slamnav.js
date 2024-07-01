@@ -43,6 +43,9 @@ slam_io.on('connection', (socket) => {
 
   socket.on('status',(data) =>{
     store.setState(data);
+
+
+
     mapping_io.emit("status",data);
   })
 
@@ -78,9 +81,9 @@ function stringifyAllValues(obj) {
 
 function Mapping(data){
     return new Promise((resolve, reject) =>{
+      console.log("Mapping ddd",data)
         if(slamnav != null){
             slamnav.emit('mapping',stringifyAllValues(data));
-    
             slamnav.once('mapping',(data) =>{
                 // console.log("response : ",data);
                 resolve(data);

@@ -10,6 +10,7 @@ async function getDirEntry(dir,callback) {
     fs.readdir(dir,callback);
 };
 
+//폴더 내 모든 파일+폴더 반환
 async function getMapList(dir,father={list:[]}) {
     const files = await fs.promises.readdir(dir, { withFileTypes: true });
     for (const file of files) {
@@ -24,6 +25,29 @@ async function getMapList(dir,father={list:[]}) {
             const fullPath = path.join(dir, file.name);
             const stats = await fs.promises.stat(fullPath);
             father.list.push({name:file.name,modifiedDate:stats.mtime});
+        }
+      }
+    }
+    return father;
+}
+
+//맵 폴더 반환
+async function getMapList2(dir,father={list:[]}) {
+    const files = await fs.promises.readdir(dir, { withFileTypes: true });
+    for (const file of files) {
+      if (file.isDirectory()) {
+        const fullPath = path.join(dir, file.name);
+        const stats = await fs.promises.stat(fullPath);
+        const model = {name:file.name,modifiedDate:stats.mtime,list:[]};
+        const models = await getMapList2(fullPath, model);  // 재귀 호출
+        father.list.push(models);
+      }else{
+        if(father.length != 0){
+            if(file.name == "cloud.csv" || file.name == "topo.json"){
+                const fullPath = path.join(dir, file.name);
+                const stats = await fs.promises.stat(fullPath);
+                father.list.push({name:file.name,modifiedDate:stats.mtime});
+            }
         }
       }
     }
@@ -56,6 +80,18 @@ async function getPresetList(){
     });
 }
   
+async function getMapTree(dir){
+    return new Promise(async(resolve, reject) =>{
+        try{
+            const directories = await getMapList2(dir);
+            resolve(directories.list);   
+        }catch(error){
+            console.error(error);
+            reject();
+        }
+    })
+}
+
 async function getDirectoryTree(dir){
     return new Promise(async(resolve, reject) =>{
         try{
@@ -218,5 +254,6 @@ module.exports = {
     changeFilename,changeFilename,
     deleteFile:deleteFile,
     saveJson:saveJson,
+    getMapTree:getMapTree,
     getPresetList:getPresetList
 }
