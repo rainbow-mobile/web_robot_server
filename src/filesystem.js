@@ -40,7 +40,8 @@ async function getMapList2(dir,father={list:[]}) {
         const stats = await fs.promises.stat(fullPath);
         const model = {name:file.name,modifiedDate:stats.mtime,list:[]};
         const models = await getMapList2(fullPath, model);  // 재귀 호출
-        father.list.push(models);
+        if(models.list.find('cloud.csv'))
+            father.list.push(models);
       }else{
         if(father.length != 0){
             if(file.name == "cloud.csv" || file.name == "topo.json"){

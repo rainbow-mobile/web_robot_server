@@ -106,10 +106,31 @@ router.get('/map/topo/:map_name',(req,res) =>{
 });
 
 
-
-router.get('/getmap/:name/list',(req,res) =>{
-    
+//현재 맵 반환
+router.get('/map/current', (req,res) =>{
+    filesystem.readJson(home_path+"/config.json").then((data) =>{
+        res.send(data.setting.MAP_NAME);
+    }).catch((err) =>{
+        console.error(err);
+        res.sendStatus(500);
+    })
 });
+
+//현재 맵 로드
+router.post('/map/current', (req, res) =>{
+    const time = new Date().getTime();
+    slam.sendCommand("mapload", {
+        "name":req.body.name,
+        "time":time
+    }).then((data) =>{
+        console.log("map load success : ",data);
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send('map load failed')
+    });
+    
+})
 
 router.get('/getmap/:name/:file',(req,res) =>{
     const _path = path.join(map_path,req.params.name);
