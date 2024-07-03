@@ -63,7 +63,7 @@ async function getWifiList(){
 
 async function getNetwork(){
     return new Promise(async(resolve, reject) =>{
-        var net_infos = {ethernet:[],wifi:{},bt:{}};
+        var net_infos = {ethernet:[],wifi:[],bt:[]};
         exec('nmcli device show', async(err, stdout, stderr) => {
             if (err) {
                 console.error(`Error: ${err}`);
@@ -99,9 +99,9 @@ async function getNetwork(){
                         if(json.GENERAL.TYPE == 'ethernet'){
                             net_infos.ethernet.push(temp_info);
                         }else if(json.GENERAL.TYPE == 'wifi'){
-                            net_infos.wifi =temp_info;
+                            net_infos.wifi.push(temp_info);
                         }else if(json.GENERAL.TYPE == 'bt'){
-                            net_infos.bt =temp_info;
+                            net_infos.bt.push(temp_info);
                         }
                     }
 
@@ -115,10 +115,10 @@ async function getNetwork(){
                     const date4 = moment();
                     const date_str4 = date4.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
                     console.log("network after getcurrentwifi", date_str4);
-                    if(wifi_detail[0]){
-                        net_infos.wifi.signal_level = wifi_detail[0].signal_level;
-                        net_infos.wifi.quality = wifi_detail[0].quality;
-                        net_infos.wifi.security = wifi_detail[0].security;
+                    if(wifi_detail[0] && net_infos.wifi.length != 0){
+                        net_infos.wifi[0].signal_level = wifi_detail[0].signal_level;
+                        net_infos.wifi[0].quality = wifi_detail[0].quality;
+                        net_infos.wifi[0].security = wifi_detail[0].security;
                     }
                     const date = moment();
                     const date_str = date.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
