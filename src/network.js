@@ -63,7 +63,7 @@ async function getWifiList(){
 
 async function getNetwork(){
     return new Promise(async(resolve, reject) =>{
-        var net_infos = {ethernet:{},wifi:{},bt:{}};
+        var net_infos = {ethernet:[],wifi:{},bt:{}};
         exec('nmcli device show', async(err, stdout, stderr) => {
             if (err) {
                 console.error(`Error: ${err}`);
@@ -76,53 +76,36 @@ async function getNetwork(){
                     const networks = stdout.split(/\n\s*\n/);
                     for(const i in networks){
                         const json = await transNMCLI(networks[i]);
+                        var temp_info ={};
                         var _dns=[];
                         for(const key in json.IP4){
                             if(key.startsWith('DNS')){
                                 _dns.push(json.IP4[key]);
                             }
                         }
+
+                        temp_info.type=json.GENERAL.TYPE;
+                        temp_info.state=parseInt(json.GENERAL.STATE);
+                        temp_info.device=json.GENERAL.DEVICE;
+                        temp_info.mac=json.GENERAL.HWADDR;
+                        temp_info.name=json.GENERAL.CONNECTION;
+                        if(temp_info.state == 100){
+                            temp_info.ip=json.IP4['ADDRESS[1]'].split('/')[0];
+                            temp_info.gateway=json.IP4.GATEWAY;
+                            temp_info.dns=_dns;
+                            temp_info.subnet=json.IP4['ADDRESS[1]'].split('/')[1];
+                        }
+
                         if(json.GENERAL.TYPE == 'ethernet'){
-                            net_infos.ethernet.type=json.GENERAL.TYPE;
-                            net_infos.ethernet.state=parseInt(json.GENERAL.STATE);
-                            net_infos.ethernet.device=json.GENERAL.DEVICE;
-                            net_infos.ethernet.mac=json.GENERAL.HWADDR;
-                            net_infos.ethernet.name=json.GENERAL.CONNECTION;
-                            if(net_infos.ethernet.state == 100){
-                                net_infos.ethernet.ip=json.IP4['ADDRESS[1]'].split('/')[0];
-                                net_infos.ethernet.gateway=json.IP4.GATEWAY;
-                                net_infos.ethernet.dns=_dns;
-                                net_infos.ethernet.subnet=json.IP4['ADDRESS[1]'].split('/')[1];
-                            }
+                            net_infos.ethernet.push(temp_info);
                         }else if(json.GENERAL.TYPE == 'wifi'){
-                            net_infos.wifi.type=json.GENERAL.TYPE;
-                            net_infos.wifi.state=parseInt(json.GENERAL.STATE);
-                            net_infos.wifi.device=json.GENERAL.DEVICE;
-                            net_infos.wifi.mac=json.GENERAL.HWADDR;
-                            net_infos.wifi.name=json.GENERAL.CONNECTION;
-                            if(net_infos.wifi.state == 100){
-                                net_infos.wifi.ip=json.IP4['ADDRESS[1]'].split('/')[0];
-                                net_infos.wifi.gateway=json.IP4.GATEWAY;
-                                net_infos.wifi.dns=_dns;
-                                net_infos.wifi.subnet=json.IP4['ADDRESS[1]'].split('/')[1];
-                            }
+                            net_infos.wifi =temp_info;
                         }else if(json.GENERAL.TYPE == 'bt'){
-                            net_infos.bt.type=json.GENERAL.TYPE;
-                            net_infos.bt.state=parseInt(json.GENERAL.STATE);
-                            net_infos.bt.device=json.GENERAL.DEVICE;
-                            net_infos.bt.mac=json.GENERAL.HWADDR;
-                            net_infos.bt.name=json.GENERAL.CONNECTION;
-                            if(net_infos.bt.state == 100){
-                                net_infos.bt.ip=json.IP4['ADDRESS[1]'].split('/')[0];
-                                net_infos.bt.gateway=json.IP4.GATEWAY;
-                                net_infos.bt.dns=_dns;
-                                net_infos.bt.subnet=json.IP4['ADDRESS[1]'].split('/')[1];
-                            }
+                            net_infos.bt =temp_info;
                         }
                     }
 
                     //wifi
-
                     const date3 = moment();
                     const date_str3 = date3.format('YYYY-MM-DD HH:mm:ss.SSS').toString();
                     console.log("network before getcurrentwifi", date_str3);
