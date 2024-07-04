@@ -31,6 +31,10 @@ router.post('/localization',(req,res) =>{
     console.log("localization -> ",req.body);
     slam.Localization({
         "command":req.body.command,
+        "x":req.body.x,
+        "y":req.body.y,
+        "z":req.body.z,
+        "rz":req.body.rz,
         "time":time
     }).then((data) =>{
         // console.log("startmapping get : ",data);
