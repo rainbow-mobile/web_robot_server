@@ -28,6 +28,7 @@ router.get("/motor/init",(req,res) =>{
 
 router.post('/localization',(req,res) =>{
     const time = new Date().getTime();
+    console.log("localization -> ",req.body);
     slam.Localization({
         "command":req.body.command,
         "time":time
