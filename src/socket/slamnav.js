@@ -112,7 +112,7 @@ function sendCommand(cmd, data){
     }else{
       reject();
     }
-  }
+  })
 }
 
 function Localization(data){
