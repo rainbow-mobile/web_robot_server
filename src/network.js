@@ -22,7 +22,7 @@ async function scan(){
                     reject();
                 }else{
                     // console.log("검색된 Wi-Fi 네트워크:");
-                    // console.log(networks);
+                    console.log(networks);
                     wifi_list2 = networks;
                     wifi_list = [];
                     for(const net of networks){
@@ -201,19 +201,69 @@ async function getCurrentWifi(){
 async function setEthernet(info){
 
 }
-async function connectWifi(info){
+
+async function setWifi(info){
     return new Promise(async(resolve, reject) =>{
         try{
-            console.log("connectWifi!!",info.ssid);
-            exec('nmcli dev wifi connect '+info.ssid, async(err, stdout, stderr) => {
+            console.log("setWifi!!",info.name);
+
+            let dns_str = '\"';
+            for(var i=0; i<info.dns.length; i++){
+                dns_str += info.dns[i] + " ";
+            }
+            dns_str += "\"";
+
+            const cmd = 'nmcli con modify ' + info.name +
+                " ipv4.addresses " + info.ip + "/" + info.subnet +
+                " ipv4.gateway " + info.gateway +
+                " ipv4.dns " + dns_str +
+                " ipv4.method manual";
+            console.log("setWifi CMD : " , cmd);
+            exec(cmd, async(err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error: ${err}`);
                     reject();
                 }else{
                     console.log(stdout);
-                    resolve(stdout);
+
+                    exec('nmcli con down '+info.name+' && nmcli con up '+info.name, async(err,stdout,stderr) =>{
+                        if (err) {
+                            console.error(`Error: ${err}`);
+                            reject();
+                        }else{
+                            console.log(stdout);
+                            resolve(stdout);
+                        }
+                    })
+                    // resolve(stdout);
                 }
             });
+        }catch(error){
+            console.error(error);
+            reject();
+        }
+    });
+}
+
+
+async function connectWifi(info){
+    return new Promise(async(resolve, reject) =>{
+        try{
+            console.log("connectWifi!!",info.ssid);
+            if(info.password == undefined){
+
+                exec('nmcli dev wifi connect '+info.ssid, async(err, stdout, stderr) => {
+                    if (err) {
+                        console.error(`Error: ${err}`);
+                        reject();
+                    }else{
+                        console.log(stdout);
+                        resolve(stdout);
+                    }
+                });
+            }else{
+                console.log("hello?");
+            }
         }catch(error){
             console.error(error);
             reject();
@@ -224,6 +274,7 @@ async function connectWifi(info){
 module.exports = {
     scan: scan,
     getWifiList:getWifiList,
+    setWifi:setWifi,
     getNetwork:getNetwork,
     setEthernet:setEthernet,
     connectWifi:connectWifi

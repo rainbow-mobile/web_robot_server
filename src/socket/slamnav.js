@@ -97,9 +97,21 @@ function Mapping(data){
 }
 
 function sendCommand(cmd, data){
-  console.log(cmd,data);
-  if(slamnav != null){
-    slamnav.emit(cmd,stringifyAllValues(data));
+  return new Promise((resolve, reject) =>{
+    console.log(cmd,data);
+    if(slamnav != null){
+      slamnav.emit(cmd,stringifyAllValues(data));
+      slamnav.once(cmd,(data) =>{
+          resolve(data);
+          clearTimeout(timeoutId);
+      })
+      const timeoutId = setTimeout(() => {
+          console.log("timeout?");
+          reject();
+      }, 5000); // 5초 타임아웃
+    }else{
+      reject();
+    }
   }
 }
 

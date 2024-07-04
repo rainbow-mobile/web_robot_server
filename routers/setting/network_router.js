@@ -41,13 +41,33 @@ router.get('/network/wifi/scan',(req,res) =>{
         res.sendStatus(500);
     })
 })
-router.put('/network/ethernet',(req,res)=>{
+router.put('/network/ethernet1',(req,res)=>{
     console.log(req.body);
     res.send();
 })
 
+router.put('/network/wifi',(req,res) =>{
+    console.log("============ Network Wifi SET");
+    network.setWifi(req.body).then((data)=>{
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.sendStatus(500);
+    })
+})
+
 router.post('/network/wifi',(req,res) =>{
     console.log("============ Network Wifi Change");
+    network.connectWifi(req.body).then((data)=>{
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.sendStatus(500);
+    })
+})
+
+router.post('/network/wifi/security',(req,res) =>{
+    console.log("============ Network Wifi(PASSWORD) Change");
     network.connectWifi(req.body).then((data)=>{
         res.send(data);
     }).catch((err) =>{
