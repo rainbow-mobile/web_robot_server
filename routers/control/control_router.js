@@ -18,6 +18,8 @@ router.post("/jog/manual",(req,res) =>{
         vy: req.body.vy,
         wz: req.body.wz,
         time: time
+    }).catch((error) =>{
+        console.error(error);
     });
     res.send();
 });
