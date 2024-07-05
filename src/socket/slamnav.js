@@ -116,6 +116,18 @@ function sendCommand(cmd, data){
   })
 }
 
+function emitCommand(cmd, data){
+  return new Promise((resolve, reject) =>{
+    console.log("emit ",cmd,data);
+    if(slamnav != null){
+      slamnav.emit(cmd,stringifyAllValues(data));
+      resolve(data);
+    }else{
+      reject();
+    }
+  })
+}
+
 function Localization(data){
     return new Promise((resolve, reject) =>{
         if(slamnav != null){
@@ -140,5 +152,6 @@ function Localization(data){
 module.exports={
   Mapping:Mapping,
   Localization:Localization,
-  sendCommand:sendCommand
+  sendCommand:sendCommand,
+  emitCommand:emitCommand
 }

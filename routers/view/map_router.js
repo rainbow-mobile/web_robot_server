@@ -72,7 +72,7 @@ router.get('/mapping/save/:name',async(req,res) =>{
 
 router.get('/mapping/reload',(req,res) =>{
     const time = new Date().getTime();
-    slam.sendCommand('mapping',{
+    slam.emitCommand('mapping',{
         "command":"reload",
         "time":time
     }).then(() =>{
