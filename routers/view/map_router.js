@@ -70,7 +70,18 @@ router.get('/mapping/save/:name',async(req,res) =>{
     });
 });
 
-
+router.get('/mapping/reload',(req,res) =>{
+    const time = new Date().getTime();
+    slam.sendCommand('mapping',{
+        "command":"reload",
+        "time":time
+    }).then(() =>{
+        res.send();
+    }).catch((err) =>{
+        console.error(err);
+        res.sendStatus(500);
+    })
+});
 
 //맵 cloud.csv 요청
 router.get('/map/cloud/:map_name',(req,res) =>{
