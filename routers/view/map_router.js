@@ -117,6 +117,16 @@ router.get('/map/topo/:map_name',(req,res) =>{
 });
 
 
+//맵 topo.json 저장
+router.post('/map/topo/:map_name',(req,res) =>{
+    const path = getTopo(req.params.map_name);
+    filesystem.saveFile(path,req.body).then((data) =>{
+        res.send(data);
+    }).catch((error) =>{
+        res.status(500).send(error);
+    });
+});
+
 //현재 맵 반환
 router.get('/map/current', (req,res) =>{
     filesystem.readJson(home_path+"/config.json").then((data) =>{
