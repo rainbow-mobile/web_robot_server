@@ -109,6 +109,25 @@ async function saveFile(filepath, filedata){
     return new Promise(async(resolve, reject) =>{
         try{
             // JSON 데이터를 파일로 저장
+            fs.copyFile(filepath, filepath+".backup", (err) => {
+              if (err) {
+                console.error('파일 저장 중 오류 발생:', err);
+                reject();
+              }
+              console.log("copy success: ",filedata);
+              resolve(filedata);
+            });
+        }catch(error){
+            console.error(error);
+            reject(error);
+        }
+    })
+}
+
+async function copyFile(filepath){
+    return new Promise(async(resolve, reject) =>{
+        try{
+            // JSON 데이터를 파일로 저장
             fs.writeFile(filepath, JSON.stringify(filedata, null, 2), (err) => {
               if (err) {
                 console.error('파일 저장 중 오류 발생:', err);
@@ -123,6 +142,7 @@ async function saveFile(filepath, filedata){
         }
     })
 }
+
 function stringifyAllValues(obj) {
     for (const key in obj) {
       if (typeof obj[key] === 'object') {
@@ -248,6 +268,7 @@ module.exports = {
     existFile: existFile,
     getDirEntry: getDirEntry,
     readJson: readJson,
+    copyFile:copyFile,
     saveFile:saveFile,
     getDirectoryTree:getDirectoryTree,
     readCsv: readCsv,
