@@ -130,10 +130,19 @@ router.post('/map/topo/:map_name',(req,res) =>{
                 res.status(500).send(error);
             });
         }else{
-            filesystem.copyFile(path).then((data) =>{
-                res.send(data);
+            filesystem.copyFile(path).then(() =>{
+                console.log("??????????????");
+                filesystem.saveFile(path,req.body).then((data) =>{
+                    res.send(data);
+                }).catch((error) =>{
+                    res.status(500).send(error);
+                });
             }).catch((error) =>{
-                res.status(500).send(error);
+                filesystem.saveFile(path,req.body).then((data) =>{
+                    res.send(data);
+                }).catch((error) =>{
+                    res.status(500).send(error);
+                });
             });
         }
     }));

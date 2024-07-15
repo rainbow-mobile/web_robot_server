@@ -2,6 +2,7 @@ const moment = require('moment');
 const store = require('../../interfaces/stateManager');
 const filesystem = require("../filesystem");
 const path = require("path")
+const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -9,6 +10,7 @@ const socketIo = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const server2 = http.createServer(app);
+app.use(bodyParser.json());
 
 
 const slam_io = socketIo(server,{
@@ -18,6 +20,7 @@ const slam_io = socketIo(server,{
 const mapping_io = socketIo(server2);
 
 var slamnav=null;
+var moveState = null;
 
 server.listen(11337, () => {
   console.log('SLAM socket server listening on port 11337');
@@ -33,11 +36,9 @@ slam_io.on('connection', (socket) => {
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
-    // console.log("lidarin", cloud.length );
       mapping_io.emit("lidar",cloud);
   })
   socket.on('mapping_cloud',(cloud) =>{
-      console.log("cloudin", cloud.length);
       mapping_io.emit("mapping",cloud);
   })
 
@@ -50,6 +51,11 @@ slam_io.on('connection', (socket) => {
     console.log('Client disconnected');
     slamnav = null;
   });
+
+  slamnav.on('move',(data) =>{
+    moveState = JSON.parse(data);
+    console.log("move state changed : ",moveState.result);
+  })
 });
 
 
@@ -97,12 +103,64 @@ function Mapping(data){
     })
 }
 
+function waitMove(){
+  return new Promise((resolve, reject) =>{
+    const interval = setInterval(() => {
+      if(moveState){
+        if(moveState.result == 'reject'){
+          console.log("moveState reject : ", moveState);
+          clearInterval(interval);
+          resolve(moveState);
+          moveState = null;
+        }else if(moveState.result == 'failed'){
+          console.log("moveState failed : ", moveState);
+          clearInterval(interval);
+          resolve(moveState);
+          moveState = null;
+        }else if(moveState.result == 'succeed'){
+          console.log("moveState changed resolve : ", moveState);
+          clearInterval(interval);
+          resolve(moveState);
+          moveState = null;
+        }else{
+          console.log(moveState.result);
+        }
+      }else{
+        console.log("moveState null");
+        clearInterval(interval);
+        reject({result:"reject",message:"no move command"});
+      }
+  }, 100); // 100ms마다 상태 체크
+  })
+}
+
+function moveCommand(data){
+  return new Promise((resolve, reject) =>{
+    console.log(data, slamnav);
+    if(slamnav != null && slamnav != undefined){
+      slamnav.emit('move',stringifyAllValues(data));
+      slamnav.once('move',(data) =>{
+          resolve(data);
+          clearTimeout(timeoutId);
+      })
+      const timeoutId = setTimeout(() => {
+          console.log("timeout?");
+          moveState = 'reject';
+          reject({...data, result:'reject', message: 'timeout'});
+      }, 5000); // 5초 타임아웃
+    }else{
+      console.log("reject?");
+      reject({...data, result:'reject', message: 'disconnected'});
+    }
+  })
+}
+
 function sendCommand(cmd, data){
   return new Promise((resolve, reject) =>{
     console.log(cmd,data);
     if(slamnav != null){
       slamnav.emit(cmd,stringifyAllValues(data));
-      slamnav.once(cmd,(data) =>{
+      slamnav.on(cmd,(data) =>{
           resolve(data);
           clearTimeout(timeoutId);
       })
@@ -153,5 +211,7 @@ module.exports={
   Mapping:Mapping,
   Localization:Localization,
   sendCommand:sendCommand,
-  emitCommand:emitCommand
+  emitCommand:emitCommand,
+  waitMove:waitMove,
+  moveCommand:moveCommand
 }

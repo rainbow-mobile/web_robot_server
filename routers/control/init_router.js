@@ -24,6 +24,24 @@ router.post("/jog/manual",(req,res) =>{
     res.send();
 });
 
+router.post("/control/move/target",(req,res) =>{
+    console.log(req.body);
+    const time = new Date().getTime();
+    slam.sendCommand("move", {
+        vx:req.body.vx,
+        vy: req.body.vy,
+        wz: req.body.wz,
+        time: time
+    }).catch((error) =>{
+        console.error(error);
+    });
+    res.send();
+});
+
+
+
+
+
 router.get("/motor/init",(req,res) =>{
     res.send(store.getState());
 });

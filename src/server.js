@@ -21,7 +21,9 @@ const router_file = require("../routers/setting/file_router")
 const router_update = require("../routers/setting/update_router")
 const router_status = require("../routers/view/status_router");
 const router_network = require('../routers/setting/network_router')
-const router_control = require('../routers/control/control_router')
+
+const router_init = require('../routers/control/init_router')
+const router_move = require('../routers/control/move_router')
 
 const slamnav_socket = require('../src/socket/slamnav');
 
@@ -31,71 +33,14 @@ app.use("/",router_setting);
 app.use("/",router_update);
 app.use("/",router_status);
 app.use("/",router_network);
-app.use("/",router_control);
+app.use("/",router_init);
+app.use("/",router_move);
 app.use(express.static('/home/rainbow/RB_MOBILE'));
 app.use(express.static(path.join(__dirname,"maps")));
 app.use(cors());
 
 const qtServerUrl = 'ws://127.0.0.1:10333'; // Qt 서버 주소
 const port1 = 10334;
-// const wss = new WebSocket.Server({ port: port1 });
-
-// wss.on('connection', function connection(ws) {
-//     console.log('Client connected');
-
-//     const qtSocket = new WebSocket(qtServerUrl);
-
-//     qtSocket.on('open', function open() {
-//         console.log('Connected to Qt server');
-//     });
-
-//     qtSocket.on('message', function message(data) {
-//         ws.send(data);
-//     });
-
-//     qtSocket.on('close', function close() {
-//         console.log('Disconnected from Qt server');
-//         ws.close();
-//     });
-
-//     ws.on('close', function close() {
-//         console.log('Client disconnected');
-//         qtSocket.close();
-//     });
-// });
-
-
-// test();
-
-// function test(){
-//     try{
-//         const qtSocket = new WebSocket(qtServerUrl);
-//         qtSocket.on('open', function open() {
-//             console.log('Connected to Qt server');
-//         });
-    
-//         qtSocket.on('message', function message(data) {
-//             console.log(data);
-//         });
-
-//         qtSocket.on('error', function error(error){
-//             console.error(error);
-//         })
-    
-//         qtSocket.on('close', function close() {
-//             console.log('Disconnected from Qt server');
-//             // ws.close();
-//         });  
-
-//         console.log(`WebSocket intermediary server running on ws://localhost:${port1}`);
-              
-//     }catch(err){
-//         console.error("EEEEEEEEE",err);
-//     }
-
-
-// }
-
 
 network.scan();
 monitor.getServerInfo();
@@ -103,7 +48,6 @@ monitor.getServerInfo();
 app.listen(port, function(){
     console.log('listening on '+port);
 });
-
 
 app.get('/', (req, res) => {
     // PrimeReact 컴포넌트를 포함한 React 애플리케이션을 서버 측에서 렌더링

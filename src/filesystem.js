@@ -108,13 +108,14 @@ async function getDirectoryTree(dir){
 async function saveFile(filepath, filedata){
     return new Promise(async(resolve, reject) =>{
         try{
+            console.log("saveFile");
             // JSON 데이터를 파일로 저장
-            fs.copyFile(filepath, filepath+".backup", (err) => {
+            fs.writeFile(filepath, JSON.stringify(filedata, null, 2), (err) => {
               if (err) {
                 console.error('파일 저장 중 오류 발생:', err);
                 reject();
               }
-              console.log("copy success: ",filedata);
+              console.log("write success: ",filedata);
               resolve(filedata);
             });
         }catch(error){
@@ -128,13 +129,13 @@ async function copyFile(filepath){
     return new Promise(async(resolve, reject) =>{
         try{
             // JSON 데이터를 파일로 저장
-            fs.writeFile(filepath, JSON.stringify(filedata, null, 2), (err) => {
+            fs.copyFile(filepath, filepath+".backup", (err) => {
               if (err) {
                 console.error('파일 저장 중 오류 발생:', err);
                 reject();
               }
-              console.log("write success: ",filedata);
-              resolve(filedata);
+              console.log("copy success: ");
+              resolve();
             });
         }catch(error){
             console.error(error);
