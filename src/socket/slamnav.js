@@ -123,7 +123,7 @@ function waitMove(){
           resolve(moveState);
           moveState = null;
         }else{
-          console.log(moveState.result);
+          // console.log(moveState.result);
         }
       }else{
         console.log("moveState null");
