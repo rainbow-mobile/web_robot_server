@@ -64,6 +64,23 @@ router.post("/control/move",async(req,res) =>{
             res.status(400).send();
             return;
         }
+        slam.moveCommand({
+            command:req.body.command,
+            x: req.body.x,
+            y: req.body.y,
+            z: req.body.z,
+            rz: req.body.rz,
+            preset: req.body.preset,
+            method: req.body.method,
+            id: req.body.id,
+            time: time
+        }).then((data) =>{
+            console.log("RESOLVE : ",data);
+            res.send(data);
+        }).catch((data) =>{
+            console.error("REJECT : ",data);
+            res.send(data);
+        });
     }else if(req.body.command == "goal"){
         if(req.body.id == null || req.body.id == undefined || req.body.id == ""){
             res.status(400).send();
@@ -74,30 +91,47 @@ router.post("/control/move",async(req,res) =>{
             res.status(400).send();
             return;
         }
+        slam.moveCommand({
+            command:req.body.command,
+            x: req.body.x,
+            y: req.body.y,
+            z: req.body.z,
+            rz: req.body.rz,
+            preset: req.body.preset,
+            method: req.body.method,
+            id: req.body.id,
+            time: time
+        }).then((data) =>{
+            console.log("RESOLVE : ",data);
+            res.send(data);
+        }).catch((data) =>{
+            console.error("REJECT : ",data);
+            res.send(data);
+        });
     }else if(["pause","resume","stop"].includes(req.body.command)){
        
+        slam.sendCommand({
+            command:req.body.command,
+            x: req.body.x,
+            y: req.body.y,
+            z: req.body.z,
+            rz: req.body.rz,
+            preset: req.body.preset,
+            method: req.body.method,
+            id: req.body.id,
+            time: time
+        }).then((data) =>{
+            console.log("RESOLVE : ",data);
+            res.send(data);
+        }).catch((data) =>{
+            console.error("REJECT : ",data);
+            res.send(data);
+        });
     }else{
         res.status(400).send();
         return;
     }
 
-    slam.moveCommand({
-        command:req.body.command,
-        x: req.body.x,
-        y: req.body.y,
-        z: req.body.z,
-        rz: req.body.rz,
-        preset: req.body.preset,
-        method: req.body.method,
-        id: req.body.id,
-        time: time
-    }).then((data) =>{
-        console.log("RESOLVE : ",data);
-        res.send(data);
-    }).catch((data) =>{
-        console.error("REJECT : ",data);
-        res.send(data);
-    });
 
 });
 
