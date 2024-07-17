@@ -11,8 +11,20 @@ router.use(bodyParser.json());
 router.use(cors());
 
 router.post("/jog/manual",(req,res) =>{
-    // console.log(req.body);
     const time = new Date().getTime();
+    if(isNaN(Number(req.body.vx))){
+        res.status(400).send();
+        return;
+    }
+    if(isNaN(Number(req.body.vy))){
+        res.status(400).send();
+        return;
+    }
+    if(isNaN(Number(req.body.wz))){
+        res.status(400).send();
+        return;
+    }
+
     slam.sendCommand("move", {
         vx:req.body.vx,
         vy: req.body.vy,
@@ -21,11 +33,54 @@ router.post("/jog/manual",(req,res) =>{
     }).catch((error) =>{
         console.error(error);
     });
+
     res.send();
 });
 
-router.post("/control/move",(req,res) =>{
+router.post("/control/move",async(req,res) =>{
     const time = new Date().getTime();
+    if(req.body.command == "target"){
+        if(isNaN(Number(req.body.x))){
+            res.status(400).send();
+            return;
+        }
+
+        if(isNaN(Number(req.body.y))){
+            res.status(400).send();
+            return;
+        }
+
+        if(isNaN(Number(req.body.z))){
+            res.status(400).send();
+            return;
+        }
+
+        if(isNaN(Number(req.body.rz))){
+            res.status(400).send();
+            return;
+        }
+        
+        if(isNaN(Number(req.body.preset))){
+            res.status(400).send();
+            return;
+        }
+    }else if(req.body.command == "goal"){
+        if(req.body.id == null || req.body.id == undefined || req.body.id == ""){
+            res.status(400).send();
+            return;
+        }
+
+        if(isNaN(Number(req.body.preset))){
+            res.status(400).send();
+            return;
+        }
+    }else if(["pause","resume","stop"].includes(req.body.command)){
+       
+    }else{
+        res.status(400).send();
+        return;
+    }
+
     slam.moveCommand({
         command:req.body.command,
         x: req.body.x,
@@ -37,16 +92,16 @@ router.post("/control/move",(req,res) =>{
         id: req.body.id,
         time: time
     }).then((data) =>{
+        console.log("RESOLVE : ",data);
         res.send(data);
-    }).catch((error) =>{
-        console.error(error);
-        res.send(error);
+    }).catch((data) =>{
+        console.error("REJECT : ",data);
+        res.send(data);
     });
-    // res.send();
+
 });
 
 router.get("/control/move",(req,res) =>{
-    console.log(req.body);
     const time = new Date().getTime();
     slam.waitMove().then((data) =>{
         res.send(data);

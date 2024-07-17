@@ -78,7 +78,6 @@ function stringifyAllValues(obj) {
         obj[key] = String(obj[key]);
       }
     }
-    console.log("output : ",obj);
     return obj;
   }
 
