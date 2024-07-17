@@ -136,7 +136,7 @@ function waitMove(){
 
 function moveCommand(data){
   return new Promise((resolve, reject) =>{
-    console.log(data, slamnav);
+    console.log("moveCommand",data);
     if(slamnav != null && slamnav != undefined){
       slamnav.emit('move',stringifyAllValues(data));
       slamnav.once('move',(data) =>{
