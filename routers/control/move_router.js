@@ -33,6 +33,7 @@ router.post("/control/move",(req,res) =>{
         z: req.body.z,
         rz: req.body.rz,
         preset: req.body.preset,
+        method: req.body.method,
         id: req.body.id,
         time: time
     }).then((data) =>{
@@ -51,12 +52,9 @@ router.get("/control/move",(req,res) =>{
         res.send(data);
     }).catch((error) =>{
         console.error(error);
+        res.send(error);
     })
     // res.send();
 });
-
-
-
-
 
 module.exports = router;

@@ -112,12 +112,12 @@ function waitMove(){
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
-        }else if(moveState.result == 'failed'){
+        }else if(moveState.result == 'fail'){
           console.log("moveState failed : ", moveState);
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
-        }else if(moveState.result == 'succeed'){
+        }else if(moveState.result == 'success'){
           console.log("moveState changed resolve : ", moveState);
           clearInterval(interval);
           resolve(moveState);
