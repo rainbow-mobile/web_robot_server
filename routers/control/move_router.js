@@ -109,8 +109,7 @@ router.post("/control/move",async(req,res) =>{
             res.send(data);
         });
     }else if(["pause","resume","stop"].includes(req.body.command)){
-       
-        slam.sendCommand({
+        slam.sendCommand("move",{
             command:req.body.command,
             x: req.body.x,
             y: req.body.y,
