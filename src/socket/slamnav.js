@@ -53,10 +53,11 @@ slam_io.on('connection', (socket) => {
   });
 
   slamnav.on('move',(data) =>{
+    console.log("slamnav send : ",data);
     if(data.command == "target" || data.command == "goal"){
       moveState = JSON.parse(data);
+      console.log("move state changed : ",moveState.result);
     }
-    console.log("move state changed : ",moveState.result);
   })
 });
 
