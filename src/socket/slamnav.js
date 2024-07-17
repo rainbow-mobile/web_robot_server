@@ -137,16 +137,21 @@ function moveCommand(data){
   return new Promise((resolve, reject) =>{
     console.log("moveCommand",data);
     if(slamnav != null && slamnav != undefined){
-      slamnav.emit('move',stringifyAllValues(data));
-      slamnav.once('move',(data) =>{
-          resolve(data);
-          clearTimeout(timeoutId);
-      })
-      const timeoutId = setTimeout(() => {
-          console.log("timeout?");
-          moveState = 'reject';
-          reject({...data, result:'reject', message: 'timeout'});
-      }, 5000); // 5초 타임아웃
+      if(moveState == null){
+        slamnav.emit('move',stringifyAllValues(data));
+        slamnav.once('move',(data) =>{
+            resolve(data);
+            clearTimeout(timeoutId);
+        })
+        const timeoutId = setTimeout(() => {
+            console.log("timeout?");
+            moveState = null;
+            reject({...data, result:'reject', message: 'timeout'});
+        }, 5000); // 5초 타임아웃
+      }else{
+        console.log("already run");
+        reject({...data, result:'reject', message: 'already moving'})
+      }
     }else{
       console.log("reject?");
       reject({...data, result:'reject', message: 'disconnected'});
