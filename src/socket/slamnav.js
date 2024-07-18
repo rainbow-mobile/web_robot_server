@@ -60,8 +60,10 @@ slam_io.on('connection', (socket) => {
     const json = JSON.parse(data);
     console.log("slamnav send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
-      moveState = json;
-      console.log("move state changed : ",moveState.result);
+      if(json.result == "accept"){
+        moveState = json;
+        console.log("move state changed : ",moveState.result);
+      }
     }else if(json.command == "stop"){
       // moveState = null;
       // console.log("move stop = null");
