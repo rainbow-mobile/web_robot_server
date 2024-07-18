@@ -55,15 +55,15 @@ slam_io.on('connection', (socket) => {
     console.log('Client disconnected');
     slamnav = null;
   });
-
+  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
   slamnav.on('move',(data) =>{
     const json = JSON.parse(data);
     console.log("slamnav send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
       if(json.result != "reject"){
         moveState = json;
+        console.log("move state changed : ",moveState.result);
       }
-      console.log("move state changed : ",moveState.result);
     }else if(json.command == "stop"){
       // moveState = null;
       // console.log("move stop = null");
