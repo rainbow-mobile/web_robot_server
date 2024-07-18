@@ -24,7 +24,7 @@ const router_network = require('../routers/setting/network_router')
 
 const router_init = require('../routers/control/init_router')
 const router_move = require('../routers/control/move_router')
-
+const router_task = require('../routers/view/task_router')
 const slamnav_socket = require('../src/socket/slamnav');
 
 app.use("/",router_file);
@@ -35,6 +35,7 @@ app.use("/",router_status);
 app.use("/",router_network);
 app.use("/",router_init);
 app.use("/",router_move);
+app.use("/",router_task);
 app.use(express.static('/home/rainbow/RB_MOBILE'));
 app.use(express.static(path.join(__dirname,"maps")));
 app.use(cors());

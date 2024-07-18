@@ -21,6 +21,7 @@ const mapping_io = socketIo(server2);
 
 var slamnav=null;
 var moveState = null;
+var robotState;
 
 server.listen(11337, () => {
   console.log('SLAM socket server listening on port 11337');
@@ -43,7 +44,10 @@ slam_io.on('connection', (socket) => {
   })
 
   socket.on('status',(data) =>{
-    store.setState(data);
+    const json = JSON.parse(data);
+    robotState = json;
+    // store.setState(data);
+    // console.log(json.condition.auto_state);
     mapping_io.emit("status",data);
   })
 
@@ -53,10 +57,14 @@ slam_io.on('connection', (socket) => {
   });
 
   slamnav.on('move',(data) =>{
-    console.log("slamnav send : ",data);
-    if(data.command == "target" || data.command == "goal"){
-      moveState = JSON.parse(data);
+    const json = JSON.parse(data);
+    console.log("slamnav send : ",json.command, json);
+    if(json.command == "target" || json.command == "goal"){
+      moveState = json;
       console.log("move state changed : ",moveState.result);
+    }else if(json.command == "stop"){
+      // moveState = null;
+      // console.log("move stop = null");
     }
   })
 });
@@ -107,6 +115,7 @@ function Mapping(data){
 
 function waitMove(){
   return new Promise((resolve, reject) =>{
+    console.log("waitMove");
     const interval = setInterval(() => {
       if(moveState){
         if(moveState.result == 'reject'){
