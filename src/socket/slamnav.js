@@ -55,7 +55,7 @@ slam_io.on('connection', (socket) => {
     console.log('Client disconnected');
     slamnav = null;
   });
-  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
+  
   slamnav.on('move',(data) =>{
     const json = JSON.parse(data);
     console.log("slamnav send : ",json.command, json);
