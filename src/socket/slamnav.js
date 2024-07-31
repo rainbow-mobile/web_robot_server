@@ -46,8 +46,6 @@ slam_io.on('connection', (socket) => {
   socket.on('status',(data) =>{
     const json = JSON.parse(data);
     robotState = json;
-    // store.setState(data);
-    // console.log(json.condition.auto_state);
     mapping_io.emit("status",data);
   })
 
@@ -60,13 +58,12 @@ slam_io.on('connection', (socket) => {
     const json = JSON.parse(data);
     console.log("slamnav send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
-      if(json.result != "reject"){
+      console.log("move state changed : ",json.result);
+        mapping_io.emit('move',json);
         moveState = json;
-        console.log("move state changed : ",moveState.result);
-      }
     }else if(json.command == "stop"){
       // moveState = null;
-      // console.log("move stop = null");
+      console.log("move stop = null");
     }
   })
 });
@@ -131,15 +128,13 @@ function waitMove(){
           resolve(moveState);
           moveState = null;
         }else if(moveState.result == 'success'){
-          console.log("moveState changed resolve : ", moveState);
+          console.log("moveState success : ", moveState);
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
         }else{
-          // console.log(moveState.result);
         }
       }else{
-        console.log("moveState null");
         clearInterval(interval);
         reject({result:"reject",message:"no move command"});
       }
@@ -147,27 +142,36 @@ function waitMove(){
   })
 }
 
+function isReadyMove(){
+  if(moveState == null){
+    return true;
+  }if(moveState.result == 'reject' || moveState.result == 'success' || moveState.result == 'fail'){
+      return true;
+  }else{
+    return false;
+  }
+}
+
 function moveCommand(data){
   return new Promise((resolve, reject) =>{
     console.log("moveCommand",data);
     if(slamnav != null && slamnav != undefined){
-      if(moveState == null){
+      if(isReadyMove()){
         slamnav.emit('move',stringifyAllValues(data));
+
         slamnav.once('move',(data) =>{
             resolve(data);
             clearTimeout(timeoutId);
         })
+
         const timeoutId = setTimeout(() => {
-            console.log("timeout?");
-            moveState = null;
             reject({...data, result:'reject', message: 'timeout'});
         }, 5000); // 5초 타임아웃
-      }else{
-        console.log("already run");
+      }else if(moveState.result == 'accept'){
+        console.log(robotState.condition.auto_state);
         reject({...data, result:'reject', message: 'already moving'})
       }
     }else{
-      console.log("reject?");
       reject({...data, result:'reject', message: 'disconnected'});
     }
   })

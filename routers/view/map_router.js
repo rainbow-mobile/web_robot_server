@@ -102,6 +102,7 @@ router.get('/map/cloud/:map_name',(req,res) =>{
 
 //맵 topo.json 요청
 router.get('/map/topo/:map_name',(req,res) =>{
+    console.log('')
     const path = getTopo(req.params.map_name);
     filesystem.existFile(path,((err,fd) =>{
         if(err){

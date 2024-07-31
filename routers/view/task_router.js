@@ -18,8 +18,30 @@ router.use(bodyParser.json());
 router.use(cors());
 router.use(compression())
 
+const work_path = '/home/rainbow/Downloads/script_task/map_editer/build/work';
+
 router.get('/task',(req,res) =>{
-    parser.parse('/home/rainbow/Downloads/script_task/map_editer/build/work/test3.task').then((data) =>{
+    parser.list(work_path).then((data) =>{
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send(err);
+    })
+})
+
+
+router.get('/task/:name',(req,res) =>{
+    parser.parse(path.join(work_path,req.params.name)).then((data) =>{
+        res.send(data);
+    }).catch((err) =>{
+        console.error(err);
+        res.send(err);
+    })
+})
+
+router.post('/task/:name',(req,res) =>{
+    parser.save(path.join(work_path,req.params.name)).then((data) =>{
+        console.log("task save");
         res.send(data);
     }).catch((err) =>{
         console.error(err);
