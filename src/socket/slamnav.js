@@ -172,6 +172,7 @@ function moveCommand(data){
         reject({...data, result:'reject', message: 'already moving'})
       }
     }else{
+      console.log("discon");
       reject({...data, result:'reject', message: 'disconnected'});
     }
   })
@@ -191,7 +192,8 @@ function sendCommand(cmd, data){
           reject();
       }, 5000); // 5초 타임아웃
     }else{
-      reject();
+      console.log("discon");
+      reject("disconnected");
     }
   })
 }
@@ -203,7 +205,8 @@ function emitCommand(cmd, data){
       slamnav.emit(cmd,stringifyAllValues(data));
       resolve(data);
     }else{
-      reject();
+      console.log("discon");
+      reject("disconnected");
     }
   })
 }
@@ -223,7 +226,8 @@ function Localization(data){
                 reject();
             }, 5000); // 5초 타임아웃
         }else{
-            reject();
+          console.log("discon");
+            reject("disconnected");
         }
     })
 }

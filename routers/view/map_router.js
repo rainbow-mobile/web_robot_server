@@ -172,9 +172,8 @@ router.post('/map/current', (req, res) =>{
         res.send(data);
     }).catch((err) =>{
         console.error(err);
-        res.send('map load failed')
+        res.send(err);
     });
-    
 })
 
 router.get('/getmap/:name/:file',(req,res) =>{

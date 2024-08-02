@@ -126,6 +126,30 @@ router.post("/control/move",async(req,res) =>{
             console.error("REJECT : ",data);
             res.send(data);
         });
+    }else if(req.body.command == "jog"){
+        if(isNaN(Number(req.body.vx))){
+            res.status(400).send();
+            return;
+        }
+        if(isNaN(Number(req.body.vy))){
+            res.status(400).send();
+            return;
+        }
+        if(isNaN(Number(req.body.wz))){
+            res.status(400).send();
+            return;
+        }
+        const time = new Date().getTime();
+        slam.sendCommand("move", {
+            command: "jog",
+            vx:req.body.vx,
+            vy: req.body.vy,
+            wz: req.body.wz,
+            time: time
+        }).catch((error) =>{
+            console.error(error);
+        });
+        res.send();
     }else{
         res.status(400).send();
         return;

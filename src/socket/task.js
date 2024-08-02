@@ -18,7 +18,7 @@ const task_io = socketIo(server,{
   pingTimeout: 6000 // 2분
 });
 server.listen(11338, () => {
-  console.log('Task socket server listening on port 11337');
+  console.log('Task socket server listening on port 11338');
 });
 
 task_io.on('connection', (socket) =>{
