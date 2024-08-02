@@ -27,6 +27,8 @@ const router_move = require('../routers/control/move_router')
 const router_task = require('../routers/view/task_router')
 const slamnav_socket = require('../src/socket/slamnav');
 
+app.use(express.json({limit: '10mb'}));
+app.use(express.urlencoded({limit: '10mb', extended: false}));
 app.use("/",router_file);
 app.use("/",router_map);
 app.use("/",router_setting);

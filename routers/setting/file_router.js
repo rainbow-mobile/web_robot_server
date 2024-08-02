@@ -27,29 +27,12 @@ const getDirectoryTree = (dirPath) => {
     };
 };
 
-router.get('/local', (req, res) => {
-    console.log("get local home");
-    const directoryPath = spath.home_path; // 이 경로를 PC의 경로로 설정
-    const directoryTree = getDirectoryTree(directoryPath);
-    console.log(directoryTree);
-    res.json(directoryTree);
-});
-
-router.get('/local/:path', (req, res) => {
-    // console.log("files get ",req.params.path);
-    // if(typeof(req.params.path) == typeof("path")){
-    //     const directoryPath = path.join('/home/rainbow/',req.params.path); // 이 경로를 PC의 경로로 설정
-    //     fs.readdir(directoryPath, (err, files) => {
-    //         if (err) {
-    //             return res.status(400).send('Unable to scan directory');
-    //         })
-    //         console.log(files);
-    //         res.json(files);
-    //     });
-        
-    // }else{
-    //     res.status(400).send();
-    // }
-});
+// router.get('/local', (req, res) => {
+//     console.log("get local home");
+//     const directoryPath = spath.home_path; // 이 경로를 PC의 경로로 설정
+//     const directoryTree = getDirectoryTree(directoryPath);
+//     console.log(directoryTree);
+//     res.json(directoryTree);
+// });
 
 module.exports = router;

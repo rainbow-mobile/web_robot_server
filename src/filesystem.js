@@ -260,6 +260,30 @@ async function readCsv(filepath, callback){
     })
 };
 
+async function saveCsv(filepath, filedata){
+    return new Promise(async(resolve, reject) =>{
+        try{
+            console.log("saveCsv");
+            
+            // JSON 데이터를 CSV 파일로 변환
+            const csvData = filedata.map(row => row.join(',')).join('\n');
+            
+            // JSON 데이터를 파일로 저장
+            fs.writeFile(filepath, csvData, (err) => {
+              if (err) {
+                console.error('파일 저장 중 오류 발생:', err);
+                reject();
+              }
+              console.log("write success: ",filedata);
+              resolve(csvData);
+            });
+        }catch(error){
+            console.error("hek",error);
+            reject(error);
+        }
+    })
+}
+
 async function existFile(filepath, callback){
     console.log(filepath);
     fs.open(filepath,'r', callback);
@@ -271,6 +295,7 @@ module.exports = {
     readJson: readJson,
     copyFile:copyFile,
     saveFile:saveFile,
+    saveCsv:saveCsv,
     getDirectoryTree:getDirectoryTree,
     readCsv: readCsv,
     makeTempPreset:makeTempPreset,

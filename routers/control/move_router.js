@@ -10,33 +10,6 @@ const slam = require('../../src/socket/slamnav');
 router.use(bodyParser.json());
 router.use(cors());
 
-router.post("/jog/manual",(req,res) =>{
-    const time = new Date().getTime();
-    if(isNaN(Number(req.body.vx))){
-        res.status(400).send();
-        return;
-    }
-    if(isNaN(Number(req.body.vy))){
-        res.status(400).send();
-        return;
-    }
-    if(isNaN(Number(req.body.wz))){
-        res.status(400).send();
-        return;
-    }
-
-    slam.sendCommand("move", {
-        vx:req.body.vx,
-        vy: req.body.vy,
-        wz: req.body.wz,
-        time: time
-    }).catch((error) =>{
-        console.error(error);
-    });
-
-    res.send();
-});
-
 router.post("/control/move",async(req,res) =>{
     const time = new Date().getTime();
     if(req.body.command == "target"){
@@ -154,8 +127,6 @@ router.post("/control/move",async(req,res) =>{
         res.status(400).send();
         return;
     }
-
-
 });
 
 router.get("/control/move",(req,res) =>{
@@ -166,7 +137,6 @@ router.get("/control/move",(req,res) =>{
         console.error(error);
         res.send(error);
     })
-    // res.send();
 });
 
 module.exports = router;

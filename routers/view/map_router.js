@@ -13,7 +13,8 @@ const compression = require('compression')
 const slam = require('../../src/socket/slamnav');
 
 const home_path = '/home/rainbow';
-router.use(bodyParser.json());
+router.use(bodyParser.json({limit: '100mb'}));
+router.use(bodyParser.urlencoded({limit: '100mb', extended: false}));
 router.use(cors());
 router.use(compression())
 
@@ -96,6 +97,37 @@ router.get('/map/cloud/:map_name',(req,res) =>{
                 res.send(data);
             }).catch((error) =>{
                 res.status(500).send(error);
+            });
+        }
+    }));
+});
+
+//맵 cloud.csv 저장
+router.post('/map/cloud/:map_name',(req,res) =>{
+    console.log('map cloud save', req.body);
+    const path = getCloud(req.params.map_name);
+
+    //backup
+    filesystem.existFile(path,((err,fd) =>{
+        if(err){
+            filesystem.saveCsv(path,req.body).then((data) =>{
+                res.send(data);
+            }).catch((error) =>{
+                res.status(500).send(error);
+            });
+        }else{
+            filesystem.copyFile(path).then(() =>{
+                filesystem.saveCsv(path,req.body).then((data) =>{
+                    res.send(data);
+                }).catch((error) =>{
+                    res.status(500).send(error);
+                });
+            }).catch((error) =>{
+                filesystem.saveCsv(path,req.body).then((data) =>{
+                    res.send(data);
+                }).catch((error) =>{
+                    res.status(500).send(error);
+                });
             });
         }
     }));
