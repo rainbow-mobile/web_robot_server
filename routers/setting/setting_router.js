@@ -114,14 +114,13 @@ router.delete('/setting/preset/:id',async(req,res) =>{
         const config_path = path.join("/home","rainbow",filename);
         filesystem.deleteFile(config_path).then(() =>{
             filesystem.getPresetList().then((data) =>{
-                res.send(data);
+                res.send({...data, name:filename});
             }).catch((error) =>{
-                console.error(error);
-                res.send();
+                res.send({...error, name:filename});
             })
         }).catch((err) =>{
             console.log(err);
-            res.status(500).send(err);
+            res.send({...err, name:filename});
         })
 
     }
@@ -137,7 +136,7 @@ router.get('/setting/preset/:id',async(req,res) =>{
             res.send(data);
         }).catch((error) =>{
             console.error(error);
-            res.status(500).send(error);
+            res.send({...error, name: filename})
         });
     }
 });
@@ -156,6 +155,7 @@ router.get('/setting/preset/add/:id', (req,res) =>{
         });
     }
 })
+
 router.post('/setting/preset/add/:id', (req,res) =>{
     if(req.params.id == null || req.params.id == undefined){
         res.status(400).send();

@@ -8,27 +8,40 @@ async function startProcess(filename,path){
     return new Promise((resolve,reject) =>{
         try{
             if(running[filename]){
-                resolve({message:'process test already running'})
+                resolve({result: "duplicate", message:'process test already running'})
             }else{
                 process[filename] = spawn(path);
                 process[filename].on('exit', (code) => {
                     console.log(`process[`+filename+`] exited with code ${code}`);
                     running[filename] = false;
+                    clearTimeout(timeout);
+                    reject({result: "fail", name: filename, message: code})
                 });
                 process[filename].on('close', (code) => {
                     console.log(`process[`+filename+`] closed with code ${code}`);
                     running[filename] = false;
+                    clearTimeout(timeout);
+                    reject({result: "fail", name: filename, message: code})
                 });
                 process[filename].on('error', (code) =>{
                     console.log(`process[`+filename+`] got error with code ${code}`);
                     running[filename] = false;
+                    clearTimeout(timeout);
+                    reject({result: "fail", name: filename, message: code})
                 })
-                running[filename] = true;
-                resolve();
+                process[filename].on('spawn', (code) =>{
+                    console.log(`process[`+filename+`] spawn with code ${code}`);
+                    running[filename] = true;
+                })
+                
+                const timeout = setTimeout(() =>{
+                    console.log("success");
+                    resolve({result: "success", name: filename});
+                },1000);
             }
         }catch(error){
             console.error(`process[`+filename+`] Error : `,error);
-            reject({message:'process start failed'});
+            reject({result: "fail", name: filename, message:error});
         }
     });
 }
@@ -84,8 +97,6 @@ async function stopProcessAll(path){
                 console.log("stop all ");
                 resolve();
             });
-            // console.log("stop all ");
-            // resolve();
         }catch(error){
             console.error("Start Process Error : ",error);
             reject({message:'process test all failed'})

@@ -155,23 +155,33 @@ function stringifyAllValues(obj) {
       }
     }
     return obj;
-  }
+}
+
+
 async function saveJson(filepath, jsondata){
     return new Promise(async(resolve, reject) =>{
         try{
             // JSON 데이터를 파일로 저장
             const stringifiedObj = stringifyAllValues(jsondata);
             fs.writeFile(filepath, JSON.stringify(stringifiedObj, null, 2), (err) => {
-              if (err) {
-                console.error('파일 저장 중 오류 발생:', err);
-                reject();
-              }
-              console.log("write success: ",stringifiedObj);
-              resolve(stringifiedObj);
+                if (err) {
+                    console.error('파일 저장 중 오류 발생:', err);
+                    reject({
+                        result: "fail",
+                        message: err
+                    });
+                }
+                console.log("write success: ",stringifiedObj);
+                resolve({
+                    result: "success"
+                });
             });
         }catch(error){
             console.error(error);
-            reject(error);
+            reject({
+                result:"fail",
+                message: error
+            });
         }
     })
 }
@@ -181,15 +191,23 @@ async function deleteFile(filepath){
         try{
             fs.unlink(filepath, (err)=>{
                 if(err){
-                    reject(err);
+                    reject({
+                        result: "fail",
+                        message: err
+                    });
                 }else{
                     console.log("delete success");
-                    resolve();
+                    resolve({
+                        result: "success"
+                    });
                 }
             });
         }catch(error){
             console.error(error);
-            reject(error);
+            reject({
+                result: "fail",
+                message: error
+            });
         }
     })
 }
@@ -198,12 +216,14 @@ async function readJson(filepath, callback){
     return new Promise(async(resolve, reject) =>{
         try{
             const filecontent = fs.readFileSync(filepath, 'utf-8');
-            // console.log(filecontent)
             const jsonData = JSON.parse(filecontent);
             resolve(jsonData);
         }catch(error){
             console.error(error);
-            reject(error);
+            reject({
+                result: "fail",
+                message: error
+            });
         }
     })
 };
@@ -264,7 +284,6 @@ async function saveCsv(filepath, filedata){
     return new Promise(async(resolve, reject) =>{
         try{
             console.log("saveCsv");
-            
             // JSON 데이터를 CSV 파일로 변환
             const csvData = filedata.map(row => row.join(',')).join('\n');
             
@@ -272,20 +291,27 @@ async function saveCsv(filepath, filedata){
             fs.writeFile(filepath, csvData, (err) => {
               if (err) {
                 console.error('파일 저장 중 오류 발생:', err);
-                reject();
+                reject({
+                    result: "fail",
+                    message: err
+                });
               }
               console.log("write success: ",filedata);
-              resolve(csvData);
+              resolve({
+                result: "success"
+              });
             });
         }catch(error){
-            console.error("hek",error);
-            reject(error);
+            console.error(error);
+            reject({
+                result: "fail",
+                message: error
+            });
         }
     })
 }
 
 async function existFile(filepath, callback){
-    console.log(filepath);
     fs.open(filepath,'r', callback);
 }
 

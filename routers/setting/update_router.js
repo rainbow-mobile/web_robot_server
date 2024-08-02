@@ -3,21 +3,13 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const path = require("path")
 const cors = require("cors");
-const multer = require('multer');
 const router = express.Router();
-const filesystem = require("../../src/filesystem.js");
-const fs = require('fs');
 const moment = require('moment');
 const update = require('../../src/update.js');
 const os = require('os');
 const process = require('../../process/runTest.js');
 const spath = require('../../setting.json');
-const db = require('../../src/version.js')
-// const update_path = spath.update_path;
-// const log_path = spath.log_path;
-// const update_json = require(update_path);
-// const log_json = require(log_path);
-
+const db = require('../../src/version.js');
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -130,14 +122,10 @@ router.post('/update',async(req,res) =>{
 router.get('/start/:filename',(req,res) =>{
     const exePath = path.join(spath.program_path+'/'+req.params.filename);
     process.startProcess(req.params.filename,exePath).then((message) =>{
-        if(message){
-            res.send(message);
-        }else{
-            res.send(true);
-        }
+        res.send(message);
     }).catch((err) =>{
         console.error("startProcess error : ",err);
-        res.status(500).send(err)
+        res.send(err);
     });
 });
 
