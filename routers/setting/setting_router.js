@@ -8,12 +8,13 @@ const multer = require('multer');
 const router = express.Router();
 const filesystem = require("../../src/filesystem");
 const fs = require('fs');
+const spath = require('../../setting.json');
 
 router.use(bodyParser.json());
 router.use(cors());
 
 router.get('/setting',async(req,res) =>{
-    const config_path = path.join("/home","rainbow","config.json");
+    const config_path = path.join(spath.program_path,"config","SRV","config.json");
     filesystem.readJson(config_path).then(async(data) =>{
         const ee = await transformDataToUI(data);
         res.send(ee);
@@ -84,7 +85,7 @@ async function transformDataToJson(data){
 }
 router.post('/setting',async(req,res) =>{
     console.log("post setting in");
-    const config_path = path.join("/home","rainbow","config.json");
+    const config_path = path.join(spath.program_path,"config","SRV","config.json");
     const newbody = await transformDataToJson(req.body);
     filesystem.saveJson(config_path,newbody).then(async(data) =>{
         const ee = await transformDataToUI(data);
