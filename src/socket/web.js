@@ -34,7 +34,7 @@ function getIO(){
 
 function emit(cmd,data){
   if(test != null){
-    console.log("emit ",cmd,data)
+    // console.log("emit ",cmd,data)
     test.emit(cmd,data);
   }
 }
