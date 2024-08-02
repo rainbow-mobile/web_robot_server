@@ -33,6 +33,7 @@
     "socket.io": "^4.7.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
+    "uuid": "^10.0.0",
     "ws": "^8.17.1"
   },
   "devDependencies": {
@@ -41,5 +42,10 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
     "utf-8-validate": "^6.0.4"
+  },
+  "pkg": {
+    "targets": [
+      "node18"
+    ]
   }
 }
