@@ -85,6 +85,7 @@ router.get('/mapping/reload',(req,res) =>{
 
 //맵 cloud.csv 요청
 router.get('/map/cloud/:map_name',(req,res) =>{
+    console.log('map cloud get');
     const path = getCloud(req.params.map_name);
     filesystem.existFile(path,((err,fd) =>{
         if(err){
@@ -102,7 +103,7 @@ router.get('/map/cloud/:map_name',(req,res) =>{
 
 //맵 topo.json 요청
 router.get('/map/topo/:map_name',(req,res) =>{
-    console.log('')
+    console.log('map topo get');
     const path = getTopo(req.params.map_name);
     filesystem.existFile(path,((err,fd) =>{
         if(err){
@@ -120,6 +121,7 @@ router.get('/map/topo/:map_name',(req,res) =>{
 
 //맵 topo.json 저장
 router.post('/map/topo/:map_name',(req,res) =>{
+    console.log('map topo post');
     const path = getTopo(req.params.map_name);
 
     //backup
