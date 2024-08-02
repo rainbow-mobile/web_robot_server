@@ -75,7 +75,6 @@ router.post('/update',async(req,res) =>{
                                 console.error("sqlLog err: ",err);
                             })
         
-            
                             console.log("start ");
                             process.restartProcess(body.program,body.path).then((r) =>{
                                 console.log("done");

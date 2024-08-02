@@ -113,20 +113,20 @@ router.post('/map/cloud/:map_name',(req,res) =>{
             filesystem.saveCsv(path,req.body).then((data) =>{
                 res.send({...data, name: req.params.map_name});
             }).catch((error) =>{
-                res.send({...data, name: req.params.map_name});
+                res.send({...error, name: req.params.map_name});
             });
         }else{
             filesystem.copyFile(path).then(() =>{
                 filesystem.saveCsv(path,req.body).then((data) =>{
                     res.send({...data, name: req.params.map_name});
                 }).catch((error) =>{
-                    res.send({...data, name: req.params.map_name});
+                    res.send({...error, name: req.params.map_name});
                 });
             }).catch((error) =>{
                 filesystem.saveCsv(path,req.body).then((data) =>{
                     res.send({...data, name: req.params.map_name});
                 }).catch((error) =>{
-                    res.send({...data, name: req.params.map_name});
+                    res.send({...error, name: req.params.map_name});
                 });
             });
         }

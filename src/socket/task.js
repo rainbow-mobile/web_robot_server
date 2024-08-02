@@ -11,7 +11,6 @@ const webIo = require('./web')
 const app = express();
 app.use(bodyParser.json());
 
-const webIO = webIo.getIO();
 var taskproc=null;
 const server = http.createServer(app);
 const task_io = socketIo(server,{

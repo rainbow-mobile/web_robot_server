@@ -11,7 +11,6 @@ const moment = require('moment');
 const update = require('../../src/update.js');
 const process = require('../../process/runTest.js');
 const spath = require('../../setting.json');
-const db = require('../../src/version.js')
 const monitor = require('../../src/monitor.js')
 const store = require('../../interfaces/stateManager');
 
