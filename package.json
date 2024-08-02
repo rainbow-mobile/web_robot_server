@@ -27,6 +27,7 @@
     "network": "^0.7.0",
     "node-ip": "^0.1.2",
     "node-wifi": "^2.0.16",
+    "pm2": "^5.4.2",
     "primereact": "^10.6.6",
     "react": "^18.3.1",
     "socket.io": "^4.7.5",

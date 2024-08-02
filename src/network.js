@@ -22,7 +22,7 @@ async function scan(){
                     reject();
                 }else{
                     // console.log("검색된 Wi-Fi 네트워크:");
-                    console.log(networks);
+                    // console.log(networks);
                     wifi_list2 = networks;
                     wifi_list = [];
                     for(const net of networks){
