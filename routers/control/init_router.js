@@ -38,10 +38,6 @@ router.post("/control/move/target",(req,res) =>{
     res.send();
 });
 
-
-
-
-
 router.get("/motor/init",(req,res) =>{
     res.send(store.getState());
 });
@@ -64,4 +60,5 @@ router.post('/localization',(req,res) =>{
         res.send('startmapping failed')
     });
 })
+
 module.exports = router;

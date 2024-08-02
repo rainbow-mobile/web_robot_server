@@ -13,8 +13,6 @@ const server = http.createServer(app);
 const server2 = http.createServer(app);
 app.use(bodyParser.json());
 
-const web_io = socketIo(server2);
-
 // server2.listen(10334, () => {
 //   console.log('Web socket server listening on port 10334');
 // });
@@ -31,7 +29,6 @@ const slam_io = socketIo(server,{
   pingTimeout: 6000 // 2분
 });
 
-const webIO = webIo.getIO();
 
 var slamnav=null;
 var moveState = null;
@@ -47,16 +44,16 @@ slam_io.on('connection', (socket) => {
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
-    webIO.emit("lidar",cloud);
+    webIo.emit("lidar",cloud);
   })
   socket.on('mapping_cloud',(cloud) =>{
-    webIO.emit("mapping",cloud);
+    webIo.emit("mapping",cloud);
   })
 
   socket.on('status',(data) =>{
     const json = JSON.parse(data);
     robotState = json;
-    web_io.emit("status",data);
+    webIo.emit("status",data);
   })
 
   socket.on('disconnect', () => {
@@ -69,7 +66,7 @@ slam_io.on('connection', (socket) => {
     console.log("slamnav send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
         console.log("move state changed : ",json.result);
-        web_io.emit('move',json);
+        webIo.emit('move',json);
         moveState = json;
     }else if(json.command == "stop"){
       // moveState = null;
