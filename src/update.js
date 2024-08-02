@@ -34,6 +34,7 @@ async function updateFile(data){
             proxy:false,
             agent: http.Agent({keepAlive:true})
         });
+        
         response.data.pipe(writer);
         console.log(new Date());
 

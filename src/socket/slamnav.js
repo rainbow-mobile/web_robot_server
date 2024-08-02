@@ -6,18 +6,32 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const webIo = require('./web')
 
 const app = express();
 const server = http.createServer(app);
 const server2 = http.createServer(app);
 app.use(bodyParser.json());
 
+const web_io = socketIo(server2);
+
+// server2.listen(10334, () => {
+//   console.log('Web socket server listening on port 10334');
+// });
+
+// web_io.on('connection', (socket) => {
+//   console.log('[Mapping] Client connected');
+
+//   socket.on('disconnect', () => {
+//     console.log('[Mapping] Client disconnected');
+//   });
+// });
 
 const slam_io = socketIo(server,{
   pingTimeout: 6000 // 2분
 });
 
-const mapping_io = socketIo(server2);
+const webIO = webIo.getIO();
 
 var slamnav=null;
 var moveState = null;
@@ -27,26 +41,22 @@ server.listen(11337, () => {
   console.log('SLAM socket server listening on port 11337');
 });
 
-server2.listen(10334, () => {
-  console.log('Mapping socket server listening on port 10334');
-});
-
 slam_io.on('connection', (socket) => {
   socket.request = null;
   console.log('slam_io Client connected',socket.id);
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
-      mapping_io.emit("lidar",cloud);
+    webIO.emit("lidar",cloud);
   })
   socket.on('mapping_cloud',(cloud) =>{
-      mapping_io.emit("mapping",cloud);
+    webIO.emit("mapping",cloud);
   })
 
   socket.on('status',(data) =>{
     const json = JSON.parse(data);
     robotState = json;
-    mapping_io.emit("status",data);
+    web_io.emit("status",data);
   })
 
   socket.on('disconnect', () => {
@@ -58,24 +68,14 @@ slam_io.on('connection', (socket) => {
     const json = JSON.parse(data);
     console.log("slamnav send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
-      console.log("move state changed : ",json.result);
-        mapping_io.emit('move',json);
+        console.log("move state changed : ",json.result);
+        web_io.emit('move',json);
         moveState = json;
     }else if(json.command == "stop"){
       // moveState = null;
       console.log("move stop = null");
     }
   })
-});
-
-
-mapping_io.on('connection', (socket) => {
-  console.log('[Mapping] Client connected');
-
-
-  socket.on('disconnect', () => {
-    console.log('[Mapping] Client disconnected');
-  });
 });
 
 function stringifyAllValues(obj) {
@@ -89,7 +89,7 @@ function stringifyAllValues(obj) {
       }
     }
     return obj;
-  }
+}
 
 
 function Mapping(data){

@@ -10,7 +10,6 @@ async function startProcess(filename,path){
             if(running[filename]){
                 resolve({message:'process test already running'})
             }else{
-                console.log(path);
                 process[filename] = spawn(path);
                 process[filename].on('exit', (code) => {
                     console.log(`process[`+filename+`] exited with code ${code}`);

@@ -140,6 +140,99 @@ async function parse(dir){
     });
 }
 
+async function save(dir,data){
+    return new Promise(async(resolve, reject) =>{
+        console.log(data);
+        const text = treeToText(data);
+        console.log(text);
+        fs.writeFile(dir,text, (err) =>{
+            if (err) {
+                console.error('파일 저장 중 오류 발생:', err);
+                reject();
+              }
+              console.log("write success: ",text);
+              resolve(text);
+        })
+    });
+}
+
+const treeToText = (tree) => {
+    let text = '';
+
+    const traverse = (node, indentLevel) => {
+        let indent = '';
+        if(indentLevel == 0){
+
+        }else{
+            indent = ' '.repeat((indentLevel-1) * 4);
+        }
+
+        switch (node.label) {
+            case 'begin':
+                text += `${indent}begin\n`;
+                break;
+            case 'wait':
+                text += `${indent}wait (${node.data})\n`;
+                break;
+            case 'repeat':
+                text += `${indent}repeat (${node.data}){\n`;
+                break;
+            case 'end':
+                text += `${indent}end\n`;
+                break;
+            case 'move':
+                text += `${indent}move(${node.data})\n`;
+                break;
+            case 'if':
+                text += `${indent}if (${node.data}){\n`;
+                break;
+            case 'else if':
+                text += `${indent}else if (${node.data}){\n`;
+                break;
+            case 'else':
+                text += `${indent}else{\n`;
+                break;
+            case 'break':
+                text += `${indent}break\n`;
+                break;
+            case 'continue':
+                text += `${indent}continue\n`;
+                break;
+            case 'map':
+                text += `${indent}map\n`;
+                break;
+            case 'script':
+                const lines = node.data.split('\n');
+                const childindent = ' '.repeat((indentLevel) * 4);
+
+                text += `${indent}script{\n`;
+                // text += `${indent}script{\n${indent}${node.data}\n${indent}}\n`;
+
+                lines.forEach(line =>{
+                    text += `${childindent}${line}\n`;
+                })
+
+                text += `${indent}}\n`;
+
+                break;
+        }
+
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(child => traverse(child, indentLevel + 1));
+            if(node.label != 'root')
+                text += `${indent}}\n`;
+        }
+    };
+
+    // Start traversal from the root
+    tree.forEach(rootNode => traverse(rootNode, 0));
+
+    return text.trim();
+};
+const treeTotext = (tree) =>{
+
+}
+
 async function list(dir) {
     const files = await fs.promises.readdir(dir, { withFileTypes: true });
     let list = [];
@@ -156,5 +249,6 @@ async function list(dir) {
 
 module.exports = {
     parse:parse,
-    list:list
+    list:list,
+    save:save
 }
