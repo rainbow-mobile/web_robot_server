@@ -166,7 +166,6 @@ router.post('/map/topo/:map_name',(req,res) =>{
             });
         }else{
             filesystem.copyFile(path).then(() =>{
-                console.log("??????????????");
                 filesystem.saveFile(path,req.body).then((data) =>{
                     res.send(data);
                 }).catch((error) =>{
@@ -181,8 +180,6 @@ router.post('/map/topo/:map_name',(req,res) =>{
             });
         }
     }));
-
-
 });
 
 //현재 맵 반환
@@ -210,18 +207,42 @@ router.post('/map/current', (req, res) =>{
     });
 })
 
-router.get('/getmap/:name/:file',(req,res) =>{
-    const _path = path.join(map_path,req.params.name);
-    let filepath = path.join(_path,req.params.file);
-    filesystem.existFile(filepath,((err,fd) =>{
+
+//GOAL 목록 반환
+router.get('/map/goal/:map_name',(req,res) =>{
+    const path = getTopo(req.params.map_name);
+    console.log(req.params.map_name, path);
+    filesystem.existFile(path,((err,fd) =>{
         if(err){
-            console.error(err);
             res.sendStatus(404);
         }else{
-            res.sendFile(filepath);
+            filesystem.readJson(path).then((data) =>{
+                let goals = [];
+                data.map((node) =>{
+                    if(node.type == "GOAL"){
+                        goals.push(node.name);
+                    }
+                })
+                res.send(goals);
+            }).catch((error) =>{
+                res.status(500).send(error);
+            });
         }
     }));
-});
+})
+
+// router.get('/getmap/:name/:file',(req,res) =>{
+//     const _path = path.join(map_path,req.params.name);
+//     let filepath = path.join(_path,req.params.file);
+//     filesystem.existFile(filepath,((err,fd) =>{
+//         if(err){
+//             console.error(err);
+//             res.sendStatus(404);
+//         }else{
+//             res.sendFile(filepath);
+//         }
+//     }));
+// });
 
 const upload = multer({
     storage: multer.diskStorage({
@@ -236,30 +257,29 @@ const upload = multer({
 });
 
 
-const uploadMiddleware = upload.single('file');
-router.post('/savemap/:name/:file',uploadMiddleware, (req,res) => {
-    console.log("SAVEMAP : ",req.params.file);
-    const _path = path.join(map_path,req.params.name);
-    let filepath = path.join(_path,req.params.file);
-    console.log("??????????????????????");
-    try{
-        const pngfile = req.file;
-        if(!pngfile){
-            console.log("file empty");
-            res.sendStatus(400);
-            return;
-        }
-        res.send("success");
-    }catch(err){
-        if(err instanceof multer.MulterError){
-            console.log("multer error : ",err.code);
-            res.sendStatus(500);
-        }else{
-            console.log("errrror : ",err);
-            res.sendStatus(500);
-        }
-    }
-});
+// const uploadMiddleware = upload.single('file');
+// router.post('/savemap/:name/:file',uploadMiddleware, (req,res) => {
+//     console.log("SAVEMAP : ",req.params.file);
+//     const _path = path.join(map_path,req.params.name);
+//     let filepath = path.join(_path,req.params.file);
+//     try{
+//         const pngfile = req.file;
+//         if(!pngfile){
+//             console.log("file empty");
+//             res.sendStatus(400);
+//             return;
+//         }
+//         res.send("success");
+//     }catch(err){
+//         if(err instanceof multer.MulterError){
+//             console.log("multer error : ",err.code);
+//             res.sendStatus(500);
+//         }else{
+//             console.log("errrror : ",err);
+//             res.sendStatus(500);
+//         }
+//     }
+// });
 
 router.get('/map/list',(req,res) =>{
     filesystem.getMapTree(home_path + "/maps").then((result) =>{

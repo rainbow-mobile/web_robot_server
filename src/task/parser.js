@@ -142,7 +142,7 @@ async function parse(dir){
 
 async function save(dir,data){
     return new Promise(async(resolve, reject) =>{
-        console.log(data);
+        console.log(dir, data);
         const text = treeToText(data);
         console.log(text);
         fs.writeFile(dir,text, (err) =>{

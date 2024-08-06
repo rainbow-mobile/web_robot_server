@@ -10,8 +10,9 @@ const slam = require('../../src/socket/slamnav');
 router.use(bodyParser.json());
 router.use(cors());
 
+//need update
 router.get("/motor/init",(req,res) =>{
-    res.send(store.getState());
+    res.send('not updated yet');
 });
 
 router.post('/localization',(req,res) =>{

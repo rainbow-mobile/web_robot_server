@@ -172,9 +172,7 @@ async function saveJson(filepath, jsondata){
                     });
                 }
                 console.log("write success: ",stringifiedObj);
-                resolve({
-                    result: "success"
-                });
+                resolve(jsondata);
             });
         }catch(error){
             console.error(error);
@@ -250,7 +248,7 @@ async function makeTempPreset(filepath){
                 reject();
               }
               console.log("write success: ",stringifiedObj);
-              resolve(stringifiedObj);
+              resolve(tempdata);
             });
         }catch(error){
             console.error(error);

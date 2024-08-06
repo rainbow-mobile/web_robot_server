@@ -25,6 +25,7 @@ router.get('/network/current',(req,res) =>{
         res.sendStatus(500);
     })
 })
+
 router.get('/network/wifi/list',(req,res) =>{
     network.getWifiList().then((data) =>{
         res.send(data);
@@ -33,6 +34,7 @@ router.get('/network/wifi/list',(req,res) =>{
         res.sendStatus(500);
     })
 })
+
 router.get('/network/wifi/scan',(req,res) =>{
     network.scan().then((data) =>{
         res.send(data);
@@ -41,15 +43,20 @@ router.get('/network/wifi/scan',(req,res) =>{
         res.sendStatus(500);
     })
 })
-router.put('/network/ethernet1',(req,res)=>{
-    console.log(req.body);
-    res.send();
+
+router.put('/network/ethernet',(req,res)=>{
+    network.setIP(req.body).then((data) =>{
+        res.send(req.body);
+    }).catch((err) =>{
+        console.error(err);
+        res.sendStatus(500);
+    })
 })
 
 router.put('/network/wifi',(req,res) =>{
     console.log("============ Network Wifi SET");
-    network.setWifi(req.body).then((data)=>{
-        res.send(data);
+    network.setIP(req.body).then((data)=>{
+        res.send(req.body);
     }).catch((err) =>{
         console.error(err);
         res.sendStatus(500);
@@ -59,6 +66,7 @@ router.put('/network/wifi',(req,res) =>{
 router.post('/network/wifi',(req,res) =>{
     console.log("============ Network Wifi Change");
     network.connectWifi(req.body).then((data)=>{
+        console.log("result",data);
         res.send(data);
     }).catch((err) =>{
         console.error(err);
@@ -66,14 +74,14 @@ router.post('/network/wifi',(req,res) =>{
     })
 })
 
-router.post('/network/wifi/security',(req,res) =>{
-    console.log("============ Network Wifi(PASSWORD) Change");
-    network.connectWifi(req.body).then((data)=>{
-        res.send(data);
-    }).catch((err) =>{
-        console.error(err);
-        res.sendStatus(500);
-    })
-})
+// router.post('/network/wifi/security',(req,res) =>{
+//     console.log("============ Network Wifi(PASSWORD) Change");
+//     network.connectWifi(req.body).then((data)=>{
+//         res.send(data);
+//     }).catch((err) =>{
+//         console.error(err);
+//         res.sendStatus(500);
+//     })
+// })
 
 module.exports = router;

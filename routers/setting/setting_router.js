@@ -97,7 +97,7 @@ router.post('/setting',async(req,res) =>{
     })
 })
 
-router.get('/setting/preset/list',(req,res) =>{
+router.get('/setting/preset',(req,res) =>{
     filesystem.getPresetList().then((data) =>{
         res.send(data);
     }).catch((error) =>{
@@ -114,7 +114,7 @@ router.delete('/setting/preset/:id',async(req,res) =>{
         const config_path = path.join("/home","rainbow",filename);
         filesystem.deleteFile(config_path).then(() =>{
             filesystem.getPresetList().then((data) =>{
-                res.send({...data, name:filename});
+                res.send(data);
             }).catch((error) =>{
                 res.send({...error, name:filename});
             })
@@ -122,7 +122,6 @@ router.delete('/setting/preset/:id',async(req,res) =>{
             console.log(err);
             res.send({...err, name:filename});
         })
-
     }
 })
 
@@ -141,7 +140,7 @@ router.get('/setting/preset/:id',async(req,res) =>{
     }
 });
 
-router.get('/setting/preset/add/:id', (req,res) =>{
+router.get('/setting/preset/temp/:id', (req,res) =>{
     if(req.params.id == null || req.params.id == undefined){
         res.status(400).send();
     }else{
@@ -156,7 +155,7 @@ router.get('/setting/preset/add/:id', (req,res) =>{
     }
 })
 
-router.post('/setting/preset/add/:id', (req,res) =>{
+router.post('/setting/preset/:id', (req,res) =>{
     if(req.params.id == null || req.params.id == undefined){
         res.status(400).send();
     }else{
@@ -171,18 +170,4 @@ router.post('/setting/preset/add/:id', (req,res) =>{
     }
 })
 
-router.post('/setting/preset/:id',async(req,res) =>{
-    if(req.params.id == null || req.params.id == undefined){
-        res.status(400).send();
-    }else{
-        const filename = "preset_"+req.params.id+".json";
-        const config_path = path.join("/home","rainbow",filename);
-        filesystem.saveJson(config_path,req.body).then(async(data) =>{
-            res.send(data);
-        }).catch((error) =>{
-            console.error(error);
-            res.status(500).send(error);
-        });
-    }
-});
 module.exports = router;

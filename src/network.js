@@ -198,8 +198,46 @@ async function getCurrentWifi(){
         }
     });
 }
-async function setEthernet(info){
 
+
+async function setIP(info){
+    return new Promise(async(resolve, reject) =>{
+        try{
+            console.log("setIP !!",info.name);
+
+            let dns_str = '\"';
+            for(var i=0; i<info.dns.length; i++){
+                dns_str += info.dns[i] + " ";
+            }
+            dns_str += "\"";
+            const cmd = "nmcli con modify '" + info.name +
+                "' ipv4.addresses " + info.ip + "/" + info.subnet +
+                " ipv4.gateway " + info.gateway +
+                " ipv4.dns " + dns_str +
+                " ipv4.method manual";
+            exec(cmd, async(err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Error: ${err}`);
+                    reject();
+                }else{
+                    console.log(stdout);
+                    exec('nmcli con down "'+info.name+'" && nmcli con up "'+info.name+'"', async(err,stdout,stderr) =>{
+                        if (err) {
+                            console.error(`Error: ${err}`);
+                            reject();
+                        }else{
+                            console.log(stdout);
+                            resolve(stdout);
+                        }
+                    })
+                    // resolve(stdout);
+                }
+            });
+        }catch(error){
+            console.error("setEthernet Error : ", error);
+            reject(error);
+        }
+    })
 }
 
 async function setWifi(info){
@@ -235,7 +273,6 @@ async function setWifi(info){
                             resolve(stdout);
                         }
                     })
-                    // resolve(stdout);
                 }
             });
         }catch(error){
@@ -249,24 +286,45 @@ async function setWifi(info){
 async function connectWifi(info){
     return new Promise(async(resolve, reject) =>{
         try{
-            console.log("connectWifi!!",info.ssid);
-            if(info.password == undefined){
-
-                exec('nmcli dev wifi connect '+info.ssid, async(err, stdout, stderr) => {
-                    if (err) {
-                        console.error(`Error: ${err}`);
-                        reject();
+            let cmd_line;
+            console.log("connectWifi!!",info.ssid, info.password);
+            if(info.password == undefined || info.password == ''){
+                cmd_line = 'echo "rainbow" | sudo -S nmcli dev wifi connect "'+info.ssid+'"';
+            }else{
+                cmd_line = 'echo "rainbow" | sudo -S nmcli dev wifi connect "'+info.ssid+'" password "'+info.password+'"';
+            }
+            console.log(cmd_line);
+            exec(cmd_line, async(err, stdout, stderr) => {
+                if (err) {
+                    console.log(err);
+                    if(err.toString().includes('Secrets were required')){
+                        resolve({...info, result: 'fail', message: 'Secrets were required, but not provided'})
+                    }else if(err.toString().includes('property is invalid')){
+                        resolve({...info, result: 'fail', message: 'Secrets were required, but not invalid'})
                     }else{
-                        console.log(stdout);
+                        resolve(err);
+                    }
+                }else{
+                    console.log(stdout);
+                    if(stdout.includes('successfully')){
+                        resolve({...info, result: 'success'})
+                    }else if(stdout.includes('Secrets were required')){
+                        resolve({...info, result: 'fail', message: 'Secrets were required, but not provided'})
+                    }else if(stdout.includes('property is invalid')){
+                        resolve({...info, result: 'fail', message: 'Secrets were required, but not invalid'})
+                    }else{
                         resolve(stdout);
                     }
-                });
-            }else{
-                console.log("hello?");
-            }
+                }
+            });
         }catch(error){
-            console.error(error);
-            reject();
+            if(error.toString().includes('Secrets were required')){
+                resolve({...info, result: 'fail', message: 'Secrets were required, but not provided'})
+            }else if(stdout.toString().includes('property is invalid')){
+                resolve({...info, result: 'fail', message: 'Secrets were required, but not invalid'})
+            }else{
+                resolve(error);
+            }
         }
     });
 }
@@ -274,8 +332,7 @@ async function connectWifi(info){
 module.exports = {
     scan: scan,
     getWifiList:getWifiList,
-    setWifi:setWifi,
     getNetwork:getNetwork,
-    setEthernet:setEthernet,
+    setIP:setIP,
     connectWifi:connectWifi
 }
