@@ -5,7 +5,7 @@ const router = express.Router();
 const cors = require("cors");
 const bodyParser = require('body-parser');
 const store = require('../../interfaces/stateManager');
-const slam = require('../../src/socket/slamnav');
+const socket = require('../../src/socket/server');
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -18,7 +18,7 @@ router.get("/motor/init",(req,res) =>{
 router.post('/localization',(req,res) =>{
     const time = new Date().getTime();
     console.log("localization -> ",req.body);
-    slam.Localization({
+    socket.Localization({
         "command":req.body.command,
         "x":req.body.x,
         "y":req.body.y,
@@ -33,4 +33,7 @@ router.post('/localization',(req,res) =>{
     });
 })
 
+router.get("/connection",(req,res) =>{
+    res.send(socket.getConnection());
+})
 module.exports = router;

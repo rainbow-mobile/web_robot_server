@@ -10,7 +10,7 @@ const router = express.Router();
 const filesystem = require("../../src/filesystem");
 const fs = require('fs');
 const compression = require('compression')
-const slam = require('../../src/socket/slamnav');
+const socket = require('../../src/socket/server');
 
 const home_path = '/home/rainbow';
 router.use(bodyParser.json({limit: '100mb'}));
@@ -28,7 +28,7 @@ function getTopo(name){
 //매핑 시작 요청
 router.get('/mapping/start',async(req,res) =>{
     const time = new Date().getTime();
-    slam.Mapping({
+    socket.Mapping({
         "command":"start",
         "time":time
     }).then((data) =>{
@@ -43,7 +43,7 @@ router.get('/mapping/start',async(req,res) =>{
 //매핑 종료 요청
 router.get('/mapping/stop',async(req,res) =>{
     const time = new Date().getTime();
-    slam.Mapping({
+    socket.Mapping({
         "command":"stop",
         "time":time
     }).then((data) =>{
@@ -58,7 +58,7 @@ router.get('/mapping/stop',async(req,res) =>{
 //매핑 종료(저장) 요청
 router.get('/mapping/save/:name',async(req,res) =>{
     const time = new Date().getTime();
-    slam.Mapping({
+    socket.Mapping({
         "command":"save",
         "name":req.params.name,
         "time":time
@@ -73,7 +73,7 @@ router.get('/mapping/save/:name',async(req,res) =>{
 
 router.get('/mapping/reload',(req,res) =>{
     const time = new Date().getTime();
-    slam.emitCommand('mapping',{
+    socket.emitCommand('mapping',{
         "command":"reload",
         "time":time
     }).then(() =>{
@@ -195,7 +195,7 @@ router.get('/map/current', (req,res) =>{
 //현재 맵 로드
 router.post('/map/current', (req, res) =>{
     const time = new Date().getTime();
-    slam.sendCommand("mapload", {
+    socket.sendCommand("mapload", {
         "name":req.body.name,
         "time":time
     }).then((data) =>{

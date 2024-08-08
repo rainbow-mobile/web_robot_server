@@ -7,36 +7,31 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const webIo = require('./web');
-const taskIo = require('./task');
+// const taskIo = require('./task');
 
 const app = express();
-const server = http.createServer(app);
-const server2 = http.createServer(app);
 app.use(bodyParser.json());
 
-// server2.listen(10334, () => {
-//   console.log('Web socket server listening on port 10334');
-// });
+const Slamserver = http.createServer(app);
+const Taskserver = http.createServer(app);
 
-// web_io.on('connection', (socket) => {
-//   console.log('[Mapping] Client connected');
-
-//   socket.on('disconnect', () => {
-//     console.log('[Mapping] Client disconnected');
-//   });
-// });
-
-const slam_io = socketIo(server,{
+const slam_io = socketIo(Slamserver,{
   pingTimeout: 6000 // 2분
 });
-
+const task_io = socketIo(Taskserver,{
+    pingTimeout: 6000 // 2분
+});
 
 var slamnav=null;
+var taskproc=null;
 var moveState = null;
 var robotState;
 
-server.listen(11337, () => {
+Slamserver.listen(11337, () => {
   console.log('SLAM socket server listening on port 11337');
+});
+Taskserver.listen(11338, () => {
+  console.log('Task socket server listening on port 11338');
 });
 
 slam_io.on('connection', (socket) => {
@@ -58,14 +53,21 @@ slam_io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
+    if(moveState && moveState.result == "accept"){
+        moveResponse({
+            ...moveState,
+            result:'fail',
+            message:'disconnected'
+        });
+    }
     moveState = null;
-    console.log('Client disconnected');
+    console.log('Slam Client disconnected');
     slamnav = null;
   });
   
   socket.on('move',(data) =>{
     const json = JSON.parse(data);
-    // taskIo.moveResponse(json);
+    moveResponse(json);
     console.log("slamnav 1send : ",json.command, json);
     if(json.command == "target" || json.command == "goal"){
         console.log("move state changed : ",json.result);
@@ -77,6 +79,49 @@ slam_io.on('connection', (socket) => {
     }
   })
 });
+
+task_io.on('connection', (socket) =>{
+    console.log('task_io Client connected',socket.id);
+    taskproc = socket;
+  
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+      taskproc = null;
+    });
+  
+    socket.on('task_id',(data) =>{
+      console.log("task id : ", data);
+      webIo.emit("task_id",data);
+    })
+  
+    socket.on('task_start',() =>{
+        console.log("task start");
+        webIo.emit("task","start");
+    })
+  
+    socket.on('task_done',() =>{
+        console.log("task done");
+        webIo.emit("task","stop");
+    })
+    socket.on('task_error',() =>{
+        console.log("task error");
+        webIo.emit("task","error");
+    })
+  
+    socket.on('move',(data) =>{
+        const json = JSON.parse(data);
+    
+        console.log("task move command",json);
+    
+        moveCommand(json).then((data) =>{
+            console.log("move Emit : ",data);
+        }).catch((err) =>{
+            console.error("move Error : ",err);
+        })
+    })
+})
+
+
 
 function stringifyAllValues(obj) {
     for (const key in obj) {
@@ -91,6 +136,75 @@ function stringifyAllValues(obj) {
     return obj;
 }
 
+function moveResponse(data){
+    if(taskproc != null){
+      taskproc.emit("move",data);
+    }
+  }
+  
+  function loadTask(path){
+      return new Promise((resolve, reject) =>{
+        if(taskproc != null){
+          taskproc.emit("load",path);
+  
+          taskproc.on('load',(data) =>{
+              console.log('load response : ',data);
+              resolve(data);
+              clearTimeout(timeoutId);
+          })
+  
+          const timeoutId = setTimeout(() => {
+              console.log("timeout?");
+              reject();
+          }, 5000); // 5초 타임아웃
+        }else{
+          reject("disconnect");
+        }
+      })
+    }
+  
+    function runTask(){
+      return new Promise((resolve, reject) =>{
+          if(taskproc != null){
+              taskproc.emit("run");
+      
+              taskproc.on('run',(data) =>{
+                  console.log('run response : ',data);
+                  resolve(data);
+                  clearTimeout(timeoutId);
+              })
+      
+              const timeoutId = setTimeout(() => {
+                  console.log("timeout?");
+                  reject();
+              }, 5000); // 5초 타임아웃
+          }else{
+              console.log("discon?");
+              reject("disconnect");
+          }
+      })
+    }
+    function stopTask(){
+      return new Promise((resolve, reject) =>{
+          if(taskproc != null){
+              taskproc.emit("stop");
+      
+              taskproc.on('stop',(data) =>{
+                  console.log('stop response : ',data);
+                  resolve(data);
+                  clearTimeout(timeoutId);
+              })
+      
+              const timeoutId = setTimeout(() => {
+                  console.log("timeout?");
+                  reject();
+              }, 5000); // 5초 타임아웃
+          }else{
+              console.log("discon?");
+              reject("disconnect");
+          }
+      })
+    }
 
 function Mapping(data){
     return new Promise((resolve, reject) =>{
@@ -232,6 +346,13 @@ function Localization(data){
     })
 }
 
+function getConnection(){
+    return({
+        "SLAMNAV":slamnav?true:false,
+        "TASK":taskproc?true:false
+    })
+}
+
 
 module.exports={
   Mapping:Mapping,
@@ -239,5 +360,10 @@ module.exports={
   sendCommand:sendCommand,
   emitCommand:emitCommand,
   waitMove:waitMove,
-  moveCommand:moveCommand
+  moveCommand:moveCommand,
+  loadTask:loadTask,
+  runTask:runTask,
+  stopTask:stopTask,
+  moveResponse:moveResponse,
+  getConnection:getConnection
 }

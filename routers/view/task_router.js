@@ -10,17 +10,16 @@ const router = express.Router();
 const filesystem = require("../../src/filesystem");
 const fs = require('fs');
 const compression = require('compression')
-const slam = require('../../src/socket/slamnav');
+const socket = require('../../src/socket/server');
 const parser = require('../../src/task/parser');
 const home_path = '/home/rainbow';
 
-const task = require('../../src/socket/task');
 
 router.use(bodyParser.json());
 router.use(cors());
 router.use(compression())
 
-const work_path = '/home/rainbow/Downloads/script_task/map_editer/build/work';
+const work_path = '/home/rainbow/TaskMan/build/work';
 
 router.get('/task',(req,res) =>{
     parser.list(work_path).then((data) =>{
@@ -33,7 +32,7 @@ router.get('/task',(req,res) =>{
 
 router.get('/task/run',(req,res) =>{
     console.log("task runnnnnnnnn");
-    task.runTask().then((data) =>{
+    socket.runTask().then((data) =>{
         res.send(data);
     }).catch((err) =>{
         console.error("error?",err);
@@ -41,7 +40,7 @@ router.get('/task/run',(req,res) =>{
     })
 })
 router.get('/task/stop',(req,res) =>{
-    task.stopTask().then((data) =>{
+    socket.stopTask().then((data) =>{
         res.send(data);
     }).catch((err) =>{
         console.error("error?",err);
@@ -74,7 +73,7 @@ router.post('/task/:name',(req,res) =>{
 })
 
 router.get('/task/load/:name',(req,res) =>{
-    task.loadTask(path.join(work_path,req.params.name)).then((data) =>{
+    socket.loadTask(path.join(work_path,req.params.name)).then((data) =>{
         res.send(data);
     }).catch((err) =>{
         console.error(err);

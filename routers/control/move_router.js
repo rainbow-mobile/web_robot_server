@@ -5,7 +5,7 @@ const router = express.Router();
 const cors = require("cors");
 const bodyParser = require('body-parser');
 const store = require('../../interfaces/stateManager');
-const slam = require('../../src/socket/slamnav');
+const socket = require('../../src/socket/server');
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -37,7 +37,7 @@ router.post("/control/move",async(req,res) =>{
             res.status(400).send();
             return;
         }
-        slam.moveCommand({
+        socket.moveCommand({
             command:req.body.command,
             x: req.body.x,
             y: req.body.y,
@@ -64,7 +64,7 @@ router.post("/control/move",async(req,res) =>{
             res.status(400).send();
             return;
         }
-        slam.moveCommand({
+        socket.moveCommand({
             command:req.body.command,
             x: req.body.x,
             y: req.body.y,
@@ -82,7 +82,7 @@ router.post("/control/move",async(req,res) =>{
             res.send(data);
         });
     }else if(["pause","resume","stop"].includes(req.body.command)){
-        slam.sendCommand("move",{
+        socket.sendCommand("move",{
             command:req.body.command,
             x: req.body.x,
             y: req.body.y,
@@ -113,7 +113,7 @@ router.post("/control/move",async(req,res) =>{
             return;
         }
         const time = new Date().getTime();
-        slam.sendCommand("move", {
+        socket.sendCommand("move", {
             command: "jog",
             vx:req.body.vx,
             vy: req.body.vy,
@@ -131,7 +131,7 @@ router.post("/control/move",async(req,res) =>{
 
 router.get("/control/move",(req,res) =>{
     const time = new Date().getTime();
-    slam.waitMove().then((data) =>{
+    socket.waitMove().then((data) =>{
         res.send(data);
     }).catch((error) =>{
         console.error(error);

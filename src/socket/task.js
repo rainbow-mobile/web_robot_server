@@ -7,6 +7,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const webIo = require('./web')
+const slamIo = require('./slamnav')
 
 const app = express();
 app.use(bodyParser.json());
@@ -47,8 +48,27 @@ task_io.on('connection', (socket) =>{
     console.log("task error");
     webIo.emit("task","error");
   })
+
+  socket.on('move',(data) =>{
+    const json = JSON.parse(data);
+
+    console.log("task move command",json);
+    console.log("slamnavIo",slamIo);
+    console.log("webIo",webIo);
+
+    slamIo.moveCommand(json).then((data) =>{
+      console.log("move Emit : ",data);
+    }).catch((err) =>{
+      console.error("move Error : ",err);
+    })
+  })
 })
 
+function moveResponse(data){
+  if(taskproc != null){
+    taskproc.emit("move",data);
+  }
+}
 
 function loadTask(path){
     return new Promise((resolve, reject) =>{
@@ -116,5 +136,6 @@ function loadTask(path){
   module.exports={
     loadTask:loadTask,
     runTask:runTask,
-    stopTask:stopTask
+    stopTask:stopTask,
+    moveResponse:moveResponse
   }
