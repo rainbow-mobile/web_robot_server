@@ -47,8 +47,6 @@ slam_io.on('connection', (socket) => {
   })
 
   socket.on('status',(data) =>{
-    console.log(data);
-    
     const json = JSON.parse(data);
     robotState = json;
     webIo.emit("status",data);
