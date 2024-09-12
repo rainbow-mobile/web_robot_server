@@ -106,33 +106,35 @@ router.get('/map/cloud/:map_name',(req,res) =>{
 router.post('/map/cloud/:map_name',(req,res) =>{
     console.log('map cloud save', req.body);
     const path = getCloud(req.params.map_name);
-    console.log(Array.isArray(req.body));
 
-
-    //backup
-    filesystem.existFile(path,((err,fd) =>{
-        if(err){
-            filesystem.saveCsv(path,filedata).then((data) =>{
-                res.send({...data, name: req.params.map_name});
-            }).catch((error) =>{
-                res.send({...error, name: req.params.map_name});
-            });
-        }else{
-            filesystem.copyFile(path).then(() =>{
-                filesystem.saveCsv(path,filedata).then((data) =>{
+    if(Array.isArray(req.body)){
+        //backup
+        filesystem.existFile(path,((err,fd) =>{
+            if(err){
+                filesystem.saveCsv(path,req.body).then((data) =>{
                     res.send({...data, name: req.params.map_name});
                 }).catch((error) =>{
                     res.send({...error, name: req.params.map_name});
                 });
-            }).catch((error) =>{
-                filesystem.saveCsv(path,filedata).then((data) =>{
-                    res.send({...data, name: req.params.map_name});
+            }else{
+                filesystem.copyFile(path).then(() =>{
+                    filesystem.saveCsv(path,req.body).then((data) =>{
+                        res.send({...data, name: req.params.map_name});
+                    }).catch((error) =>{
+                        res.send({...error, name: req.params.map_name});
+                    });
                 }).catch((error) =>{
-                    res.send({...error, name: req.params.map_name});
+                    filesystem.saveCsv(path,req.body).then((data) =>{
+                        res.send({...data, name: req.params.map_name});
+                    }).catch((error) =>{
+                        res.send({...error, name: req.params.map_name});
+                    });
                 });
-            });
-        }
-    }));
+            }
+        }));
+    }else{
+        res.sendStatus(400);
+    }
 });
 
 //맵 topo.json 요청
