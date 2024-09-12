@@ -106,7 +106,8 @@ router.get('/map/cloud/:map_name',(req,res) =>{
 router.post('/map/cloud/:map_name',(req,res) =>{
     console.log('map cloud save', req.body);
     const path = getCloud(req.params.map_name);
-    const filedata = JSON.parse(req.body);
+    console.log(Array.isArray(req.body));
+
 
     //backup
     filesystem.existFile(path,((err,fd) =>{
