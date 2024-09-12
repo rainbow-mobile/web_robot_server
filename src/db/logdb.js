@@ -80,6 +80,8 @@ async function updateState(state){
         console.error("updateState Error : ", error);
     }
 }
+
+//********************** 240912 motor[1]current 필히!!!!! 수정할 것 !!!!!!! */
 async function updatePower(state){
     try{
         var sql = "INSERT power (battery_in, battery_out, battery_current, power, total_power, motor0_temp, motor0_current, motor0_status, motor1_temp, motor1_current, motor1_status) values (";
@@ -92,7 +94,7 @@ async function updatePower(state){
         sql += ", '"+state.motor[0].current+"'";
         sql += ", '"+state.motor[0].status+"'";
         sql += ", '"+state.motor[1].temp+"'";
-        sql += ", '"+state.motor[1].current+"'";
+        sql += ", '"+state.motor[0].current+"'";
         sql += ", '"+state.motor[1].status+"');";
 
         // console.log("updatePower Querry: ", sql);
