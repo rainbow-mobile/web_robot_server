@@ -9,7 +9,7 @@ const update = require('../../src/update.js');
 const os = require('os');
 const process = require('../../process/runTest.js');
 const spath = require('../../setting.json');
-const db = require('../../src/version.js');
+const db = require('../../src/db/version.js');
 
 router.use(bodyParser.json());
 router.use(cors());

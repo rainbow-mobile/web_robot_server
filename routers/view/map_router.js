@@ -156,30 +156,34 @@ router.post('/map/topo/:map_name',(req,res) =>{
     console.log('map topo post');
     const path = getTopo(req.params.map_name);
 
-    //backup
-    filesystem.existFile(path,((err,fd) =>{
-        if(err){
-            filesystem.saveFile(path,req.body).then((data) =>{
-                res.send(data);
-            }).catch((error) =>{
-                res.status(500).send(error);
-            });
-        }else{
-            filesystem.copyFile(path).then(() =>{
+    if(req.body.length > 0){
+        //backup
+        filesystem.existFile(path,((err,fd) =>{
+            if(err){
                 filesystem.saveFile(path,req.body).then((data) =>{
                     res.send(data);
                 }).catch((error) =>{
                     res.status(500).send(error);
                 });
-            }).catch((error) =>{
-                filesystem.saveFile(path,req.body).then((data) =>{
-                    res.send(data);
+            }else{
+                filesystem.copyFile(path).then(() =>{
+                    filesystem.saveFile(path,req.body).then((data) =>{
+                        res.send(data);
+                    }).catch((error) =>{
+                        res.status(500).send(error);
+                    });
                 }).catch((error) =>{
-                    res.status(500).send(error);
+                    filesystem.saveFile(path,req.body).then((data) =>{
+                        res.send(data);
+                    }).catch((error) =>{
+                        res.status(500).send(error);
+                    });
                 });
-            });
-        }
-    }));
+            }
+        }));
+    }else{
+        res.sendStatus(400);
+    }
 });
 
 //현재 맵 반환

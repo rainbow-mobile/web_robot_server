@@ -21,10 +21,12 @@ const router_file = require("../routers/setting/file_router")
 const router_update = require("../routers/setting/update_router")
 const router_status = require("../routers/view/status_router");
 const router_network = require('../routers/setting/network_router')
+const router_state = require('../routers/setting/state_router');
 
 const router_init = require('../routers/control/init_router')
 const router_move = require('../routers/control/move_router')
 const router_task = require('../routers/view/task_router')
+const router_view = require('../routers/view/init_router')
 
 app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({limit: '10mb', extended: false}));
@@ -34,9 +36,11 @@ app.use("/",router_setting);
 app.use("/",router_update);
 app.use("/",router_status);
 app.use("/",router_network);
+app.use("/",router_view);
 app.use("/",router_init);
 app.use("/",router_move);
 app.use("/",router_task);
+app.use("/",router_state);
 app.use(express.static('/home/rainbow/RB_MOBILE'));
 app.use(express.static(path.join(__dirname,"maps")));
 app.use(cors());
@@ -51,23 +55,23 @@ app.listen(port, function(){
     console.log('listening on '+port);
 });
 
-app.get('/', (req, res) => {
-    // PrimeReact 컴포넌트를 포함한 React 애플리케이션을 서버 측에서 렌더링
-    const appHtml = ReactDOMServer.renderToString(
-        // React.createElement(PrimeComponent)
-    );
+// app.get('/', (req, res) => {
+//     // PrimeReact 컴포넌트를 포함한 React 애플리케이션을 서버 측에서 렌더링
+//     const appHtml = ReactDOMServer.renderToString(
+//         // React.createElement(PrimeComponent)
+//     );
 
-    // 서버에서 생성된 HTML을 클라이언트에 전송
-    res.send(`
-        <html>
-            <head>
-                <title>MobileServer</title>
-                <link rel="stylesheet" type="text/css" href="/styles.css">
-            </head>
-            <body>
-                <div id="app">${appHtml}</div>
-                <script src="/client.js"></script>
-            </body>
-        </html>
-    `);
-});
+//     // 서버에서 생성된 HTML을 클라이언트에 전송
+//     res.send(`
+//         <html>
+//             <head>
+//                 <title>MobileServer</title>
+//                 <link rel="stylesheet" type="text/css" href="/styles.css">
+//             </head>
+//             <body>
+//                 <div id="app">${appHtml}</div>
+//                 <script src="/client.js"></script>
+//             </body>
+//         </html>
+//     `);
+// });

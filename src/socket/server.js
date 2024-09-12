@@ -6,7 +6,9 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const webIo = require('./web');
+const logDB = require('../../src/db/logdb');
+const schedule = require('node-schedule');
+// const webIo = require('./web');
 // const taskIo = require('./task');
 
 const app = express();
@@ -14,6 +16,7 @@ app.use(bodyParser.json());
 
 const Slamserver = http.createServer(app);
 const Taskserver = http.createServer(app);
+const Webserver = http.createServer(app);
 
 const slam_io = socketIo(Slamserver,{
   pingTimeout: 6000 // 2분
@@ -21,35 +24,77 @@ const slam_io = socketIo(Slamserver,{
 const task_io = socketIo(Taskserver,{
     pingTimeout: 6000 // 2분
 });
+const web_io = socketIo(Webserver,{
+    pingTimeout: 6000 // 2분
+});
 
 var slamnav=null;
 var taskproc=null;
+var web=null;
 var moveState = null;
-var robotState;
+var taskState = {
+  file:'',
+  running:false,
+  id:0
+};
+let robotState;
 
 Slamserver.listen(11337, () => {
-  console.log('SLAM socket server listening on port 11337');
+  console.log('Slamserver listening on port 11337');
 });
 Taskserver.listen(11338, () => {
-  console.log('Task socket server listening on port 11338');
+  console.log('Taskserver listening on port 11338');
+});
+Webserver.listen(10334, () => {
+  console.log('Webserver listening on port 10334');
 });
 
+////**********************************Webserver */
+web_io.on('connection', (socket) => {
+  console.log('Webserver Client connected : ',socket.id);
+
+  web = socket;
+  socket.on('disconnect', () => {
+    console.log('Webserver Client disconnected : ',socket.id);
+  });
+
+  socket.on('init',() =>{
+    web_io.emit("init", {slam:robotState,move:moveState,task:taskState});
+  });
+});
+
+////**********************************Slamserver */
 slam_io.on('connection', (socket) => {
   socket.request = null;
-  console.log('slam_io Client connected',socket.id);
+  console.log('Slamserver Client connected : ',socket.id);
   slamnav = socket;
 
   socket.on('lidar_cloud',(cloud) =>{
-    webIo.emit("lidar",cloud);
+    web_io.emit("lidar",cloud);
   })
+
   socket.on('mapping_cloud',(cloud) =>{
-    webIo.emit("mapping",cloud);
+    web_io.emit("mapping",cloud);
   })
 
   socket.on('status',(data) =>{
-    const json = JSON.parse(data);
+    let json = JSON.parse(data);
     robotState = json;
-    webIo.emit("status",data);
+    web_io.emit("status",data);
+  })
+
+  socket.on('move',(data) =>{
+    const json = JSON.parse(data);
+    moveResponse(json);
+    console.log("slamnav 1send : ",json.command, json);
+    if(json.command == "target" || json.command == "goal"){
+        console.log("move state changed : ",json.result);
+        web_io.emit('move',json);
+        moveState = json;
+    }else if(json.command == "stop"){
+      // moveState = null;
+      console.log("move stop = null");
+    }
   })
 
   socket.on('disconnect', () => {
@@ -60,61 +105,73 @@ slam_io.on('connection', (socket) => {
             message:'disconnected'
         });
     }
+    if(taskState.running){
+      stopTask();
+      web_io.emit("task_error","disconnected");
+    }
+    taskState.running = false;
     moveState = null;
-    console.log('Slam Client disconnected');
+    console.log('Slamserver Client disconnected : ',socket.id);
     slamnav = null;
   });
   
-  socket.on('move',(data) =>{
-    const json = JSON.parse(data);
-    moveResponse(json);
-    console.log("slamnav 1send : ",json.command, json);
-    if(json.command == "target" || json.command == "goal"){
-        console.log("move state changed : ",json.result);
-        webIo.emit('move',json);
-        moveState = json;
-    }else if(json.command == "stop"){
-      // moveState = null;
-      console.log("move stop = null");
-    }
-  })
 });
 
+//10초마다 DB에 state 저장
+setInterval(() => {
+  if(slamnav){
+    logDB.updateState(robotState);
+    logDB.updatePower(robotState);
+  }
+}, 10000); // 10초 간격
+
+// 12시간 지난 데이터 삭제
+schedule.scheduleJob('0 * * * *', () => {
+  logDB.deleteOld();
+});
+
+
+////**********************************Taskserver */
 task_io.on('connection', (socket) =>{
-    console.log('task_io Client connected',socket.id);
+    console.log('Taskserver Client connected : ',socket.id);
     taskproc = socket;
   
     socket.on('disconnect', () => {
-      console.log('Client disconnected');
+      console.log('Taskserver Client disconnected : ',socket.id);
       taskproc = null;
     });
   
     socket.on('task_id',(data) =>{
       console.log("task id : ", data);
-      webIo.emit("task_id",data);
+      taskState.id = data;
+      web_io.emit("task_id",data);
     })
   
-    socket.on('task_start',() =>{
-        console.log("task start");
-        webIo.emit("task","start");
+    socket.on('task_start',(data) =>{
+        console.log("task start",data);
+        taskState.running = true;
+        web_io.emit("task_start",data);
     })
   
-    socket.on('task_done',() =>{
+    socket.on('task_done',(data) =>{
         console.log("task done");
-        webIo.emit("task","stop");
+        taskState.running = null;
+        taskState.id = 0;
+        web_io.emit("task_done",data);
     })
-    socket.on('task_error',() =>{
+
+    socket.on('task_error',(data) =>{
         console.log("task error");
-        webIo.emit("task","error");
+        taskState.running = null;
+        web_io.emit("task_error",data);
     })
   
     socket.on('move',(data) =>{
         const json = JSON.parse(data);
-    
         console.log("task move command",json);
-    
         moveCommand(json).then((data) =>{
             console.log("move Emit : ",data);
+            // web_io.emit("task", "")
         }).catch((err) =>{
             console.error("move Error : ",err);
         })
@@ -142,15 +199,45 @@ function moveResponse(data){
     }
   }
   
+  function getTaskFile(){
+    return new Promise((resolve, reject) =>{
+      if(taskproc != null){
+        taskproc.emit("file");
+
+        taskproc.on('file',(data) =>{
+            console.log('task file response : ',data);
+            taskState.file = data.file;
+            taskState.id = data.id;
+            taskState.running = data.running;
+            resolve(data);
+            clearTimeout(timeoutId);
+        })
+
+        const timeoutId = setTimeout(() => {
+            console.log("timeout?");
+            reject();
+        }, 5000); // 5초 타임아웃
+      }else{
+        reject("disconnect");
+      }
+    })
+  }
+
+
   function loadTask(path){
       return new Promise((resolve, reject) =>{
         if(taskproc != null){
           taskproc.emit("load",path);
   
           taskproc.on('load',(data) =>{
-              console.log('load response : ',data);
+            if(data.result == 'success'){
+              console.log('load task : success',data);
+              taskState.file = data.file;
               resolve(data);
-              clearTimeout(timeoutId);
+            }else{
+              reject(data);
+            }
+            clearTimeout(timeoutId);
           })
   
           const timeoutId = setTimeout(() => {
@@ -365,5 +452,6 @@ module.exports={
   runTask:runTask,
   stopTask:stopTask,
   moveResponse:moveResponse,
+  getTaskFile:getTaskFile,
   getConnection:getConnection
 }

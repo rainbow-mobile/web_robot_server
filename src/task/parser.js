@@ -130,10 +130,10 @@ async function parse(dir){
             }else{
                 const file = fs.readFileSync(dir, 'utf-8');
         
-                console.log(file);
+                // console.log(file);
                 const result = textToTreeData(file);
         
-                console.log(result);
+                // console.log(result);
                 resolve(result);
             }
         });
@@ -144,7 +144,7 @@ async function save(dir,data){
     return new Promise(async(resolve, reject) =>{
         console.log(dir, data);
         const text = treeToText(data);
-        console.log(text);
+        // console.log(text);
         fs.writeFile(dir,text, (err) =>{
             if (err) {
                 console.error('파일 저장 중 오류 발생:', err);

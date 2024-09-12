@@ -23,7 +23,7 @@ async function updateJson(path, data){
 }
 
 async function updateFile(data){
-    const url = 'http://10.108.1.10:11335/update/' + data.program + '/' + data.new_version;
+    const url = 'http://211.188.53.173:11335/update/' + data.program + '/' + data.new_version;
     try{
         const writer = fs.createWriteStream(data.path);
         console.log(data.path, url);

@@ -16,21 +16,21 @@ const versiondb = sql.createPool({
 //     console.log("versiondb : connected");
 // });
 
+
 async function setQuery(query){
-    try {
-        return await new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
+        try {
             versiondb.query(query, (err, result) => {
                 if (err) {
                     reject({ 'error': err });
                 }
                 resolve(result);
             });
-
-        });
-    } catch (error) {
-        console.log("SetQuery Catch:",error);
-        reject({ 'error': error });
-    }
+        } catch (error) {
+            console.log("SetQuery Catch:",error);
+            reject({ 'error': error });
+        }
+    });
 }
 
 module.exports = {

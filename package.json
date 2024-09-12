@@ -26,6 +26,7 @@
     "mysql": "^2.18.1",
     "network": "^0.7.0",
     "node-ip": "^0.1.2",
+    "node-schedule": "^2.1.1",
     "node-wifi": "^2.0.16",
     "pm2": "^5.4.2",
     "primereact": "^10.6.6",

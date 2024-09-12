@@ -14,7 +14,6 @@ const socket = require('../../src/socket/server');
 const parser = require('../../src/task/parser');
 const home_path = '/home/rainbow';
 
-
 router.use(bodyParser.json());
 router.use(cors());
 router.use(compression())
@@ -26,6 +25,15 @@ router.get('/task',(req,res) =>{
         res.send(data);
     }).catch((err) =>{
         console.error(err);
+        res.send(err);
+    })
+})
+
+router.get('/task/file',(req,res) =>{
+    socket.getTaskFile().then((data) =>{
+        res.send(data);
+    }).catch((err) =>{
+        console.error("error?",err);
         res.send(err);
     })
 })
@@ -53,6 +61,7 @@ router.get('/task/pause',(req,res) =>{
     console.log("task pause");
     res.send("no function");
 })
+
 router.get('/task/:name',(req,res) =>{
     parser.parse(path.join(work_path,req.params.name)).then((data) =>{
         res.send(data);
@@ -76,7 +85,7 @@ router.get('/task/load/:name',(req,res) =>{
     socket.loadTask(path.join(work_path,req.params.name)).then((data) =>{
         res.send(data);
     }).catch((err) =>{
-        console.error(err);
+        console.error("EDDOR:",err);
         res.send(err);
     })
 })

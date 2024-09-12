@@ -4,7 +4,7 @@ const axios = require('axios');
 const network = require('network');
 const moment = require('moment')
 let mac_address;
-const _url = 'http://10.108.1.10:11335/';
+const _url = 'http://211.188.53.173:11335/';
 
 var info;
 var now_status;
