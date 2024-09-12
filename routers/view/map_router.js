@@ -133,6 +133,7 @@ router.post('/map/cloud/:map_name',(req,res) =>{
             }
         }));
     }else{
+        console.error("Map Cloud Save Failed : data is not array")
         res.sendStatus(400);
     }
 });
