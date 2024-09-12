@@ -281,7 +281,7 @@ async function readCsv(filepath, callback){
 async function saveCsv(filepath, filedata){
     return new Promise(async(resolve, reject) =>{
         try{
-            console.log("saveCsv");
+            console.log("saveCsv", filedata);
             // JSON 데이터를 CSV 파일로 변환
             const csvData = filedata.map(row => row.join(',')).join('\n');
             
