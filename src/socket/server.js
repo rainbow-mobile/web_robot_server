@@ -59,6 +59,7 @@ web_io.on('connection', (socket) => {
   });
 
   socket.on('init',() =>{
+    console.log(taskState, moveState, robotState);
     web_io.emit("init", {slam:robotState,move:moveState,task:taskState});
   });
 });
@@ -166,6 +167,13 @@ task_io.on('connection', (socket) =>{
         web_io.emit("task_error",data);
     })
   
+    socket.on('init',(data) =>{
+      console.log('task file response : ',data);
+      taskState.file = data.file;
+      taskState.id = data.id;
+      taskState.running = data.running;
+    })
+    
     socket.on('move',(data) =>{
         const json = JSON.parse(data);
         console.log("task move command",json);
