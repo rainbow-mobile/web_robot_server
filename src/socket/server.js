@@ -8,8 +8,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const logDB = require('../../src/db/logdb');
 const schedule = require('node-schedule');
-// const webIo = require('./web');
-// const taskIo = require('./task');
 
 const app = express();
 app.use(bodyParser.json());
@@ -77,6 +75,16 @@ slam_io.on('connection', (socket) => {
   socket.on('mapping_cloud',(cloud) =>{
     web_io.emit("mapping",cloud);
   })
+
+  
+  socket.on('local_path',(data) =>{
+    web_io.emit("local_path",data);
+  })
+  socket.on('global_path',(data) =>{
+    web_io.emit("global_path",data);
+  })
+
+
 
   socket.on('status',(data) =>{
     let json = JSON.parse(data);
@@ -185,8 +193,6 @@ task_io.on('connection', (socket) =>{
         })
     })
 })
-
-
 
 function stringifyAllValues(obj) {
     for (const key in obj) {

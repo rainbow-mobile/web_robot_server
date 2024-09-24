@@ -107,10 +107,10 @@ async function updatePower(state){
 async function deleteOld(){
     try{
         const sql = "DELETE FROM state WHERE time < NOW() - INTERVAL 12 HOUR";
-        console.log("deleteOld Querry: ", sql);
+        // console.log("deleteOld Querry: ", sql);
         setQuery(sql);
         const sql2 = "DELETE FROM power WHERE time < NOW() - INTERVAL 12 HOUR";
-        console.log("deleteOld Querry: ", sql2);
+        // console.log("deleteOld Querry: ", sql2);
         setQuery(sql2);
     }catch(error){
         console.error("deleteOld Error : ", error);

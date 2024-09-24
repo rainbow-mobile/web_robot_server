@@ -56,7 +56,6 @@ router.get('/task/stop',(req,res) =>{
     })
 })
 
-
 router.get('/task/pause',(req,res) =>{
     console.log("task pause");
     res.send("no function");
@@ -85,7 +84,7 @@ router.get('/task/load/:name',(req,res) =>{
     socket.loadTask(path.join(work_path,req.params.name)).then((data) =>{
         res.send(data);
     }).catch((err) =>{
-        console.error("EDDOR:",err);
+        console.error("Load Task Error :",err);
         res.send(err);
     })
 })
