@@ -15,16 +15,21 @@ const git = require("../../src/git/git.js");
 router.use(bodyParser.json());
 router.use(cors());
 
-router.get("/hi/im/yujin", (req, res) => {
-  git
-    .getFetchCommit()
-    .then((result) => {
-      res.send(result);
-    })
-    .catch((error) => {
-      res.send(error);
-    });
+router.get("/version/git/:filename", async (req, res) => {
+  console.log("git version get : ", req.params.filename);
+  const head = await git.getHeadInfo(req.params.filename);
+  const fetchHead = await git.getFetchHeadInfo(req.params.filename);
+  res.send({
+    head: { ...head, date: moment(head.date) },
+    fetchHead: { ...fetchHead, date: moment(fetchHead.date) },
+  });
 });
+
+router.get("/versions/git/:filename", async (req, res) => {
+  const data = await git.getLog(req.params.filename);
+  res.send(data.all);
+});
+
 router.get("/version/make/:filename", (req, res) => {
   if (req.params.filename != "") {
     db.makeLogTable(req.params.filename)
@@ -44,34 +49,6 @@ router.get("/version/make/:filename", (req, res) => {
 });
 
 router.get("/versions/:filename", (req, res) => {
-  if (req.params.filename != "") {
-    const sql =
-      "select * from curversion where program = '" + req.params.filename + "';";
-    db.setQuery(sql)
-      .then((result) => {
-        if (result.length > 0) {
-          console.log(result);
-          const date = moment(result[0].date);
-          const date_str = date.format("YYYY-MM-DD HH:mm:ss.SSS").toString();
-          res.send({
-            data: { ...result[0], date: date_str },
-            filename: req.params.filename,
-          });
-        } else {
-          res.send({ filename: req.params.filename });
-        }
-      })
-      .catch((error) => {
-        res.status(500).send(error);
-      });
-  } else {
-    res.status(400).send({
-      message: "params filename is missing",
-      filename: req.params.filename,
-    });
-  }
-});
-router.get("/versions/git/:filename", (req, res) => {
   if (req.params.filename != "") {
     const sql =
       "select * from curversion where program = '" + req.params.filename + "';";
@@ -280,42 +257,101 @@ router.post("/update", async (req, res) => {
 });
 
 router.get("/start/:filename", (req, res) => {
-  const exePath = path.join(spath.program_path + "/" + req.params.filename);
-  process
-    .startProcess(req.params.filename, exePath)
-    .then((message) => {
-      res.send(message);
-    })
-    .catch((err) => {
-      console.error("startProcess error : ", err);
-      res.send(err);
-    });
+  if (req.params.filename == "TaskMan") {
+    const exePath = path.join(spath.task_path + "/" + req.params.filename);
+    process
+      .startProcess(req.params.filename, exePath)
+      .then((message) => {
+        console.log(message);
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("startProcess error : ", err);
+        res.send(err);
+      });
+  } else if (req.params.filename == "MobileServer") {
+  } else if (req.params.filename == "MobileWeb") {
+  } else if (req.params.filename.includes("SLAMNAV")) {
+    const exePath = path.join(spath.slam_path + "/" + req.params.filename);
+    process
+      .startProcess(req.params.filename, exePath)
+      .then((message) => {
+        console.log(message);
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("startProcess error : ", err);
+        res.send(err);
+      });
+  } else {
+    console.error("Unknown Start Program : ", req.params.filename);
+    res.sendStatus(400);
+  }
 });
 
 router.get("/stop/:filename", (req, res) => {
-  const exePath = path.join(spath.program_path + "/" + req.params.filename);
-  process
-    .stopProcess(req.params.filename)
-    .then(() => {
-      res.send(true);
-    })
-    .catch((err) => {
-      console.log("stopProcess error : ", err);
-      res.status(500).send(err);
-    });
+  if (req.params.filename == "TaskMan") {
+    process
+      .stopProcess(req.params.filename)
+      .then((message) => {
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("stopProcess error : ", err);
+        res.send(err);
+      });
+  } else if (req.params.filename == "MobileServer") {
+  } else if (req.params.filename == "MobileWeb") {
+  } else if (req.params.filename.includes("SLAMNAV")) {
+    process
+      .stopProcess(req.params.filename)
+      .then((message) => {
+        console.log(message);
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("stopProcess error : ", err);
+        res.send(err);
+      });
+  } else {
+    console.error("Unknown Start Program : ", req.params.filename);
+    res.sendStatus(400);
+  }
 });
 
 router.get("/restart/:filename", (req, res) => {
-  const exePath = path.join(spath.program_path + "/" + req.params.filename);
-  process
-    .restartProcess(req.params.filename, exePath)
-    .then(() => {
-      res.send(true);
-    })
-    .catch((err) => {
-      console.error("restartProcess error : ", err);
-      res.status(500).send(err);
-    });
+  if (req.params.filename == "TaskMan") {
+    const exePath = path.join(spath.task_path + "/" + req.params.filename);
+    process
+      .restartProcess(req.params.filename, exePath)
+      .then((message) => {
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("restartProcess error : ", err);
+        res.send(err);
+      });
+  } else if (req.params.filename == "MobileServer") {
+    res.send();
+    console.log("HI");
+  } else if (req.params.filename == "MobileWeb") {
+  } else if (req.params.filename.includes("SLAMNAV")) {
+    const exePath = path.join(spath.slam_path + "/" + req.params.filename);
+    process
+      .restartProcess(req.params.filename, exePath)
+      .then((message) => {
+        console.log(message);
+        res.send(message);
+      })
+      .catch((err) => {
+        console.error("restartProcess error : ", err);
+        res.send(err);
+      });
+  } else {
+    console.error("Unknown Start Program : ", req.params.filename);
+    res.sendStatus(400);
+  }
 });
+const { spawn, exec } = require("child_process");
 
 module.exports = router;

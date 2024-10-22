@@ -1,4 +1,5 @@
 {
-  "program_path":"/home/rainbow/code/build-SLAMNAV2-Desktop-Release",
-  "home_path":"/home/rainbow"
+  "slam_path": "/home/rainbow/code/build-SLAMNAV2-Desktop-Release",
+  "task_path": "/home/rainbow/TaskMan/build",
+  "home_path": "/home/rainbow"
 }

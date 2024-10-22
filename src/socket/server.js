@@ -5,7 +5,9 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const express = require("express");
 const http = require("http");
+const wrtc = require("wrtc");
 const socketIo = require("socket.io");
+const socketClient = require("socket.io-client");
 const logDB = require("../../src/db/logdb");
 const schedule = require("node-schedule");
 
@@ -25,6 +27,7 @@ const task_io = socketIo(Taskserver, {
 const web_io = socketIo(Webserver, {
   pingTimeout: 6000, // 2분
 });
+const streamSocket = socketClient("http://localhost:11340");
 
 var slamnav = null;
 var taskproc = null;
@@ -47,11 +50,55 @@ Webserver.listen(10334, () => {
   console.log("Webserver listening on port 10334");
 });
 
+////*********************** Streaming Server */
+streamSocket.on("connect", () => {
+  streamSocket.emit("make-room", "testCamera");
+
+  let peerConnection;
+  const configuration = {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  };
+
+  // 피어 연결 생성
+  peerConnection = new wrtc.RTCPeerConnection(configuration);
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      streamSocket.emit("ice-candidate", event.candidate);
+    }
+  };
+
+  peerConnection.ontrack = (event) => {
+    remoteVideo.srcObject = event.streams[0]; // 원격 스트림 설정
+  };
+
+  // offer 수신
+  streamSocket.on("offer", (offer) => {
+    peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(offer));
+    peerConnection.createAnswer().then((answer) => {
+      peerConnection.setLocalDescription(answer);
+      streamSocket.emit("answer", answer);
+    });
+  });
+
+  // answer 수신
+  streamSocket.on("answer", (answer) => {
+    peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(answer));
+  });
+
+  // ICE 후보 수신
+  streamSocket.on("ice-candidate", (candidate) => {
+    peerConnection.addIceCandidate(new wrtc.RTCIceCandidate(candidate));
+  });
+});
+
 ////**********************************Webserver */
+const weblistener = new Set();
 web_io.on("connection", (socket) => {
   console.log("Webserver Client connected : ", socket.id);
 
   web = socket;
+
   socket.on("disconnect", () => {
     console.log("Webserver Client disconnected : ", socket.id);
   });
@@ -62,6 +109,7 @@ web_io.on("connection", (socket) => {
   });
 });
 
+let streamData;
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -87,6 +135,12 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
+    // console.log(web_io.socket.)
+  });
+
+  socket.on("stream", (data) => {
+    streamData = data;
+    streamSocket.emit("stream");
   });
 
   socket.on("move", (data) => {
