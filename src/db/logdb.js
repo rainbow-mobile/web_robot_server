@@ -1,5 +1,6 @@
 "use strict";
 const sql = require("mysql");
+const logger = require("../log/logger");
 
 const logdb = sql.createPool({
   host: "localhost",
@@ -26,7 +27,7 @@ async function setQuery(query) {
         resolve(result);
       });
     } catch (error) {
-      console.log("SetQuery Catch:", error);
+      logger.error("LogDB query Error : ", error);
       reject({ error: error });
     }
   });

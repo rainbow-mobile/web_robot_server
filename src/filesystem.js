@@ -109,18 +109,17 @@ async function getDirectoryTree(dir) {
 async function saveFile(filepath, filedata) {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("saveFile");
+      logger.info("Save File : " + filepath);
       // JSON 데이터를 파일로 저장
       fs.writeFile(filepath, JSON.stringify(filedata, null, 2), (err) => {
         if (err) {
-          console.error("파일 저장 중 오류 발생:", err);
+          logger.error("Save File Error : ", err);
           reject();
         }
-        console.log("write success: ", filedata);
         resolve(filedata);
       });
     } catch (error) {
-      console.error(error);
+      logger.error("Save File Error : ", error);
       reject(error);
     }
   });
@@ -162,20 +161,20 @@ async function saveJson(filepath, jsondata) {
   return new Promise(async (resolve, reject) => {
     try {
       // JSON 데이터를 파일로 저장
+      logger.info("Save Json : " + filepath);
       const stringifiedObj = stringifyAllValues(jsondata);
       fs.writeFile(filepath, JSON.stringify(stringifiedObj, null, 2), (err) => {
         if (err) {
-          console.error("파일 저장 중 오류 발생:", err);
+          logger.error("Save Json Error : ", err);
           reject({
             result: "fail",
             message: err,
           });
         }
-        console.log("write success: ", stringifiedObj);
         resolve(jsondata);
       });
     } catch (error) {
-      console.error(error);
+      logger.error("Save Json Error : ", err);
       reject({
         result: "fail",
         message: error,
@@ -187,8 +186,10 @@ async function saveJson(filepath, jsondata) {
 async function deleteFile(filepath) {
   return new Promise(async (resolve, reject) => {
     try {
+      logger.info("Delete File : " + filepath);
       fs.unlink(filepath, (err) => {
         if (err) {
+          logger.error("Delete File Error : ", error);
           reject({
             result: "fail",
             message: err,
@@ -201,7 +202,7 @@ async function deleteFile(filepath) {
         }
       });
     } catch (error) {
-      console.error(error);
+      logger.error("Delete File Error : ", error);
       reject({
         result: "fail",
         message: error,
@@ -257,8 +258,6 @@ async function makeTempPreset(filepath) {
   });
 }
 
-async function changeFilename(filepath, newpath) {}
-
 async function readCsv(filepath, callback) {
   return new Promise((resolve, reject) => {
     try {
@@ -280,14 +279,14 @@ async function readCsv(filepath, callback) {
 async function saveCsv(filepath, filedata) {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("saveCsv", filedata, Array.isArray(filedata));
+      logger.info("Save CSV : " + filepath);
       // JSON 데이터를 CSV 파일로 변환
       const csvData = filedata.map((row) => row.join(",")).join("\n");
 
       // JSON 데이터를 파일로 저장
       fs.writeFile(filepath, csvData, (err) => {
         if (err) {
-          console.error("파일 저장 중 오류 발생:", err);
+          logger.error("Save CSV Error : ", err);
           reject({
             result: "fail",
             message: err,
@@ -299,7 +298,7 @@ async function saveCsv(filepath, filedata) {
         });
       });
     } catch (error) {
-      console.error(error);
+      logger.error("Save CSV Error : ", error);
       reject({
         result: "fail",
         message: error,
@@ -322,8 +321,6 @@ module.exports = {
   getDirectoryTree: getDirectoryTree,
   readCsv: readCsv,
   makeTempPreset: makeTempPreset,
-  changeFilename,
-  changeFilename,
   deleteFile: deleteFile,
   saveJson: saveJson,
   getMapTree: getMapTree,
