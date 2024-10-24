@@ -7,8 +7,11 @@ const express = require("express");
 const http = require("http");
 const wrtc = require("wrtc");
 const socketIo = require("socket.io");
+const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
 const logDB = require("../../src/db/logdb");
+const stream = require("stream");
+const cors = require("cors");
 const schedule = require("node-schedule");
 
 const app = express();
@@ -27,7 +30,8 @@ const task_io = socketIo(Taskserver, {
 const web_io = socketIo(Webserver, {
   pingTimeout: 6000, // 2분
 });
-const streamSocket = socketClient("http://localhost:11340");
+
+const streamSocket = socketClient("http://localhost:11339");
 
 var slamnav = null;
 var taskproc = null;
@@ -39,7 +43,6 @@ var taskState = {
   id: 0,
 };
 let robotState;
-
 Slamserver.listen(11337, () => {
   console.log("Slamserver listening on port 11337");
 });
@@ -50,50 +53,7 @@ Webserver.listen(10334, () => {
   console.log("Webserver listening on port 10334");
 });
 
-////*********************** Streaming Server */
-streamSocket.on("connect", () => {
-  streamSocket.emit("make-room", "testCamera");
-
-  let peerConnection;
-  const configuration = {
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-  };
-
-  // 피어 연결 생성
-  peerConnection = new wrtc.RTCPeerConnection(configuration);
-
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      streamSocket.emit("ice-candidate", event.candidate);
-    }
-  };
-
-  peerConnection.ontrack = (event) => {
-    remoteVideo.srcObject = event.streams[0]; // 원격 스트림 설정
-  };
-
-  // offer 수신
-  streamSocket.on("offer", (offer) => {
-    peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(offer));
-    peerConnection.createAnswer().then((answer) => {
-      peerConnection.setLocalDescription(answer);
-      streamSocket.emit("answer", answer);
-    });
-  });
-
-  // answer 수신
-  streamSocket.on("answer", (answer) => {
-    peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(answer));
-  });
-
-  // ICE 후보 수신
-  streamSocket.on("ice-candidate", (candidate) => {
-    peerConnection.addIceCandidate(new wrtc.RTCIceCandidate(candidate));
-  });
-});
-
 ////**********************************Webserver */
-const weblistener = new Set();
 web_io.on("connection", (socket) => {
   console.log("Webserver Client connected : ", socket.id);
 
@@ -104,12 +64,10 @@ web_io.on("connection", (socket) => {
   });
 
   socket.on("init", () => {
-    console.log(taskState, moveState, robotState);
     web_io.emit("init", { slam: robotState, move: moveState, task: taskState });
   });
 });
 
-let streamData;
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -135,25 +93,16 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
-    // console.log(web_io.socket.)
-  });
-
-  socket.on("stream", (data) => {
-    streamData = data;
-    streamSocket.emit("stream");
   });
 
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
-    console.log("slamnav 1send : ", json.command, json);
     if (json.command == "target" || json.command == "goal") {
-      console.log("move state changed : ", json.result);
       web_io.emit("move", json);
       moveState = json;
     } else if (json.command == "stop") {
       // moveState = null;
-      console.log("move stop = null");
     }
   });
 
@@ -200,32 +149,27 @@ task_io.on("connection", (socket) => {
   });
 
   socket.on("task_id", (data) => {
-    console.log("task id : ", data);
     taskState.id = data;
     web_io.emit("task_id", data);
   });
 
   socket.on("task_start", (data) => {
-    console.log("task start", data);
     taskState.running = true;
     web_io.emit("task_start", data);
   });
 
   socket.on("task_done", (data) => {
-    console.log("task done");
     taskState.running = null;
     taskState.id = 0;
     web_io.emit("task_done", data);
   });
 
   socket.on("task_error", (data) => {
-    console.log("task error");
     taskState.running = null;
     web_io.emit("task_error", data);
   });
 
   socket.on("init", (data) => {
-    console.log("task file response : ", data);
     taskState.file = data.file;
     taskState.id = data.id;
     taskState.running = data.running;
@@ -233,7 +177,6 @@ task_io.on("connection", (socket) => {
 
   socket.on("move", (data) => {
     const json = JSON.parse(data);
-    console.log("task move command", json);
     moveCommand(json)
       .then((data) => {
         console.log("move Emit : ", data);
@@ -270,7 +213,6 @@ function getTaskFile() {
       taskproc.emit("file");
 
       taskproc.on("file", (data) => {
-        console.log("task file response : ", data);
         taskState.file = data.file;
         taskState.id = data.id;
         taskState.running = data.running;
@@ -279,7 +221,6 @@ function getTaskFile() {
       });
 
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
@@ -295,7 +236,6 @@ function loadTask(path) {
 
       taskproc.on("load", (data) => {
         if (data.result == "success") {
-          console.log("load task : success", data);
           taskState.file = data.file;
           resolve(data);
         } else {
@@ -305,7 +245,6 @@ function loadTask(path) {
       });
 
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
@@ -320,17 +259,14 @@ function runTask() {
       taskproc.emit("run");
 
       taskproc.on("run", (data) => {
-        console.log("run response : ", data);
         resolve(data);
         clearTimeout(timeoutId);
       });
 
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
-      console.log("discon?");
       reject("disconnect");
     }
   });
@@ -341,17 +277,14 @@ function stopTask() {
       taskproc.emit("stop");
 
       taskproc.on("stop", (data) => {
-        console.log("stop response : ", data);
         resolve(data);
         clearTimeout(timeoutId);
       });
 
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
-      console.log("discon?");
       reject("disconnect");
     }
   });
@@ -359,16 +292,13 @@ function stopTask() {
 
 function Mapping(data) {
   return new Promise((resolve, reject) => {
-    console.log("Mapping ddd", data);
     if (slamnav != null) {
       slamnav.emit("mapping", stringifyAllValues(data));
       slamnav.once("mapping", (data) => {
-        // console.log("response : ",data);
         resolve(data);
         clearTimeout(timeoutId);
       });
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
@@ -379,21 +309,17 @@ function Mapping(data) {
 
 function waitMove() {
   return new Promise((resolve, reject) => {
-    console.log("waitMove");
     const interval = setInterval(() => {
       if (moveState) {
         if (moveState.result == "reject") {
-          console.log("moveState reject : ", moveState);
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
         } else if (moveState.result == "fail") {
-          console.log("moveState failed : ", moveState);
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
         } else if (moveState.result == "success") {
-          console.log("moveState success : ", moveState);
           clearInterval(interval);
           resolve(moveState);
           moveState = null;
@@ -424,7 +350,6 @@ function isReadyMove() {
 
 function moveCommand(data) {
   return new Promise((resolve, reject) => {
-    console.log("moveCommand", data);
     if (slamnav != null && slamnav != undefined) {
       if (isReadyMove()) {
         slamnav.emit("move", stringifyAllValues(data));
@@ -442,15 +367,23 @@ function moveCommand(data) {
         reject({ ...data, result: "reject", message: "already moving" });
       }
     } else {
-      console.log("discon");
       reject({ ...data, result: "reject", message: "disconnected" });
+    }
+  });
+}
+
+function sendJog(cmd, data) {
+  return new Promise((resolve, reject) => {
+    if (slamnav != null) {
+      slamnav.emit(cmd, stringifyAllValues(data));
+    } else {
+      reject("disconnected");
     }
   });
 }
 
 function sendCommand(cmd, data) {
   return new Promise((resolve, reject) => {
-    console.log(cmd, data);
     if (slamnav != null) {
       slamnav.emit(cmd, stringifyAllValues(data));
       slamnav.on(cmd, (data) => {
@@ -458,11 +391,9 @@ function sendCommand(cmd, data) {
         clearTimeout(timeoutId);
       });
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
-      console.log("discon");
       reject("disconnected");
     }
   });
@@ -470,12 +401,10 @@ function sendCommand(cmd, data) {
 
 function emitCommand(cmd, data) {
   return new Promise((resolve, reject) => {
-    console.log("emit ", cmd, data);
     if (slamnav != null) {
       slamnav.emit(cmd, stringifyAllValues(data));
       resolve(data);
     } else {
-      console.log("discon");
       reject("disconnected");
     }
   });
@@ -486,17 +415,19 @@ function Localization(data) {
     if (slamnav != null) {
       slamnav.emit("localization", stringifyAllValues(data));
 
+      if (data.command == "start" || data.command == "stop") {
+        resolve({ result: "accept", command: data.command });
+        return;
+      }
       slamnav.once("localization", (data) => {
         resolve(data);
         clearTimeout(timeoutId);
       });
 
       const timeoutId = setTimeout(() => {
-        console.log("timeout?");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
-      console.log("discon");
       reject("disconnected");
     }
   });
@@ -509,6 +440,147 @@ function getConnection() {
   };
 }
 
+// let peerConnection;
+// const roomId = "testCamera";
+// ////*********************** Streaming Server */
+// streamSocket.on("connect", () => {
+//   console.log("streamSocket Connected : ", streamSocket.id);
+//   streamSocket.emit("make-room", roomId);
+
+//   const configuration = {
+//     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+//   };
+
+//   // 피어 연결 생성
+//   peerConnection = new wrtc.RTCPeerConnection(configuration);
+
+//   peerConnection.onicecandidate = (event) => {
+//     if (event.candidate) {
+//       send({
+//         event: "candidate",
+//         data: event.candidate,
+//       });
+//       // streamSocket.emit("ice-candidate", event.candidate);
+//     }
+//   };
+
+//   peerConnection.ontrack = (event) => {
+//     remoteVideo.srcObject = event.streams[0]; // 원격 스트림 설정
+//   };
+
+//   // offer 수신
+//   streamSocket.on("offer", (offer) => {
+//     console.log("Get Offer ", offer);
+//     peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(offer));
+//     peerConnection.createAnswer().then((answer) => {
+//       peerConnection.setLocalDescription(answer);
+//       streamSocket.emit("answer", answer);
+//     });
+//   });
+
+//   // answer 수신
+//   streamSocket.on("answer", (answer) => {
+//     peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(answer));
+//   });
+
+//   // ICE 후보 수신
+//   streamSocket.on("ice-candidate", (candidate) => {
+//     peerConnection.addIceCandidate(new wrtc.RTCIceCandidate(candidate));
+//   });
+//   streamSocket.on("rtc-message", async (message) => {
+//     var content = JSON.parse(message);
+//     console.log("RTCMessage : ", content);
+//     // Offer 수신 : 누군가가 오퍼를 받음
+//     if (content.event == "offer") {
+//       console.log("Receive Offer", content.data);
+//       var offer = content.data;
+//       peerConnection.setRemoteDescription(offer); //받은 Offer SDP -> 상대 피어에 대한 원격 설정으로 저장
+
+//       // sendImageAsStream(peerConnection, streamData);
+//       // await getMedia();
+//       // 상대 Peer와 공유할 미디어 트랙을 추가
+//       // peerConnection.addTrack
+//       // myStream
+//       // .getTracks()
+//       // .forEach((track) => peerConnection.addTrack(track, myStream));
+
+//       var answer = await peerConnection.createAnswer();
+
+//       //Answer로 자신의 SDP를 보냄
+//       console.log("Send Answer");
+//       send({
+//         event: "answer",
+//         data: answer,
+//       });
+
+//       //자신의 Local ICE Candidate를 Stun Server로부터 얻어와 등록-> onicecandidate 트리거 -> Candidate를 Socket에 Answer로 보냄
+//       peerConnection.setLocalDescription(answer);
+//     }
+
+//     // Answer 수신 : 오퍼를 보내고 나서 응답이 옴
+//     else if (content.event == "answer") {
+//       console.log("Receive Answer");
+//       answer = content.data;
+//       peerConnection.setRemoteDescription(answer); //받은 Offer SDP -> 상대 피어에 대한 원격 설정으로 저장
+//     }
+
+//     // Candidate 수신
+//     else if (content.event == "candidate") {
+//       console.log("Receive Candidate");
+//       peerConnection.addIceCandidate(content.data); //// Remote Description에 설정되어있는 Peer와의 연결방식을 결정
+//     }
+//   });
+
+//   // Offer를 먼저 전송하는 버튼을 클릭했을 때 실행
+//   async function createOffer() {
+//     await getMedia();
+//     // 상대 Peer와 공유할 미디어 트랙을 추가
+//     myStream
+//       .getTracks()
+//       .forEach((track) => peerConnection.addTrack(track, myStream));
+
+//     // 상대 Peer에게 보낼 SDP Offer 생성
+//     var offer = await peerConnection.createOffer();
+
+//     // 시그널링 서버로 Offer 전송
+//     await send({
+//       event: "offer",
+//       data: offer,
+//     });
+//     console.log("Send Offer");
+
+//     //자신의 Local ICE Candidate를 Stun Server로부터 얻어와 등록-> onicecandidate 트리거 -> Candidate를 Socket에 Answer로 보냄
+//     peerConnection.setLocalDescription(offer);
+//   }
+//   // Browser의 미디어 Stream을 얻어낸다.
+//   async function getMedia() {
+//     try {
+//       myStream = await navigator.mediaDevices.getUserMedia({
+//         audio: true,
+//         video: true,
+//       });
+
+//       // 화면을 받고 싶은 경우
+//       // myStream = await navigator.mediaDevices.getDisplayMedia({
+//       //   video: {
+//       //     displaySurface: "window",
+//       //   },
+//       // });
+//       myFace.srcObject = myStream;
+//     } catch (e) {
+//       console.log("미디어 스트림 에러");
+//     }
+//   }
+//   // Signaling Server에 메세지를 보내는 Function
+//   async function send(message) {
+//     const data = {
+//       roomId: roomId,
+//       ...message,
+//     };
+//     streamSocket.emit("rtc-message", JSON.stringify(data));
+//   }
+// });
+
 module.exports = {
   Mapping: Mapping,
   Localization: Localization,
@@ -519,6 +591,7 @@ module.exports = {
   loadTask: loadTask,
   runTask: runTask,
   stopTask: stopTask,
+  sendJog: sendJog,
   moveResponse: moveResponse,
   getTaskFile: getTaskFile,
   getConnection: getConnection,

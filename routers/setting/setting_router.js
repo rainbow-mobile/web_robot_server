@@ -13,11 +13,11 @@ const spath = require("../../setting.json");
 router.use(bodyParser.json());
 router.use(cors());
 
-router.get("/setting", async (req, res) => {
+router.get("/setting/:type", async (req, res) => {
   const config_path = path.join(
     spath.slam_path,
     "config",
-    "SRV",
+    req.params.type,
     "config.json"
   );
   filesystem
@@ -27,7 +27,6 @@ router.get("/setting", async (req, res) => {
       res.send(ee);
     })
     .catch((error) => {
-      console.error(error);
       res.status(500).send(error);
     });
 });
@@ -137,12 +136,12 @@ async function transformDataToJson(data) {
     return {};
   }
 }
-router.post("/setting", async (req, res) => {
+router.post("/setting/:type", async (req, res) => {
   console.log("post setting in");
   const config_path = path.join(
     spath.slam_path,
     "config",
-    "SRV",
+    req.params.type,
     "config.json"
   );
   const newbody = await transformDataToJson(req.body);
@@ -150,8 +149,6 @@ router.post("/setting", async (req, res) => {
     .saveJson(config_path, newbody)
     .then(async (data) => {
       const ee = await transformDataToUI(data);
-      console.log("/?????????????????????????");
-      console.log(ee);
       res.send(ee);
     })
     .catch((error) => {
@@ -159,9 +156,10 @@ router.post("/setting", async (req, res) => {
     });
 });
 
-router.get("/setting/preset", (req, res) => {
+router.get("/setting/preset/:type", (req, res) => {
+  const config_path = path.join(spath.slam_path, "config", req.params.type);
   filesystem
-    .getPresetList()
+    .getPresetList(config_path)
     .then((data) => {
       res.send(data);
     })
@@ -171,12 +169,17 @@ router.get("/setting/preset", (req, res) => {
     });
 });
 
-router.delete("/setting/preset/:id", async (req, res) => {
+router.delete("/setting/preset/:type/:id", async (req, res) => {
   if (req.params.id == null || req.params.id == undefined) {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
-    const config_path = path.join("/home", "rainbow", filename);
+    const config_path = path.join(
+      spath.slam_path,
+      "config",
+      req.params.type,
+      filename
+    );
     filesystem
       .deleteFile(config_path)
       .then(() => {
@@ -196,12 +199,17 @@ router.delete("/setting/preset/:id", async (req, res) => {
   }
 });
 
-router.get("/setting/preset/:id", async (req, res) => {
+router.get("/setting/preset/:type/:id", async (req, res) => {
   if (req.params.id == null || req.params.id == undefined) {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
-    const config_path = path.join("/home", "rainbow", filename);
+    const config_path = path.join(
+      spath.slam_path,
+      "config",
+      req.params.type,
+      filename
+    );
     filesystem
       .readJson(config_path)
       .then(async (data) => {
@@ -219,7 +227,12 @@ router.get("/setting/preset/temp/:id", (req, res) => {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
-    const config_path = path.join("/home", "rainbow", filename);
+    const config_path = path.join(
+      spath.slam_path,
+      "config",
+      req.params.type,
+      filename
+    );
     filesystem
       .makeTempPreset(config_path)
       .then(async (data) => {
@@ -232,12 +245,17 @@ router.get("/setting/preset/temp/:id", (req, res) => {
   }
 });
 
-router.post("/setting/preset/:id", (req, res) => {
+router.post("/setting/preset/:type/:id", (req, res) => {
   if (req.params.id == null || req.params.id == undefined) {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
-    const config_path = path.join("/home", "rainbow", filename);
+    const config_path = path.join(
+      spath.slam_path,
+      "config",
+      req.params.type,
+      filename
+    );
     filesystem
       .saveJson(config_path, req.body)
       .then(async (data) => {

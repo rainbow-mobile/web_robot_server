@@ -7,13 +7,13 @@ const { get } = require("http");
 simpleGit().clean(simpleGit.CleanOptions.FORCE);
 
 const gitMobileServer = simpleGit({
-  baseDir: os.homedir() + "/MobileServer",
+  baseDir: os.homedir() + "/wb_internal_server",
   binary: "git",
   maxConcurrentProcesses: 6,
   trimmed: false,
 });
 const gitMobileWeb = simpleGit({
-  baseDir: os.homedir() + "/MobileWeb",
+  baseDir: os.homedir() + "/wf_internal_monitor",
   binary: "git",
   maxConcurrentProcesses: 6,
   trimmed: false,

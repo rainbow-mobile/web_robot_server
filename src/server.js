@@ -29,7 +29,6 @@ const router_view = require("../routers/view/init_router");
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: false }));
-app.use("/", router_file);
 app.use("/", router_map);
 app.use("/", router_setting);
 app.use("/", router_update);
@@ -40,12 +39,9 @@ app.use("/", router_init);
 app.use("/", router_move);
 app.use("/", router_task);
 app.use("/", router_state);
-app.use(express.static("/home/rainbow/RB_MOBILE"));
+// app.use(express.static("/home/rainbow/RB_MOBILE"));
 app.use(express.static(path.join(__dirname, "maps")));
 app.use(cors());
-
-const qtServerUrl = "ws://127.0.0.1:10333"; // Qt 서버 주소
-const port1 = 10334;
 
 network.scan();
 monitor.getServerInfo();
@@ -59,23 +55,6 @@ app.get("/exit", async (req, res) => {
   process.exit(0);
 });
 
-// app.get('/', (req, res) => {
-//     // PrimeReact 컴포넌트를 포함한 React 애플리케이션을 서버 측에서 렌더링
-//     const appHtml = ReactDOMServer.renderToString(
-//         // React.createElement(PrimeComponent)
-//     );
-
-//     // 서버에서 생성된 HTML을 클라이언트에 전송
-//     res.send(`
-//         <html>
-//             <head>
-//                 <title>MobileServer</title>
-//                 <link rel="stylesheet" type="text/css" href="/styles.css">
-//             </head>
-//             <body>
-//                 <div id="app">${appHtml}</div>
-//                 <script src="/client.js"></script>
-//             </body>
-//         </html>
-//     `);
-// });
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html"); // HTML 파일의 경로를 설정
+});
