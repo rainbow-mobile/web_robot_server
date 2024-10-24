@@ -7,12 +7,13 @@ const express = require("express");
 const http = require("http");
 const wrtc = require("wrtc");
 const socketIo = require("socket.io");
-const Canvas = require("canvas");
+// const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
 const logDB = require("../../src/db/logdb");
 const stream = require("stream");
 const cors = require("cors");
 const schedule = require("node-schedule");
+const logger = require("../log/logger");
 
 const app = express();
 app.use(bodyParser.json());
@@ -43,24 +44,36 @@ var taskState = {
   id: 0,
 };
 let robotState;
+
+Slamserver.on("error", (e) => {
+  logger.error("SlamSocket Error : ", e);
+});
 Slamserver.listen(11337, () => {
-  console.log("Slamserver listening on port 11337");
+  logger.info("SlamSocket Open -> 11337");
+});
+
+Taskserver.on("error", (e) => {
+  logger.error("TaskSocket Error : ", e);
 });
 Taskserver.listen(11338, () => {
-  console.log("Taskserver listening on port 11338");
+  logger.info("TaskSocket Open -> 11338");
+});
+
+Webserver.on("error", (e) => {
+  logger.error("WebSocket Error : ", e);
 });
 Webserver.listen(10334, () => {
-  console.log("Webserver listening on port 10334");
+  logger.info("WebSocket Open -> 10334");
 });
 
 ////**********************************Webserver */
 web_io.on("connection", (socket) => {
-  console.log("Webserver Client connected : ", socket.id);
+  logger.info("WebSocket Connected : " + socket.id);
 
   web = socket;
 
   socket.on("disconnect", () => {
-    console.log("Webserver Client disconnected : ", socket.id);
+    logger.info("WebSocket Disconnected : " + socket.id);
   });
 
   socket.on("init", () => {
@@ -71,7 +84,7 @@ web_io.on("connection", (socket) => {
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
-  console.log("Slamserver Client connected : ", socket.id);
+  logger.info("SlamSocket Connected : " + socket.id);
   slamnav = socket;
 
   socket.on("lidar_cloud", (cloud) => {
@@ -107,6 +120,8 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+    logger.info("SlamSocket Disconnected : " + socket.id);
+
     if (moveState && moveState.result == "accept") {
       moveResponse({
         ...moveState,
@@ -120,7 +135,6 @@ slam_io.on("connection", (socket) => {
     }
     taskState.running = false;
     moveState = null;
-    console.log("Slamserver Client disconnected : ", socket.id);
     slamnav = null;
   });
 });
@@ -140,11 +154,11 @@ schedule.scheduleJob("0 * * * *", () => {
 
 ////**********************************Taskserver */
 task_io.on("connection", (socket) => {
-  console.log("Taskserver Client connected : ", socket.id);
+  logger.info("TaskSocket Connected : " + socket.id);
   taskproc = socket;
 
   socket.on("disconnect", () => {
-    console.log("Taskserver Client disconnected : ", socket.id);
+    logger.info("TaskSocket Disconnected : " + socket.id);
     taskproc = null;
   });
 
@@ -154,17 +168,20 @@ task_io.on("connection", (socket) => {
   });
 
   socket.on("task_start", (data) => {
+    logger.info("TaskSocket Start : " + data);
     taskState.running = true;
     web_io.emit("task_start", data);
   });
 
   socket.on("task_done", (data) => {
+    logger.info("TaskSocket Stop : " + data);
     taskState.running = null;
     taskState.id = 0;
     web_io.emit("task_done", data);
   });
 
   socket.on("task_error", (data) => {
+    logger.error("TaskSocket Error : " + data);
     taskState.running = null;
     web_io.emit("task_error", data);
   });

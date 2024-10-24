@@ -50,7 +50,7 @@ async function setQuery(query) {
         resolve(result);
       });
     } catch (error) {
-      console.log("SetQuery Catch:", error);
+      logger.error("VersionDB query Error : ", error);
       reject({ error: error });
     }
   });
