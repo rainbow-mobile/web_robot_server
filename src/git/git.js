@@ -13,7 +13,7 @@ const gitMobileServer = simpleGit({
   trimmed: false,
 });
 const gitMobileWeb = simpleGit({
-  baseDir: os.homedir() + "/wf_internal_monitor",
+  baseDir: os.homedir() + "/web_robot_ui",
   binary: "git",
   maxConcurrentProcesses: 6,
   trimmed: false,

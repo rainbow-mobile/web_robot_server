@@ -10,7 +10,7 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.File({ filename: "Log/main.log" }),
-    // new winston.transports.Console(), // 콘솔에도 출력
+    new winston.transports.Console(), // 콘솔에도 출력
   ],
 });
 
