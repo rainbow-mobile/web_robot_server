@@ -6,30 +6,38 @@ const { get } = require("http");
 
 simpleGit().clean(simpleGit.CleanOptions.FORCE);
 
-const gitMobileServer = simpleGit({
-  baseDir: os.homedir() + "/web_robot_server",
-  binary: "git",
-  maxConcurrentProcesses: 6,
-  trimmed: false,
-});
-const gitMobileWeb = simpleGit({
-  baseDir: os.homedir() + "/web_robot_ui",
-  binary: "git",
-  maxConcurrentProcesses: 6,
-  trimmed: false,
-});
-const gitTaskMan = simpleGit({
-  baseDir: os.homedir() + "/TaskMan",
-  binary: "git",
-  maxConcurrentProcesses: 6,
-  trimmed: false,
-});
-const gitSLAMNAV2 = simpleGit({
-  baseDir: os.homedir() + "/code",
-  binary: "git",
-  maxConcurrentProcesses: 6,
-  trimmed: false,
-});
+makeGit();
+async function makeGit() {
+  try {
+    const gitMobileServer = simpleGit({
+      baseDir: os.homedir() + "/web_robot_server",
+      binary: "git",
+      maxConcurrentProcesses: 6,
+      trimmed: false,
+    });
+    const gitMobileWeb = simpleGit({
+      baseDir: os.homedir() + "/web_robot_ui",
+      binary: "git",
+      maxConcurrentProcesses: 6,
+      trimmed: false,
+    });
+
+    const gitTaskMan = simpleGit({
+      baseDir: os.homedir() + "/TaskMan",
+      binary: "git",
+      maxConcurrentProcesses: 6,
+      trimmed: false,
+    });
+    const gitSLAMNAV2 = simpleGit({
+      baseDir: os.homedir() + "/code",
+      binary: "git",
+      maxConcurrentProcesses: 6,
+      trimmed: false,
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 function getGit(filename) {
   if (filename == "MobileServer") {
