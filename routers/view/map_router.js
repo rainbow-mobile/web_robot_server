@@ -10,6 +10,7 @@ const filesystem = require("../../src/filesystem");
 const fs = require("fs");
 const compression = require("compression");
 const socket = require("../../src/socket/server");
+const logger = require("../../src/log/logger");
 
 const home_path = "/home/rainbow";
 router.use(bodyParser.json({ limit: "100mb" }));
@@ -105,10 +106,12 @@ router.get("/map/cloud/:map_name", (req, res) => {
       filesystem
         .readCsv(path)
         .then((data) => {
-          console.log("data:", data);
           res.send(data);
         })
         .catch((error) => {
+          logger.error(
+            "Get Cloud " + req.params.map_name + " Error : " + error
+          );
           res.status(500).send(error);
         });
     }
@@ -117,7 +120,7 @@ router.get("/map/cloud/:map_name", (req, res) => {
 
 //맵 cloud.csv 저장
 router.post("/map/cloud/:map_name", (req, res) => {
-  console.log("map cloud save", req.body);
+  logger.info("Save Cloud " + req.params.map_name);
   const path = getCloud(req.params.map_name);
 
   if (Array.isArray(req.body)) {
@@ -130,6 +133,9 @@ router.post("/map/cloud/:map_name", (req, res) => {
             res.send({ ...data, name: req.params.map_name });
           })
           .catch((error) => {
+            logger.error(
+              "Save Cloud " + req.params.map_name + " Error : " + error
+            );
             res.send({ ...error, name: req.params.map_name });
           });
       } else {
@@ -142,6 +148,9 @@ router.post("/map/cloud/:map_name", (req, res) => {
                 res.send({ ...data, name: req.params.map_name });
               })
               .catch((error) => {
+                logger.error(
+                  "Save Cloud " + req.params.map_name + " Error : " + error
+                );
                 res.send({ ...error, name: req.params.map_name });
               });
           })
@@ -152,13 +161,18 @@ router.post("/map/cloud/:map_name", (req, res) => {
                 res.send({ ...data, name: req.params.map_name });
               })
               .catch((error) => {
+                logger.error(
+                  "Save Cloud " + req.params.map_name + " Error : " + error
+                );
                 res.send({ ...error, name: req.params.map_name });
               });
           });
       }
     });
   } else {
-    console.error("Map Cloud Save Failed : data is not array");
+    logger.error(
+      "Save Cloud " + req.params.map_name + " Error : Data is not array "
+    );
     res.sendStatus(400);
   }
 });
@@ -176,6 +190,7 @@ router.get("/map/topo/:map_name", (req, res) => {
           res.send(data);
         })
         .catch((error) => {
+          logger.error("Get Topo " + req.params.map_name + " Error : " + error);
           res.status(500).send(error);
         });
     }
@@ -184,7 +199,7 @@ router.get("/map/topo/:map_name", (req, res) => {
 
 //맵 topo.json 저장
 router.post("/map/topo/:map_name", (req, res) => {
-  console.log("map topo post");
+  logger.info("Save Topo " + req.params.map_name);
   const path = getTopo(req.params.map_name);
 
   if (req.body.length > 0) {
@@ -197,6 +212,9 @@ router.post("/map/topo/:map_name", (req, res) => {
             res.send(data);
           })
           .catch((error) => {
+            logger.error(
+              "Save Topo " + req.params.map_name + " Error : " + error
+            );
             res.status(500).send(error);
           });
       } else {
@@ -209,6 +227,9 @@ router.post("/map/topo/:map_name", (req, res) => {
                 res.send(data);
               })
               .catch((error) => {
+                logger.error(
+                  "Save Topo " + req.params.map_name + " Error : " + error
+                );
                 res.status(500).send(error);
               });
           })
@@ -219,12 +240,18 @@ router.post("/map/topo/:map_name", (req, res) => {
                 res.send(data);
               })
               .catch((error) => {
+                logger.error(
+                  "Save Topo " + req.params.map_name + " Error : " + error
+                );
                 res.status(500).send(error);
               });
           });
       }
     });
   } else {
+    logger.error(
+      "Save Topo " + req.params.map_name + " Error : Data length <= 0"
+    );
     res.sendStatus(400);
   }
 });
@@ -236,8 +263,8 @@ router.get("/map/current", (req, res) => {
     .then((data) => {
       res.send(data.setting.MAP_NAME);
     })
-    .catch((err) => {
-      console.error(err);
+    .catch((error) => {
+      logger.error("Get Current Map Error : " + error);
       res.sendStatus(500);
     });
 });
@@ -245,25 +272,25 @@ router.get("/map/current", (req, res) => {
 //현재 맵 로드
 router.post("/map/current", (req, res) => {
   const time = new Date().getTime();
+  logger.info("Load Map : " + req.body.name);
   socket
     .sendCommand("mapload", {
       name: req.body.name,
       time: time,
     })
     .then((data) => {
-      console.log("map load success : ", data);
+      logger.info("Load Map Success: " + req.body.name);
       res.send(data);
     })
-    .catch((err) => {
-      console.error(err);
-      res.send(err);
+    .catch((error) => {
+      logger.info("Load Map Error : " + error);
+      res.send(error);
     });
 });
 
 //GOAL 목록 반환
 router.get("/map/goal/:map_name", (req, res) => {
   const path = getTopo(req.params.map_name);
-  console.log(req.params.map_name, path);
   filesystem.existFile(path, (err, fd) => {
     if (err) {
       res.sendStatus(404);
@@ -280,6 +307,9 @@ router.get("/map/goal/:map_name", (req, res) => {
           res.send(goals);
         })
         .catch((error) => {
+          logger.error(
+            "Get Goal List " + req.params.map_name + " Error : " + error
+          );
           res.status(500).send(error);
         });
     }
@@ -329,6 +359,7 @@ router.get("/map/list", (req, res) => {
       res.send(result);
     })
     .catch((error) => {
+      logger.error("Get Map List Error : " + error);
       res.status(500).send();
     });
 });

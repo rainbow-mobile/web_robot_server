@@ -196,11 +196,10 @@ task_io.on("connection", (socket) => {
     const json = JSON.parse(data);
     moveCommand(json)
       .then((data) => {
-        console.log("move Emit : ", data);
         // web_io.emit("task", "")
       })
       .catch((err) => {
-        console.error("move Error : ", err);
+        logger.error("Move Error : ", err);
       });
   });
 });
