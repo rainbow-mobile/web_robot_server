@@ -9,6 +9,7 @@ const router = express.Router();
 const filesystem = require("../../src/filesystem");
 const fs = require("fs");
 const spath = require("../../setting.json");
+const logger = require("../../src/log/logger");
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -27,6 +28,7 @@ router.get("/setting/:type", async (req, res) => {
       res.send(ee);
     })
     .catch((error) => {
+      logger.error("Get Setting " + req.params.type + " Error : " + error);
       res.status(500).send(error);
     });
 });
@@ -81,7 +83,25 @@ async function transformDataToUI(data) {
         ? data.default.LIDAR_TF_B.split(",")[5]
         : 0,
     };
-    const newdata = { ...data, default: new_default };
+    const new_cam = {
+      CAM_SERIAL_NUMBER_0: data.cam.CAM_SERIAL_NUMBER_0,
+      CAM_SERIAL_NUMBER_1: data.cam.CAM_SERIAL_NUMBER_1,
+      CAM_HEIGHT_MIN: data.cam.CAM_HEIGHT_MIN,
+      CAM_HEIGHT_MAX: data.cam.CAM_HEIGHT_MAX,
+      CAM_TF_0_X: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[0] : 0,
+      CAM_TF_0_Y: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[1] : 0,
+      CAM_TF_0_Z: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[2] : 0,
+      CAM_TF_0_RX: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[3] : 0,
+      CAM_TF_0_RY: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[4] : 0,
+      CAM_TF_0_RZ: data.cam.CAM_TF_0 ? data.cam.CAM_TF_0.split(",")[5] : 0,
+      CAM_TF_1_X: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[0] : 0,
+      CAM_TF_1_Y: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[1] : 0,
+      CAM_TF_1_Z: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[2] : 0,
+      CAM_TF_1_RX: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[3] : 0,
+      CAM_TF_1_RY: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[4] : 0,
+      CAM_TF_1_RZ: data.cam.CAM_TF_1 ? data.cam.CAM_TF_1.split(",")[5] : 0,
+    };
+    const newdata = { ...data, default: new_default, cam: new_cam };
     return newdata;
   } else {
     return {};
@@ -113,6 +133,30 @@ async function transformDataToJson(data) {
       data.default.LIDAR_TF_F_RY +
       "," +
       data.default.LIDAR_TF_F_RZ;
+    const camera_tf_0 =
+      data.cam.CAM_TF_0_X +
+      "," +
+      data.cam.CAM_TF_0_Y +
+      "," +
+      data.cam.CAM_TF_0_Z +
+      "," +
+      data.cam.CAM_TF_0_RX +
+      "," +
+      data.cam.CAM_TF_0_RY +
+      "," +
+      data.cam.CAM_TF_0_RZ;
+    const camera_tf_1 =
+      data.cam.CAM_TF_1_X +
+      "," +
+      data.cam.CAM_TF_1_Y +
+      "," +
+      data.cam.CAM_TF_1_Z +
+      "," +
+      data.cam.CAM_TF_1_RX +
+      "," +
+      data.cam.CAM_TF_1_RY +
+      "," +
+      data.cam.CAM_TF_1_RZ;
 
     const new_default = {
       ROBOT_SIZE_MAX_X: data.default.ROBOT_SIZE_MAX_X,
@@ -128,16 +172,22 @@ async function transformDataToJson(data) {
       LIDAR_TF_B: lidar_tf_b,
       LIDAR_TF_F: lidar_tf_f,
     };
-    const newdata = { ...data, default: new_default };
+    const new_camera = {
+      CAM_SERIAL_NUMBER_0: data.cam.CAM_SERIAL_NUMBER_0,
+      CAM_SERIAL_NUMBER_1: data.cam.CAM_SERIAL_NUMBER_1,
+      CAM_TF_0: camera_tf_0,
+      CAM_TF_1: camera_tf_1,
+      CAM_HEIGHT_MIN: data.cam.CAM_HEIGHT_MIN,
+      CAM_HEIGHT_MAX: data.cam.CAM_HEIGHT_MAX,
+    };
+    const newdata = { ...data, default: new_default, cam: new_camera };
     return newdata;
   } else {
-    console.log("??????????????????");
-    console.log(data);
     return {};
   }
 }
 router.post("/setting/:type", async (req, res) => {
-  console.log("post setting in");
+  logger.info("Save Setting " + req.params.type);
   const config_path = path.join(
     spath.slam_path,
     "config",
@@ -152,6 +202,7 @@ router.post("/setting/:type", async (req, res) => {
       res.send(ee);
     })
     .catch((error) => {
+      logger.error("Save Setting " + req.params.type + " Error : " + error);
       res.status(500).send(error);
     });
 });
@@ -164,7 +215,9 @@ router.get("/setting/preset/:type", (req, res) => {
       res.send(data);
     })
     .catch((error) => {
-      console.error(error);
+      logger.error(
+        "Get Setting Preset List " + req.params.type + " Error : " + error
+      );
       res.status(500).send();
     });
 });
@@ -174,27 +227,30 @@ router.delete("/setting/preset/:type/:id", async (req, res) => {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
-    const config_path = path.join(
-      spath.slam_path,
-      "config",
-      req.params.type,
-      filename
-    );
+    logger.info("Delete Setting Preset " + req.params.type + " : " + filename);
+    const config_path = path.join(spath.slam_path, "config", req.params.type);
     filesystem
-      .deleteFile(config_path)
+      .deleteFile(config_path + "/" + filename)
       .then(() => {
         filesystem
-          .getPresetList()
+          .getPresetList(config_path)
           .then((data) => {
             res.send(data);
           })
           .catch((error) => {
-            res.send({ ...error, name: filename });
+            res.send({ error: error, name: filename });
           });
       })
-      .catch((err) => {
-        console.log(err);
-        res.send({ ...err, name: filename });
+      .catch((error) => {
+        logger.error(
+          "Delete Setting Preset " +
+            req.params.type +
+            " Error : " +
+            filename +
+            ", " +
+            error
+        );
+        res.send({ error: error, name: filename });
       });
   }
 });
@@ -216,7 +272,14 @@ router.get("/setting/preset/:type/:id", async (req, res) => {
         res.send(data);
       })
       .catch((error) => {
-        console.error(error);
+        logger.error(
+          "Get Setting Preset " +
+            req.params.type +
+            " Error : " +
+            filename +
+            ", " +
+            error
+        );
         res.send({ ...error, name: filename });
       });
   }
@@ -239,7 +302,9 @@ router.get("/setting/preset/temp/:id", (req, res) => {
         res.send(data);
       })
       .catch((error) => {
-        console.error(error);
+        logger.error(
+          "Get Setting Preset Temp " + " Error : " + filename + ", " + error
+        );
         res.status(500).send(error);
       });
   }
@@ -250,6 +315,7 @@ router.post("/setting/preset/:type/:id", (req, res) => {
     res.status(400).send();
   } else {
     const filename = "preset_" + req.params.id + ".json";
+    logger.info("Save Setting Preset " + req.params.type + " : " + filename);
     const config_path = path.join(
       spath.slam_path,
       "config",
@@ -262,7 +328,14 @@ router.post("/setting/preset/:type/:id", (req, res) => {
         res.send(data);
       })
       .catch((error) => {
-        console.error(error);
+        logger.error(
+          "Save Setting Preset " +
+            req.params.type +
+            " Error : " +
+            filename +
+            ", " +
+            error
+        );
         res.status(500).send(error);
       });
   }

@@ -61,7 +61,6 @@ async function getPresetList(path) {
       const nums = [];
       const files = await fs.promises.readdir(path, { withFileTypes: true });
 
-      console.log("files : ", path, files);
       for (const file of files) {
         if (!file.isDirectory()) {
           if (file.name.split(".")[0].split("_")[0] == "preset") {
@@ -77,8 +76,7 @@ async function getPresetList(path) {
       }
       resolve(nums);
     } catch (error) {
-      console.error(error);
-      reject();
+      reject(error);
     }
   });
 }
@@ -135,11 +133,9 @@ async function copyFile(filepath) {
           console.error("파일 저장 중 오류 발생:", err);
           reject();
         }
-        console.log("copy success: ");
         resolve();
       });
     } catch (error) {
-      console.error(error);
       reject(error);
     }
   });
@@ -196,7 +192,6 @@ async function deleteFile(filepath) {
             message: err,
           });
         } else {
-          console.log("delete success");
           resolve({
             result: "success",
           });
@@ -249,11 +244,9 @@ async function makeTempPreset(filepath) {
           console.error("파일 저장 중 오류 발생:", err);
           reject();
         }
-        console.log("write success: ", stringifiedObj);
         resolve(tempdata);
       });
     } catch (error) {
-      console.error(error);
       reject(error);
     }
   });
@@ -293,7 +286,6 @@ async function saveCsv(filepath, filedata) {
             message: err,
           });
         }
-        console.log("write success: ", filedata);
         resolve({
           result: "success",
         });

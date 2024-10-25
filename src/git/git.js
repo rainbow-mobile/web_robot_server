@@ -6,30 +6,36 @@ const { get } = require("http");
 
 simpleGit().clean(simpleGit.CleanOptions.FORCE);
 
+let gitMobileServer;
+let gitMobileWeb;
+let gitTaskMan;
+let gitSLAMNAV2;
 makeGit();
+
 async function makeGit() {
   try {
-    const gitMobileServer = simpleGit({
+    gitMobileServer = simpleGit({
       baseDir: os.homedir() + "/web_robot_server",
       binary: "git",
       maxConcurrentProcesses: 6,
       trimmed: false,
     });
-    const gitMobileWeb = simpleGit({
+
+    gitMobileWeb = simpleGit({
       baseDir: os.homedir() + "/web_robot_ui",
       binary: "git",
       maxConcurrentProcesses: 6,
       trimmed: false,
     });
 
-    const gitTaskMan = simpleGit({
-      baseDir: os.homedir() + "/TaskMan",
+    gitTaskMan = simpleGit({
+      baseDir: os.homedir() + "/app_taskman",
       binary: "git",
       maxConcurrentProcesses: 6,
       trimmed: false,
     });
-    const gitSLAMNAV2 = simpleGit({
-      baseDir: os.homedir() + "/code",
+    gitSLAMNAV2 = simpleGit({
+      baseDir: os.homedir() + "/app_slamnav2",
       binary: "git",
       maxConcurrentProcesses: 6,
       trimmed: false,
