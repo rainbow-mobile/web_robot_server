@@ -4,6 +4,7 @@ const axios = require("axios");
 const path = require("path");
 const csv = require("fast-csv");
 const { homedir } = require("os");
+const logger = require("./log/logger");
 
 async function getDirEntry(dir, callback) {
   fs.readdir(dir, callback);

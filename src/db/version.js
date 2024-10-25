@@ -1,5 +1,6 @@
 "use strict";
 const sql = require("mysql");
+const logger = require("./log/logger");
 
 const versiondb = sql.createPool({
   host: "localhost",
