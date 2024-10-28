@@ -105,6 +105,7 @@ slam_io.on("connection", (socket) => {
   socket.on("status", (data) => {
     let json = JSON.parse(data);
     robotState = json;
+    // console.log(json);
     web_io.emit("status", data);
   });
 
@@ -379,7 +380,6 @@ function moveCommand(data) {
           reject({ ...data, result: "reject", message: "timeout" });
         }, 5000); // 5초 타임아웃
       } else if (moveState.result == "accept") {
-        console.log(robotState.condition.auto_state);
         reject({ ...data, result: "reject", message: "already moving" });
       }
     } else {

@@ -61,7 +61,6 @@ async function getState(state) {
       } else if (state.condition.auto_state == "stop") {
         return "Ready";
       } else {
-        console.log("WHAT???????????????!!!!!!!!!!!!!!!!!!!!!!");
         return "?";
       }
     }
@@ -82,7 +81,6 @@ async function updateState(state) {
     sql += ", '" + state.condition.inlier_ratio + "'";
     sql += ", '" + state.condition.inlier_error + "');";
 
-    // console.log("updateState Querry: ", sql);
     await setQuery(sql);
   } catch (error) {
     console.error("updateState Error : ", error);
