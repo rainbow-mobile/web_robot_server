@@ -105,6 +105,7 @@ slam_io.on("connection", (socket) => {
   socket.on("status", (data) => {
     let json = JSON.parse(data);
     robotState = json;
+    // console.log(json);
     web_io.emit("status", data);
   });
 
