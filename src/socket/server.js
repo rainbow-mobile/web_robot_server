@@ -379,7 +379,6 @@ function moveCommand(data) {
           reject({ ...data, result: "reject", message: "timeout" });
         }, 5000); // 5초 타임아웃
       } else if (moveState.result == "accept") {
-        console.log(robotState.condition.auto_state);
         reject({ ...data, result: "reject", message: "already moving" });
       }
     } else {
