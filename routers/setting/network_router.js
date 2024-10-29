@@ -114,6 +114,7 @@ router.put("/network/:device", (req, res) => {
 
 router.post("/network/wifi", (req, res) => {
   try {
+    logger.info("Connect Wifi : ", req.body);
     if (
       req.body.ssid == undefined ||
       req.body.ssid == null ||
@@ -126,10 +127,11 @@ router.post("/network/wifi", (req, res) => {
     network
       .connectWifi(req.body)
       .then((data) => {
+        console.log("connectWifi then dadta : ", data);
         res.send(data);
       })
       .catch((err) => {
-        console.error(err);
+        logger.error("Connect Wifi Error : ", err);
         res.sendStatus(500);
       });
   } catch (e) {
