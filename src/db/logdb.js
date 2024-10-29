@@ -9,14 +9,6 @@ const logdb = sql.createPool({
   database: "logdb",
 });
 
-// logdb.connect((err) =>{
-//     if(err){
-//         console.error("logdb : connet error ",err);
-//         throw err;
-//     }
-//     console.log("logdb : connected");
-// });
-
 async function setQuery(query) {
   return await new Promise((resolve, reject) => {
     try {

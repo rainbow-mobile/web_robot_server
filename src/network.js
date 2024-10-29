@@ -204,7 +204,7 @@ async function setIP(info) {
       }
       dns_str += '"';
       const cmd =
-        "nmcli con modify '" +
+        "sudo nmcli con modify '" +
         info.name +
         "' ipv4.addresses " +
         info.ip +
@@ -223,9 +223,9 @@ async function setIP(info) {
           reject();
         } else {
           exec(
-            'nmcli con down "' +
+            'sudo nmcli con down "' +
               info.name +
-              '" && nmcli con up "' +
+              '"&& nmcli con up "' +
               info.name +
               '"',
             async (err, stdout, stderr) => {
@@ -260,7 +260,7 @@ async function setWifi(info) {
       dns_str += '"';
 
       const cmd =
-        "nmcli con modify " +
+        "sudo nmcli con modify " +
         info.name +
         " ipv4.addresses " +
         info.ip +
@@ -280,7 +280,10 @@ async function setWifi(info) {
           console.log(stdout);
 
           exec(
-            "nmcli con down " + info.name + " && nmcli con up " + info.name,
+            "sudo nmcli con down " +
+              info.name +
+              " && nmcli con up " +
+              info.name,
             async (err, stdout, stderr) => {
               if (err) {
                 console.error(`Error: ${err}`);
@@ -305,11 +308,11 @@ async function connectWifi(info) {
     try {
       let cmd_line;
       if (info.password == undefined || info.password == "") {
-        cmd_line =
-          'echo "rainbow" | sudo -S nmcli dev wifi connect "' + info.ssid + '"';
+        cmd_line = 'sudo -S nmcli dev wifi connect "' + info.ssid + '"';
+        // 'echo "rainbow" | sudo -S nmcli dev wifi connect "' + info.ssid + '"';
       } else {
         cmd_line =
-          'echo "rainbow" | sudo -S nmcli dev wifi connect "' +
+          'sudo -S nmcli dev wifi connect "' +
           info.ssid +
           '" password "' +
           info.password +
