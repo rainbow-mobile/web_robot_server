@@ -27,19 +27,18 @@ async function makeGit() {
       maxConcurrentProcesses: 6,
       trimmed: false,
     });
-
-    gitTaskMan = simpleGit({
-      baseDir: os.homedir() + "/app_taskman",
-      binary: "git",
-      maxConcurrentProcesses: 6,
-      trimmed: false,
-    });
-    gitSLAMNAV2 = simpleGit({
-      baseDir: os.homedir() + "/app_slamnav2",
-      binary: "git",
-      maxConcurrentProcesses: 6,
-      trimmed: false,
-    });
+    // gitTaskMan = simpleGit({
+    //   baseDir: os.homedir() + "/app_taskman",
+    //   binary: "git",
+    //   maxConcurrentProcesses: 6,
+    //   trimmed: false,
+    // });
+    // gitSLAMNAV2 = simpleGit({
+    //   baseDir: os.homedir() + "/app_slamnav2",
+    //   binary: "git",
+    //   maxConcurrentProcesses: 6,
+    //   trimmed: false,
+    // });
   } catch (e) {
     console.error(e);
   }
