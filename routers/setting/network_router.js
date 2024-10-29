@@ -61,12 +61,20 @@ router.get("/network/wifi/scan", (req, res) => {
   }
 });
 
-router.put("/network/:device", (req, res) => {
+router.put("/network/device", (req, res) => {
   try {
     if (
       req.body.name == undefined ||
       req.body.name == null ||
       req.body.name == ""
+    ) {
+      res.sendStatus(400);
+      return;
+    }
+    if (
+      req.body.device == undefined ||
+      req.body.device == null ||
+      req.body.device == ""
     ) {
       res.sendStatus(400);
       return;
@@ -96,7 +104,7 @@ router.put("/network/:device", (req, res) => {
       return;
     }
 
-    logger.info("set IP " + req.params.device + " : ", req.body);
+    logger.info("set IP " + req.body.name + " : ", req.body);
     network
       .setIP(req.body)
       .then((data) => {
