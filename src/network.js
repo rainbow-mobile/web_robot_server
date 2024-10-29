@@ -223,10 +223,10 @@ async function setIP(info) {
           reject();
         } else {
           exec(
-            'sudo nmcli con down "' +
-              info.name +
-              '"&& nmcli con up "' +
-              info.name +
+            'sudo nmcli device down "' +
+              info.device +
+              '"&& nmcli device up "' +
+              info.device +
               '"',
             async (err, stdout, stderr) => {
               if (err) {
@@ -277,13 +277,11 @@ async function setWifi(info) {
           console.error(`Error: ${err}`);
           reject();
         } else {
-          console.log(stdout);
-
           exec(
-            "sudo nmcli con down " +
-              info.name +
-              " && nmcli con up " +
-              info.name,
+            "sudo nmcli device down " +
+              info.device +
+              " && nmcli device up " +
+              info.device,
             async (err, stdout, stderr) => {
               if (err) {
                 console.error(`Error: ${err}`);
