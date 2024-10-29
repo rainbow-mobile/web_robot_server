@@ -12,17 +12,16 @@ const fs = require("fs");
 const compression = require("compression");
 const socket = require("../../src/socket/server");
 const parser = require("../../src/task/parser");
+const spath = require("../../setting.json");
 const home_path = "/home/rainbow";
 
 router.use(bodyParser.json());
 router.use(cors());
 router.use(compression());
 
-const work_path = "/home/rainbow/TaskMan/build/work";
-
 router.get("/task", (req, res) => {
   parser
-    .list(work_path)
+    .list(spath.task_path + "/work")
     .then((data) => {
       res.send(data);
     })
@@ -73,7 +72,7 @@ router.get("/task/pause", (req, res) => {
 
 router.get("/task/:name", (req, res) => {
   parser
-    .parse(path.join(work_path, req.params.name))
+    .parse(path.join(spath.task_path + "/work", req.params.name))
     .then((data) => {
       res.send(data);
     })
@@ -85,7 +84,7 @@ router.get("/task/:name", (req, res) => {
 
 router.post("/task/:name", (req, res) => {
   parser
-    .save(path.join(work_path, req.params.name), req.body)
+    .save(path.join(spath.task_path + "/work", req.params.name), req.body)
     .then((data) => {
       res.send(data);
     })
@@ -97,7 +96,7 @@ router.post("/task/:name", (req, res) => {
 
 router.get("/task/load/:name", (req, res) => {
   socket
-    .loadTask(path.join(work_path, req.params.name))
+    .loadTask(path.join(spath.task_path + "/work", req.params.name))
     .then((data) => {
       res.send(data);
     })
