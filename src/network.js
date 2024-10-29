@@ -223,11 +223,7 @@ async function setIP(info) {
           reject();
         } else {
           exec(
-            'sudo nmcli device down "' +
-              info.device +
-              '"&& nmcli device up "' +
-              info.device +
-              '"',
+            'sudo nmcli device up "' + info.device + '"',
             async (err, stdout, stderr) => {
               if (err) {
                 console.error(`Error: ${err}`);
@@ -278,10 +274,7 @@ async function setWifi(info) {
           reject();
         } else {
           exec(
-            "sudo nmcli device down " +
-              info.device +
-              " && nmcli device up " +
-              info.device,
+            "sudo nmcli device up " + info.device,
             async (err, stdout, stderr) => {
               if (err) {
                 console.error(`Error: ${err}`);
