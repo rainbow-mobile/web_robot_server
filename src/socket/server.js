@@ -394,6 +394,7 @@ function moveCommand(data) {
 function sendJog(cmd, data) {
   return new Promise((resolve, reject) => {
     if (slamnav != null) {
+      console.log("Jog send to slam : ", new Date().toLocaleTimeString());
       slamnav.emit(cmd, stringifyAllValues(data));
     } else {
       reject("disconnected");
