@@ -6,6 +6,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const store = require("../../interfaces/stateManager");
 const socket = require("../../src/socket/server");
+const logger = require("../../src/log/logger");
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -23,6 +24,8 @@ router.post("/control/move", async (req, res) => {
       return;
     }
 
+    logger.debug("move " + req.body.command);
+
     if (req.body.command == "target") {
       if (
         isNaN(Number(req.body.x)) ||
@@ -32,6 +35,7 @@ router.post("/control/move", async (req, res) => {
         isNaN(Number(req.body.preset))
       ) {
         res.status(400).send();
+        logger.error("move target Error: data null");
         return;
       }
 
@@ -51,6 +55,7 @@ router.post("/control/move", async (req, res) => {
           res.send(data);
         })
         .catch((data) => {
+          logger.error("move target Error: " + data.message);
           res.send(data);
         });
     } else if (req.body.command == "goal") {
@@ -60,6 +65,7 @@ router.post("/control/move", async (req, res) => {
         req.body.id == "" ||
         isNaN(Number(req.body.preset))
       ) {
+        logger.error("move goal Error: data null");
         res.status(400).send();
         return;
       }
@@ -80,6 +86,7 @@ router.post("/control/move", async (req, res) => {
           res.send(data);
         })
         .catch((data) => {
+          logger.error("move goal Error: " + data.message);
           res.send(data);
         });
     } else if (["pause", "resume", "stop"].includes(req.body.command)) {
@@ -99,6 +106,7 @@ router.post("/control/move", async (req, res) => {
           res.send(data);
         })
         .catch((data) => {
+          logger.error("move " + req.body.command + " Error: " + data.message);
           res.send(data);
         });
     } else if (req.body.command == "jog") {
@@ -111,7 +119,8 @@ router.post("/control/move", async (req, res) => {
         return;
       }
 
-      console.log("Jog receive : ", new Date().toLocaleTimeString());
+      // const date = new Date();
+      // console.log("Jog receive : ", `${date.toLocaleTimeString()}.${String(date.getMilliseconds()).padStart(3, '0')}`);
       socket
         .sendJog("move", {
           command: "jog",
