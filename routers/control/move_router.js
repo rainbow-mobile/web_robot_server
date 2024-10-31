@@ -110,6 +110,8 @@ router.post("/control/move", async (req, res) => {
         res.status(400).send();
         return;
       }
+
+      console.log("Jog receive : ", new Date().toLocaleTimeString());
       socket
         .sendJog("move", {
           command: "jog",
