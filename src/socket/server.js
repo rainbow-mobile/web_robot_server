@@ -32,7 +32,7 @@ const web_io = socketIo(Webserver, {
   pingTimeout: 6000, // 2분
 });
 
-const streamSocket = socketClient("http://localhost:11339");
+// const streamSocket = socketClient("http://localhost:11339");
 
 var slamnav = null;
 var taskproc = null;
@@ -77,7 +77,19 @@ web_io.on("connection", (socket) => {
   });
 
   socket.on("init", () => {
-    web_io.emit("init", { slam: robotState, move: moveState, task: taskState });
+    logger.info(
+      "WebSocket Init : " +
+        socket.id +
+        " -> " +
+        robotState +
+        moveState +
+        taskState
+    );
+    web_io.emit("init", {
+      slam: robotState,
+      move: moveState,
+      task: taskState.running,
+    });
   });
 });
 
@@ -98,20 +110,22 @@ slam_io.on("connection", (socket) => {
   socket.on("local_path", (data) => {
     web_io.emit("local_path", data);
   });
+
   socket.on("global_path", (data) => {
+    logger.debug("receive : global_path");
     web_io.emit("global_path", data);
   });
 
   socket.on("status", (data) => {
     let json = JSON.parse(data);
     robotState = json;
-    // console.log(json);
     web_io.emit("status", data);
   });
 
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
+    logger.debug("receive : move " + json.command + " -> " + json.result);
     if (json.command == "target" || json.command == "goal") {
       web_io.emit("move", json);
       moveState = json;
@@ -188,6 +202,7 @@ task_io.on("connection", (socket) => {
   });
 
   socket.on("init", (data) => {
+    logger.info("TaskSocket Init : " + data.file + ", " + data.running);
     taskState.file = data.file;
     taskState.id = data.id;
     taskState.running = data.running;
@@ -195,7 +210,7 @@ task_io.on("connection", (socket) => {
 
   socket.on("move", (data) => {
     const json = JSON.parse(data);
-    console.log("task move : ", json.command);
+    logger.debug("TaskSocket Move : " + json.command + json.id);
     moveCommand(json)
       .then((data) => {
         // web_io.emit("task", "")
@@ -371,6 +386,7 @@ function moveCommand(data) {
     if (slamnav != null && slamnav != undefined) {
       if (isReadyMove()) {
         slamnav.emit("move", stringifyAllValues(data));
+        logger.debug("moveCommand : " + stringifyAllValues(data));
 
         slamnav.once("move", (data) => {
           resolve(data);
@@ -381,11 +397,13 @@ function moveCommand(data) {
           reject({ ...data, result: "reject", message: "timeout" });
         }, 5000); // 5초 타임아웃
       } else if (moveState.result == "accept") {
+        logger.debug("moveCommand Error : moveCommand already moving");
         reject({ ...data, result: "reject", message: "already moving" });
       } else {
-        console.log("moveCommand not ready");
+        logger.error("moveCommand Error : moveCommand not ready");
       }
     } else {
+      logger.error("moveCommand Error : Slam not connected");
       reject({ ...data, result: "reject", message: "disconnected" });
     }
   });
@@ -394,16 +412,11 @@ function moveCommand(data) {
 function sendJog(cmd, data) {
   return new Promise((resolve, reject) => {
     if (slamnav != null) {
-      const date = new Date();
-      console.log(
-        "Jog to slam : ",
-        `${date.toLocaleTimeString()}.${String(date.getMilliseconds()).padStart(
-          3,
-          "0"
-        )}`
-      );
+      logger.debug("Send Jog : " + stringifyAllValues(data));
+
       slamnav.emit(cmd, stringifyAllValues(data));
     } else {
+      logger.error("Send Jog Error : Slam not connected");
       reject("disconnected");
     }
   });
@@ -413,6 +426,7 @@ function sendCommand(cmd, data) {
   return new Promise((resolve, reject) => {
     if (slamnav != null) {
       slamnav.emit(cmd, stringifyAllValues(data));
+      logger.error("Send " + cmd + " : " + stringifyAllValues(data));
       slamnav.on(cmd, (data) => {
         resolve(data);
         clearTimeout(timeoutId);
@@ -421,6 +435,7 @@ function sendCommand(cmd, data) {
         reject();
       }, 5000); // 5초 타임아웃
     } else {
+      logger.error("Send " + cmd + " Error : Slam not connected");
       reject("disconnected");
     }
   });
@@ -430,8 +445,10 @@ function emitCommand(cmd, data) {
   return new Promise((resolve, reject) => {
     if (slamnav != null) {
       slamnav.emit(cmd, stringifyAllValues(data));
+      logger.error("Emit " + cmd + " : " + stringifyAllValues(data));
       resolve(data);
     } else {
+      logger.error("Emit " + cmd + " Error : Slam not connected");
       reject("disconnected");
     }
   });
@@ -441,6 +458,7 @@ function Localization(data) {
   return new Promise((resolve, reject) => {
     if (slamnav != null) {
       slamnav.emit("localization", stringifyAllValues(data));
+      logger.debug("Localization :" + data.command);
 
       if (data.command == "start" || data.command == "stop") {
         resolve({ result: "accept", command: data.command });
@@ -455,6 +473,7 @@ function Localization(data) {
         reject();
       }, 5000); // 5초 타임아웃
     } else {
+      logger.error("Localization Error : Slam not connected");
       reject("disconnected");
     }
   });

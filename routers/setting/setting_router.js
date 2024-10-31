@@ -28,7 +28,9 @@ router.get("/setting/:type", async (req, res) => {
       res.send(ee);
     })
     .catch((error) => {
-      logger.error("Get Setting " + req.params.type + " Error : " + error);
+      logger.error(
+        "Get Setting " + req.params.type + " Error : " + config_path
+      );
       res.status(500).send(error);
     });
 });
@@ -285,7 +287,7 @@ router.get("/setting/preset/:type/:id", async (req, res) => {
   }
 });
 
-router.get("/setting/preset/temp/:id", (req, res) => {
+router.get("/setting/temp/:type/:id", (req, res) => {
   if (req.params.id == null || req.params.id == undefined) {
     res.status(400).send();
   } else {
