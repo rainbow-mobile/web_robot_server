@@ -195,6 +195,7 @@ task_io.on("connection", (socket) => {
 
   socket.on("move", (data) => {
     const json = JSON.parse(data);
+    console.log("task move : ", json.command);
     moveCommand(json)
       .then((data) => {
         // web_io.emit("task", "")
@@ -381,6 +382,8 @@ function moveCommand(data) {
         }, 5000); // 5초 타임아웃
       } else if (moveState.result == "accept") {
         reject({ ...data, result: "reject", message: "already moving" });
+      } else {
+        console.log("moveCommand not ready");
       }
     } else {
       reject({ ...data, result: "reject", message: "disconnected" });
