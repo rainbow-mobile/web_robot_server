@@ -1,5 +1,5 @@
 const moment = require("moment");
-const store = require("../../interfaces/stateManager");
+const store = require("../interfaces/stateManager");
 const filesystem = require("../filesystem");
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -9,7 +9,7 @@ const wrtc = require("wrtc");
 const socketIo = require("socket.io");
 // const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
-const logDB = require("../../src/db/logdb");
+const logDB = require("../db/logdb");
 const stream = require("stream");
 const cors = require("cors");
 const schedule = require("node-schedule");
