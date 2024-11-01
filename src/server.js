@@ -2,12 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
-const bodyParser = require("body-parser");
-const { spawn, exec } = require("child_process");
-const runProcess = require("../process/runTest");
-const monitor = require("./monitor");
 const compression = require("compression");
-const network = require("../src/network");
+const network = require("./network");
 const http = require("http");
 const app = express();
 const WebSocket = require("ws");
@@ -15,17 +11,16 @@ const morgan = require("morgan");
 const logger = require("./log/logger");
 
 //routers
-const router_map = require("../routers/view/map_router");
-const router_setting = require("../routers/setting/setting_router");
-const router_update = require("../routers/setting/update_router");
-const router_status = require("../routers/view/status_router");
-const router_network = require("../routers/setting/network_router");
-const router_state = require("../routers/setting/state_router");
+const router_map = require("./routers/map_router");
+const router_setting = require("./routers/setting_router");
+const router_update = require("./routers/update_router");
+const router_status = require("./routers/status_router");
+const router_network = require("./routers/network_router");
+const router_state = require("./routers/state_router");
 
-const router_init = require("../routers/control/init_router");
-const router_move = require("../routers/control/move_router");
-const router_task = require("../routers/view/task_router");
-const router_view = require("../routers/view/init_router");
+const router_init = require("./routers/init_router");
+const router_move = require("./routers/move_router");
+const router_task = require("./routers/task_router");
 
 const httplogStream = fs.createWriteStream("Log/HTTP.log", { flags: "a" });
 
@@ -38,12 +33,11 @@ app.use("/", router_setting);
 app.use("/", router_update);
 app.use("/", router_status);
 app.use("/", router_network);
-app.use("/", router_view);
 app.use("/", router_init);
 app.use("/", router_move);
 app.use("/", router_task);
 app.use("/", router_state);
-// app.use(express.static("/home/rainbow/RB_MOBILE"));
+
 app.use(express.static(path.join(__dirname, "maps")));
 app.use(cors());
 
