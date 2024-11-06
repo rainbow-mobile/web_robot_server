@@ -88,7 +88,7 @@ web_io.on("connection", (socket) => {
     web_io.emit("init", {
       slam: robotState,
       move: moveState,
-      task: taskState.running,
+      task: taskState,
     });
   });
 });
@@ -266,12 +266,15 @@ function loadTask(path) {
   return new Promise((resolve, reject) => {
     if (taskproc != null) {
       taskproc.emit("load", path);
+      logger.info("emit load Task : " + path);
 
       taskproc.on("load", (data) => {
         if (data.result == "success") {
           taskState.file = data.file;
+          logger.info("load Task Success : " + data.file);
           resolve(data);
         } else {
+          logger.error("load Task Failed : " + data.file);
           reject(data);
         }
         clearTimeout(timeoutId);
@@ -290,8 +293,10 @@ function runTask() {
   return new Promise((resolve, reject) => {
     if (taskproc != null) {
       taskproc.emit("run");
+      logger.info("emit run Task : " + path);
 
       taskproc.on("run", (data) => {
+        logger.info("load run Success : " + data.file);
         resolve(data);
         clearTimeout(timeoutId);
       });
@@ -308,8 +313,10 @@ function stopTask() {
   return new Promise((resolve, reject) => {
     if (taskproc != null) {
       taskproc.emit("stop");
+      logger.info("emit stop Task : " + path);
 
       taskproc.on("stop", (data) => {
+        logger.info("load stop Success : " + data.file);
         resolve(data);
         clearTimeout(timeoutId);
       });
