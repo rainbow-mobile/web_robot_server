@@ -66,23 +66,23 @@ async function transformDataToUI(data) {
       LIDAR_TF_B_RZ: data.default.LIDAR_TF_B
         ? data.default.LIDAR_TF_B.split(",")[5]
         : 0,
-      LIDAR_TF_F_X: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[0]
+      LIDAR_TF_F_X: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[0]
         : 0,
-      LIDAR_TF_F_Y: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[1]
+      LIDAR_TF_F_Y: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[1]
         : 0,
-      LIDAR_TF_F_Z: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[2]
+      LIDAR_TF_F_Z: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[2]
         : 0,
-      LIDAR_TF_F_RX: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[3]
+      LIDAR_TF_F_RX: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[3]
         : 0,
-      LIDAR_TF_F_RY: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[4]
+      LIDAR_TF_F_RY: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[4]
         : 0,
-      LIDAR_TF_F_RZ: data.default.LIDAR_TF_B
-        ? data.default.LIDAR_TF_B.split(",")[5]
+      LIDAR_TF_F_RZ: data.default.LIDAR_TF_F
+        ? data.default.LIDAR_TF_F.split(",")[5]
         : 0,
     };
     const new_cam = {
