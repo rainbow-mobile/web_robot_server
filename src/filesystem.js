@@ -214,7 +214,7 @@ async function readJson(filepath, callback) {
       const jsonData = JSON.parse(filecontent);
       resolve(jsonData);
     } catch (error) {
-      console.error(error);
+      console.error("readError : ", error);
       reject({
         result: "fail",
         message: error,
