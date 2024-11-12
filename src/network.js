@@ -14,40 +14,43 @@ var wifi_list = [];
 async function scan() {
   return new Promise(async (resolve, reject) => {
     try {
-      // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
-      wifi.scan((error, networks) => {
-        if (error) {
-          console.error(error);
-          reject();
-        } else {
-          // console.log("검색된 Wi-Fi 네트워크:");
-          // console.log(networks);
-          wifi_list2 = networks;
-          wifi_list = [];
-          for (const net of networks) {
-            var flag = false;
-            if (net.ssid != "") {
-              for (var w of wifi_list) {
-                if (w.ssid == net.ssid) {
-                  // console.log("already in ",w.ssid, w.quality, net.quality);
-                  if (w.quality > net.quality) {
-                    // console.log("pass");
-                    flag = true;
-                  } else {
-                    w = net;
-                    flag = true;
+      //nmcli rescan
+      exec("nmcli dev wifi rescan", () => {
+        // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
+        wifi.scan((error, networks) => {
+          if (error) {
+            console.error(error);
+            reject();
+          } else {
+            // console.log("검색된 Wi-Fi 네트워크:");
+            // console.log(networks);
+            wifi_list2 = networks;
+            wifi_list = [];
+            for (const net of networks) {
+              var flag = false;
+              if (net.ssid != "") {
+                for (var w of wifi_list) {
+                  if (w.ssid == net.ssid) {
+                    // console.log("already in ",w.ssid, w.quality, net.quality);
+                    if (w.quality > net.quality) {
+                      // console.log("pass");
+                      flag = true;
+                    } else {
+                      w = net;
+                      flag = true;
+                    }
+                    break;
                   }
-                  break;
+                }
+                if (!flag) {
+                  // console.log("wifi push : ",net);
+                  wifi_list.push(net);
                 }
               }
-              if (!flag) {
-                // console.log("wifi push : ",net);
-                wifi_list.push(net);
-              }
             }
+            resolve(wifi_list);
           }
-          resolve(wifi_list);
-        }
+        });
       });
     } catch (error) {
       console.error(error);
