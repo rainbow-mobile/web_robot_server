@@ -5,7 +5,9 @@ const bodyParser = require("body-parser");
 // const ini = require('ini');
 const path = require("path");
 const cors = require("cors");
+const logger = require("../log/logger");
 const multer = require("multer");
+const os = require("os");
 const router = express.Router();
 const filesystem = require("../filesystem");
 const fs = require("fs");
@@ -19,17 +21,17 @@ router.use(bodyParser.json());
 router.use(cors());
 router.use(compression());
 
-router.get("/task", (req, res) => {
-  parser
-    .list(spath.task_path + "/work")
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500).send();
-    });
-});
+// router.get("/task", (req, res) => {
+//   parser
+//     .list(spath.task_path + "/work")
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       res.sendStatus(500).send();
+//     });
+// });
 
 router.get("/task/file", (req, res) => {
   socket
@@ -54,6 +56,7 @@ router.get("/task/run", (req, res) => {
       res.send(err);
     });
 });
+
 router.get("/task/stop", (req, res) => {
   socket
     .stopTask()
@@ -70,9 +73,59 @@ router.get("/task/pause", (req, res) => {
   res.send("no function");
 });
 
-router.get("/task/:name", (req, res) => {
+// router.get("/task/:name", (req, res) => {
+//   parser
+//     .parse(path.join(spath.task_path + "/work", req.params.name))
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       res.send(err);
+//     });
+// });
+
+// router.post("/task/:name", (req, res) => {
+//   parser
+//     .save(path.join(spath.task_path + "/work", req.params.name), req.body)
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       console.error(err);
+//       res.send(err);
+//     });
+// });
+
+// router.get("/task/load/:name", (req, res) => {
+//   socket
+//     .loadTask(path.join(spath.task_path + "/work", req.params.name))
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       console.error("Load Task Error :", err);
+//       res.send(err);
+//     });
+// });
+
+//-------------------------------New (~/maps)
+
+router.get("/task/:map", (req, res) => {
   parser
-    .parse(path.join(spath.task_path + "/work", req.params.name))
+    .list(os.homedir() + "/maps/" + req.params.map)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500).send();
+    });
+});
+
+router.get("/task/:map/:name", (req, res) => {
+  parser
+    .parse(path.join(os.homedir(), "maps", req.params.map, req.params.name))
     .then((data) => {
       res.send(data);
     })
@@ -82,9 +135,14 @@ router.get("/task/:name", (req, res) => {
     });
 });
 
-router.post("/task/:name", (req, res) => {
+router.post("/task/:map/:name", (req, res) => {
+  logger.info("save Task : " + req.params.map + ", " + req.params.name);
+  console.log(path.join(os.homedir(), "maps", req.params.map, req.params.name));
   parser
-    .save(path.join(spath.task_path + "/work", req.params.name), req.body)
+    .save(
+      path.join(os.homedir(), "maps", req.params.map, req.params.name),
+      req.body
+    )
     .then((data) => {
       res.send(data);
     })
@@ -94,9 +152,9 @@ router.post("/task/:name", (req, res) => {
     });
 });
 
-router.get("/task/load/:name", (req, res) => {
+router.get("/task/load/:map/:name", (req, res) => {
   socket
-    .loadTask(path.join(spath.task_path + "/work", req.params.name))
+    .loadTask(path.join(os.homedir(), "maps", req.params.map, req.params.name))
     .then((data) => {
       res.send(data);
     })
