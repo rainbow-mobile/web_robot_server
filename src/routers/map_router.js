@@ -301,7 +301,7 @@ router.get("/map/goal/:map_name", (req, res) => {
           let goals = [];
           data.map((node) => {
             if (node.type == "GOAL" || node.type == "INIT") {
-              goals.push(node.id);
+              goals.push({ id: node.id, name: node.name });
             }
           });
           res.send(goals);
