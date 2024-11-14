@@ -373,10 +373,13 @@ function MapLoad(map) {
     if (slamnav != null) {
       const time = new Date().getTime();
       logger.info("Load Map : " + map);
-      slamnav.emit("mapload", {
-        name: map,
-        time: time,
-      });
+      slamnav.emit(
+        "mapload",
+        stringifyAllValues({
+          name: map,
+          time: time,
+        })
+      );
 
       slamnav.on("mapload", (data) => {
         slamnav.off("mapload");
