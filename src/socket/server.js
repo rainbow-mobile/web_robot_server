@@ -347,6 +347,52 @@ function Mapping(data) {
   });
 }
 
+function sendCommand(cmd, data) {
+  return new Promise((resolve, reject) => {
+    if (slamnav != null) {
+      slamnav.emit(cmd, stringifyAllValues(data));
+      logger.error("Send " + cmd + " : " + stringifyAllValues(data));
+      slamnav.on(cmd, (data) => {
+        console.log("sendCommand on ", cmd);
+        resolve(data);
+        // slamnav.off(cmd);
+        clearTimeout(timeoutId);
+      });
+      const timeoutId = setTimeout(() => {
+        reject();
+      }, 5000); // 5초 타임아웃
+    } else {
+      logger.error("Send " + cmd + " Error : Slam not connected");
+      reject("disconnected");
+    }
+  });
+}
+
+function MapLoad(map) {
+  return new Promise((resolve, reject) => {
+    if (slamnav != null) {
+      const time = new Date().getTime();
+      logger.info("Load Map : " + map);
+      slamnav.emit("mapload", {
+        name: map,
+        time: time,
+      });
+
+      slamnav.on("mapload", (data) => {
+        slamnav.off("mapload");
+        resolve(data);
+        clearTimeout(timeoutId);
+      });
+      const timeoutId = setTimeout(() => {
+        reject();
+      }, 5000); // 5초 타임아웃
+    } else {
+      logger.error("Send " + cmd + " Error : Slam not connected");
+      reject("disconnected");
+    }
+  });
+}
+
 function waitMove() {
   return new Promise((resolve, reject) => {
     const interval = setInterval(() => {
@@ -643,6 +689,7 @@ module.exports = {
   moveCommand: moveCommand,
   loadTask: loadTask,
   runTask: runTask,
+  MapLoad: MapLoad,
   stopTask: stopTask,
   sendJog: sendJog,
   moveResponse: moveResponse,
