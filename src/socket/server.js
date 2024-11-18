@@ -33,7 +33,7 @@ const web_io = socketIo(Webserver, {
 });
 
 const streamSocket = socketClient("http://localhost:11337");
-const frsSocket = socketClient("http://10.108.1.27:3001");
+const frsSocket = socketClient("http://10.108.1.27:3001/socket/robots");
 
 streamSocket.on("connect", () => {
   console.log("test ok");
@@ -125,6 +125,9 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
+    if (frsSocket.id != undefined) {
+      frsSocket.emit("status", data);
+    }
   });
 
   socket.on("move", (data) => {
@@ -389,11 +392,11 @@ function MapLoad(map) {
       );
 
       slamnav.on("mapload", (data) => {
-        slamnav.off("mapload");
         resolve(data);
         clearTimeout(timeoutId);
       });
       const timeoutId = setTimeout(() => {
+        console.error("?????????????????????????");
         reject();
       }, 5000); // 5초 타임아웃
     } else {
@@ -550,7 +553,21 @@ function getConnection() {
 }
 
 frsSocket.on("connect", () => {
-  console.log("FRS Connected");
+  logger.info("FRS Connected : " + frsSocket.id);
+  frsSocket.emit(
+    "robot-status",
+    {
+      robotUuid: "1",
+      status: "test",
+      timestamp: new Date().toISOString(),
+    },
+    (response) => {
+      logger.info(response.data);
+    }
+  );
+});
+frsSocket.on("disconnect", () => {
+  logger.info("FRS Disconnected : " + frsSocket.id);
 });
 
 // let peerConnection;
