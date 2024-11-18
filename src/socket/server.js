@@ -32,7 +32,12 @@ const web_io = socketIo(Webserver, {
   pingTimeout: 6000, // 2분
 });
 
-// const streamSocket = socketClient("http://localhost:11339");
+const streamSocket = socketClient("http://localhost:11337");
+const frsSocket = socketClient("http://10.108.1.27:3001");
+
+streamSocket.on("connect", () => {
+  console.log("test ok");
+});
 
 var slamnav = null;
 var taskproc = null;
@@ -157,8 +162,10 @@ slam_io.on("connection", (socket) => {
 //10초마다 DB에 state 저장
 setInterval(() => {
   if (slamnav) {
-    logDB.updateState(robotState);
-    logDB.updatePower(robotState);
+    if (robotState) {
+      logDB.updateState(robotState);
+      logDB.updatePower(robotState);
+    }
   }
 }, 10000); // 10초 간격
 
@@ -541,6 +548,10 @@ function getConnection() {
     TASK: taskproc ? true : false,
   };
 }
+
+frsSocket.on("connect", () => {
+  console.log("FRS Connected");
+});
 
 // let peerConnection;
 // const roomId = "testCamera";
