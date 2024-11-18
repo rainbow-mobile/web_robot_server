@@ -71,8 +71,11 @@ router.get("/mapping/save/:name", async (req, res) => {
       time: time,
     })
     .then((data) => {
-      // console.log("savemapping get : ",data);
+      console.log("savemapping get : ", data);
       res.send(data);
+
+      //리로드 요청
+      socket.MapLoad(req.params.name);
     })
     .catch((err) => {
       console.error(err);
@@ -120,60 +123,66 @@ router.get("/map/cloud/:map_name", (req, res) => {
 
 //맵 cloud.csv 저장
 router.post("/map/cloud/:map_name", (req, res) => {
-  logger.info("Save Cloud " + req.params.map_name);
-  const path = getCloud(req.params.map_name);
+  try {
+    logger.info("Save Cloud " + req.params.map_name);
+    const path = getCloud(req.params.map_name);
 
-  if (Array.isArray(req.body)) {
-    //backup
-    filesystem.existFile(path, (err, fd) => {
-      if (err) {
-        filesystem
-          .saveCsv(path, req.body)
-          .then((data) => {
-            res.send({ ...data, name: req.params.map_name });
-          })
-          .catch((error) => {
-            logger.error(
-              "Save Cloud " + req.params.map_name + " Error : " + error
-            );
-            res.send({ ...error, name: req.params.map_name });
-          });
-      } else {
-        filesystem
-          .copyFile(path)
-          .then(() => {
-            filesystem
-              .saveCsv(path, req.body)
-              .then((data) => {
-                res.send({ ...data, name: req.params.map_name });
-              })
-              .catch((error) => {
-                logger.error(
-                  "Save Cloud " + req.params.map_name + " Error : " + error
-                );
-                res.send({ ...error, name: req.params.map_name });
-              });
-          })
-          .catch((error) => {
-            filesystem
-              .saveCsv(path, req.body)
-              .then((data) => {
-                res.send({ ...data, name: req.params.map_name });
-              })
-              .catch((error) => {
-                logger.error(
-                  "Save Cloud " + req.params.map_name + " Error : " + error
-                );
-                res.send({ ...error, name: req.params.map_name });
-              });
-          });
-      }
-    });
-  } else {
-    logger.error(
-      "Save Cloud " + req.params.map_name + " Error : Data is not array "
-    );
-    res.sendStatus(400);
+    if (Array.isArray(req.body)) {
+      //backup
+      filesystem.existFile(path, (err, fd) => {
+        if (err) {
+          filesystem
+            .saveCsv(path, req.body)
+            .then((data) => {
+              res.send({ ...data, name: req.params.map_name });
+            })
+            .catch((error) => {
+              logger.error(
+                "Save Cloud " + req.params.map_name + " Error : " + error
+              );
+              res.send({ ...error, name: req.params.map_name });
+            });
+        } else {
+          filesystem
+            .copyFile(path)
+            .then(() => {
+              filesystem
+                .saveCsv(path, req.body)
+                .then((data) => {
+                  res.send({ ...data, name: req.params.map_name });
+                  socket.MapLoad(req.params.map_name);
+                })
+                .catch((error) => {
+                  logger.error(
+                    "Save Cloud " + req.params.map_name + " Error : " + error
+                  );
+                  res.send({ ...error, name: req.params.map_name });
+                });
+            })
+            .catch((error) => {
+              filesystem
+                .saveCsv(path, req.body)
+                .then((data) => {
+                  res.send({ ...data, name: req.params.map_name });
+                })
+                .catch((error) => {
+                  logger.error(
+                    "Save Cloud " + req.params.map_name + " Error : " + error
+                  );
+                  res.send({ ...error, name: req.params.map_name });
+                });
+            });
+        }
+      });
+    } else {
+      logger.error(
+        "Save Cloud " + req.params.map_name + " Error : Data is not array "
+      );
+      res.sendStatus(400);
+    }
+  } catch (e) {
+    logger.error("Cloud Save Error : ", e);
+    res.sendStatus(500);
   }
 });
 
@@ -199,60 +208,66 @@ router.get("/map/topo/:map_name", (req, res) => {
 
 //맵 topo.json 저장
 router.post("/map/topo/:map_name", (req, res) => {
-  logger.info("Save Topo " + req.params.map_name);
-  const path = getTopo(req.params.map_name);
+  try {
+    logger.info("Save Topo " + req.params.map_name);
+    const path = getTopo(req.params.map_name);
 
-  if (req.body.length > 0) {
-    //backup
-    filesystem.existFile(path, (err, fd) => {
-      if (err) {
-        filesystem
-          .saveFile(path, req.body)
-          .then((data) => {
-            res.send(data);
-          })
-          .catch((error) => {
-            logger.error(
-              "Save Topo " + req.params.map_name + " Error : " + error
-            );
-            res.status(500).send(error);
-          });
-      } else {
-        filesystem
-          .copyFile(path)
-          .then(() => {
-            filesystem
-              .saveFile(path, req.body)
-              .then((data) => {
-                res.send(data);
-              })
-              .catch((error) => {
-                logger.error(
-                  "Save Topo " + req.params.map_name + " Error : " + error
-                );
-                res.status(500).send(error);
-              });
-          })
-          .catch((error) => {
-            filesystem
-              .saveFile(path, req.body)
-              .then((data) => {
-                res.send(data);
-              })
-              .catch((error) => {
-                logger.error(
-                  "Save Topo " + req.params.map_name + " Error : " + error
-                );
-                res.status(500).send(error);
-              });
-          });
-      }
-    });
-  } else {
-    logger.error(
-      "Save Topo " + req.params.map_name + " Error : Data length <= 0"
-    );
-    res.sendStatus(400);
+    if (req.body.length > 0) {
+      //backup
+      filesystem.existFile(path, (err, fd) => {
+        if (err) {
+          filesystem
+            .saveFile(path, req.body)
+            .then((data) => {
+              res.send(data);
+            })
+            .catch((error) => {
+              logger.error(
+                "Save Topo " + req.params.map_name + " Error : " + error
+              );
+              res.status(500).send(error);
+            });
+        } else {
+          filesystem
+            .copyFile(path)
+            .then(() => {
+              filesystem
+                .saveFile(path, req.body)
+                .then((data) => {
+                  res.send(data);
+                  socket.MapLoad(req.params.map_name);
+                })
+                .catch((error) => {
+                  logger.error(
+                    "Save Topo " + req.params.map_name + " Error : " + error
+                  );
+                  res.status(500).send(error);
+                });
+            })
+            .catch((error) => {
+              filesystem
+                .saveFile(path, req.body)
+                .then((data) => {
+                  res.send(data);
+                })
+                .catch((error) => {
+                  logger.error(
+                    "Save Topo " + req.params.map_name + " Error : " + error
+                  );
+                  res.status(500).send(error);
+                });
+            });
+        }
+      });
+    } else {
+      logger.error(
+        "Save Topo " + req.params.map_name + " Error : Data length <= 0"
+      );
+      res.sendStatus(400);
+    }
+  } catch (e) {
+    logger.error("TOPO Save Error : " + e);
+    res.sendStatus(500);
   }
 });
 
@@ -274,10 +289,7 @@ router.post("/map/current", (req, res) => {
   const time = new Date().getTime();
   logger.info("Load Map : " + req.body.name);
   socket
-    .sendCommand("mapload", {
-      name: req.body.name,
-      time: time,
-    })
+    .MapLoad(req.body.name)
     .then((data) => {
       logger.info("Load Map Success: " + req.body.name);
       res.send(data);
@@ -301,7 +313,7 @@ router.get("/map/goal/:map_name", (req, res) => {
           let goals = [];
           data.map((node) => {
             if (node.type == "GOAL" || node.type == "INIT") {
-              goals.push(node.id);
+              goals.push({ id: node.id, name: node.name });
             }
           });
           res.send(goals);

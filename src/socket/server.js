@@ -32,7 +32,12 @@ const web_io = socketIo(Webserver, {
   pingTimeout: 6000, // 2분
 });
 
-// const streamSocket = socketClient("http://localhost:11339");
+const streamSocket = socketClient("http://localhost:11337");
+const frsSocket = socketClient("http://10.108.1.27:3001");
+
+streamSocket.on("connect", () => {
+  console.log("test ok");
+});
 
 var slamnav = null;
 var taskproc = null;
@@ -157,8 +162,10 @@ slam_io.on("connection", (socket) => {
 //10초마다 DB에 state 저장
 setInterval(() => {
   if (slamnav) {
-    logDB.updateState(robotState);
-    logDB.updatePower(robotState);
+    if (robotState) {
+      logDB.updateState(robotState);
+      logDB.updatePower(robotState);
+    }
   }
 }, 10000); // 10초 간격
 
@@ -347,6 +354,55 @@ function Mapping(data) {
   });
 }
 
+function sendCommand(cmd, data) {
+  return new Promise((resolve, reject) => {
+    if (slamnav != null) {
+      slamnav.emit(cmd, stringifyAllValues(data));
+      logger.error("Send " + cmd + " : " + stringifyAllValues(data));
+      slamnav.on(cmd, (data) => {
+        console.log("sendCommand on ", cmd);
+        resolve(data);
+        // slamnav.off(cmd);
+        clearTimeout(timeoutId);
+      });
+      const timeoutId = setTimeout(() => {
+        reject();
+      }, 5000); // 5초 타임아웃
+    } else {
+      logger.error("Send " + cmd + " Error : Slam not connected");
+      reject("disconnected");
+    }
+  });
+}
+
+function MapLoad(map) {
+  return new Promise((resolve, reject) => {
+    if (slamnav != null) {
+      const time = new Date().getTime();
+      logger.info("Load Map : " + map);
+      slamnav.emit(
+        "mapload",
+        stringifyAllValues({
+          name: map,
+          time: time,
+        })
+      );
+
+      slamnav.on("mapload", (data) => {
+        slamnav.off("mapload");
+        resolve(data);
+        clearTimeout(timeoutId);
+      });
+      const timeoutId = setTimeout(() => {
+        reject();
+      }, 5000); // 5초 타임아웃
+    } else {
+      logger.error("Send " + cmd + " Error : Slam not connected");
+      reject("disconnected");
+    }
+  });
+}
+
 function waitMove() {
   return new Promise((resolve, reject) => {
     const interval = setInterval(() => {
@@ -492,6 +548,10 @@ function getConnection() {
     TASK: taskproc ? true : false,
   };
 }
+
+frsSocket.on("connect", () => {
+  console.log("FRS Connected");
+});
 
 // let peerConnection;
 // const roomId = "testCamera";
@@ -643,6 +703,7 @@ module.exports = {
   moveCommand: moveCommand,
   loadTask: loadTask,
   runTask: runTask,
+  MapLoad: MapLoad,
   stopTask: stopTask,
   sendJog: sendJog,
   moveResponse: moveResponse,

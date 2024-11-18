@@ -216,7 +216,7 @@ async function save(dir, data) {
         logger.error("Save File " + dir + " Error :", err);
         reject(err);
       }
-      logger.info("Save File Success : ", dir);
+      logger.info("Save File Success : " + dir);
       resolve(text);
     });
   });
@@ -329,17 +329,21 @@ const treeToText = (tree) => {
 const treeTotext = (tree) => {};
 
 async function list(dir) {
-  const files = await fs.promises.readdir(dir, { withFileTypes: true });
-  let list = [];
+  try {
+    const files = await fs.promises.readdir(dir, { withFileTypes: true });
+    let list = [];
 
-  files.map((file) => {
-    if (file.name.split(".").length > 1) {
-      if (file.name.split(".")[1] == "task") {
-        list.push(file.name);
+    files.map((file) => {
+      if (file.name.split(".").length > 1) {
+        if (file.name.split(".")[1] == "task") {
+          list.push(file.name);
+        }
       }
-    }
-  });
-  return list;
+    });
+    return list;
+  } catch (e) {
+    logger.error("task list get : Error , ", e);
+  }
 }
 
 module.exports = {
