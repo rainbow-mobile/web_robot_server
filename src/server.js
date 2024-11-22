@@ -22,6 +22,9 @@ const router_init = require("./routers/init_router");
 const router_move = require("./routers/move_router");
 const router_task = require("./routers/task_router");
 
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUI = require("swagger-ui-express");
+
 const httplogStream = fs.createWriteStream("Log/HTTP.log", { flags: "a" });
 
 app.use(morgan("combined", { stream: httplogStream }));
@@ -40,6 +43,29 @@ app.use("/", router_state);
 
 app.use(express.static(path.join(__dirname, "maps")));
 app.use(cors());
+
+// Swagger 옵션 설정
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Sample API",
+      version: "1.0.0",
+      description: "Sample API documentation using Swagger",
+    },
+    servers: [
+      {
+        url: "http://localhost:11334",
+      },
+    ],
+  },
+  apis: ["./routes/*.js"], // API 명세를 작성할 파일 경로
+};
+// Swagger 명세 정의
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
+// Swagger UI 설정
+app.use("/swagger", swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
 const mainServer = http.createServer(app);
 
