@@ -6,14 +6,18 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const http = require("http");
 const wrtc = require("wrtc");
+const os = require("os");
 const socketIo = require("socket.io");
 // const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
 const logDB = require("../db/logdb");
+const settingDB = require("../db/settingdb");
 const stream = require("stream");
 const cors = require("cors");
 const schedule = require("node-schedule");
 const logger = require("../log/logger");
+const settingdb = require("../db/settingdb");
+const { glob } = require("fs");
 
 const app = express();
 app.use(bodyParser.json());
@@ -33,7 +37,6 @@ const web_io = socketIo(Webserver, {
 });
 
 const streamSocket = socketClient("http://localhost:11337");
-const frsSocket = socketClient("http://10.108.1.27:3001/socket/robots");
 
 streamSocket.on("connect", () => {
   console.log("test ok");
@@ -98,6 +101,24 @@ web_io.on("connection", (socket) => {
   });
 });
 
+function getMacAddresses() {
+  const networkInterfaces = os.networkInterfaces();
+  const macAddresses = [];
+
+  for (const [interfaceName, interfaces] of Object.entries(networkInterfaces)) {
+    interfaces.forEach((iface) => {
+      if (!iface.internal && iface.mac) {
+        macAddresses.push({
+          interface: interfaceName,
+          mac: iface.mac,
+        });
+      }
+    });
+  }
+
+  return macAddresses;
+}
+
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -126,7 +147,13 @@ slam_io.on("connection", (socket) => {
     robotState = json;
     web_io.emit("status", data);
     if (frsSocket.id != undefined) {
-      frsSocket.emit("status", data);
+      const macAddresses = getMacAddresses();
+      const sendData = {
+        robotUuid: global.robotUuid,
+        status: json,
+      };
+      // console.log("emit status ", json.time);
+      frsSocket.emit("robots-status", sendData);
     }
   });
 
@@ -551,25 +578,46 @@ function getConnection() {
     TASK: taskproc ? true : false,
   };
 }
+// var frsSocket;
+const frsSocket = socketClient("http://192.168.1.190:3001/socket/robots");
+const connectSocket = async () => {
+  global.robotUuid = await settingDB.getVariable("robotUuid");
+  const sendData = {
+    robotMcAdrs: getMacAddresses()[0].mac,
+    robotUuid: global.robotUuid,
+  };
 
-frsSocket.on("connect", () => {
+  console.log("sendData : ", sendData);
+  frsSocket = socketClient("http://192.168.1.190:3001/socket/robots", {
+    query: sendData,
+  });
+};
+
+// connectSocket();
+
+frsSocket.on("connect", async () => {
   logger.info("FRS Connected : " + frsSocket.id);
-  frsSocket.emit(
-    "robot-status",
-    {
-      robotUuid: "1",
-      status: "test",
-      timestamp: new Date().toISOString(),
-    },
-    (response) => {
-      logger.info(response.data);
-    }
-  );
+  global.robotUuid = await settingDB.getVariable("robotUuid");
+  const sendData = {
+    robotMcAdrs: getMacAddresses()[0].mac,
+    // robotUuid: global.robotUuid,
+  };
+
+  console.log("sendData : ", sendData);
+
+  frsSocket.emit("robots-add", sendData);
+
+  frsSocket.on("robots-add", (data) => {
+    logger.info("Get UUID : " + data);
+    const json = JSON.parse(data);
+    settingDB.setVariable("robotUuid", json.robotUuid);
+    settingDB.setVariable("robotName", json.robotNm);
+  });
 });
+
 frsSocket.on("disconnect", () => {
   logger.info("FRS Disconnected : " + frsSocket.id);
 });
-
 // let peerConnection;
 // const roomId = "testCamera";
 // ////*********************** Streaming Server */
