@@ -147,12 +147,11 @@ slam_io.on("connection", (socket) => {
     robotState = json;
     web_io.emit("status", data);
     if (frsSocket != null && frsSocket.id != undefined) {
-      const macAddresses = getMacAddresses();
       const sendData = {
         robotUuid: global.robotUuid,
         status: json,
       };
-      // console.log("emit status ", json.time);
+      console.debug("emit status ", json.time);
       frsSocket.emit("robots-status", sendData);
     }
   });
@@ -581,6 +580,7 @@ function getConnection() {
 var frsSocket;
 
 const connectSocket = async () => {
+  console.log("connectSocket");
   if (frsSocket) {
     frsSocket.disconnect();
     frsSocket.close();
@@ -588,18 +588,19 @@ const connectSocket = async () => {
   }
 
   global.frs_url = await settingdb.getVariable("frs_url");
+  global.robotMcAdrs = await getMacAddresses()[0].mac;
 
-  console.log("frs : ", global.frs_url);
+  console.log("frs : ", global.frs_url, global.robotMcAdrs);
 
   frsSocket = socketClient(global.frs_url);
 
   frsSocket.on("connect", async () => {
     logger.info("FRS Connected : " + frsSocket.id);
+
     global.robotUuid = await settingDB.getVariable("robotUuid");
     global.frsConnect = true;
     const sendData = {
-      robotMcAdrs: getMacAddresses()[0].mac,
-      // robotUuid: global.robotUuid,
+      robotMcAdrs: global.robotMcAdrs,
     };
 
     console.log("sendData : ", sendData);
@@ -609,11 +610,13 @@ const connectSocket = async () => {
     frsSocket.on("robots-add", (data) => {
       logger.info("Get UUID : " + data);
       const json = JSON.parse(data);
-      global.robotNm = json.robotNm;
-      global.robotUuid = json.robotUuid;
-      global.robotMcAdrs = json.robotMcAdrs;
-      settingDB.setVariable("robotUuid", json.robotUuid);
-      settingDB.setVariable("robotName", json.robotNm);
+      if (json.robotMcAdrs == global.robotMcAdrs) {
+        global.robotNm = json.robotNm;
+        global.robotUuid = json.robotUuid;
+        global.robotMcAdrs = json.robotMcAdrs;
+        settingDB.setVariable("robotUuid", json.robotUuid);
+        settingDB.setVariable("robotName", json.robotNm);
+      }
     });
   });
 
