@@ -1,10 +1,10 @@
 "use strict";
-const sql = require("mysql");
+const sql = require("mariadb");
 const logger = require("../log/logger");
 
-const versiondb = sql.createPool({
+const settingdb = sql.createPool({
   host: "localhost",
-  user: "root",
+  user: "rainbow",
   password: "rainbow",
   database: "settingdb",
 });
@@ -50,26 +50,22 @@ async function setQuery(query) {
 }
 
 async function getVariable(key) {
-  return await new Promise((resolve, reject) => {
+  return await new Promise(async (resolve, reject) => {
     try {
       const query = "SELECT * from variables";
-      versiondb.query(query, (err, result) => {
-        if (err) {
-          reject("");
+      const data = await settingdb.query(query);
+
+      console.log(data);
+
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].keystr == key) {
+          resolve(data[i].valuestr);
+          return;
         }
+      }
 
-        console.log(result);
-
-        for (var i = 0; i < result.length; i++) {
-          if (result[i].keystr == key) {
-            resolve(result[i].valuestr);
-            return;
-          }
-        }
-
-        console.log("not found ", key);
-        resolve("");
-      });
+      console.log("not found ", key);
+      resolve("");
     } catch (error) {
       logger.error("SettingDB query Error : ", error);
       reject("");
@@ -77,7 +73,7 @@ async function getVariable(key) {
   });
 }
 async function setVariable(key, value) {
-  return await new Promise((resolve, reject) => {
+  return await new Promise(async (resolve, reject) => {
     try {
       const query =
         "INSERT INTO variables (keystr, valuestr) values ('" +
@@ -89,14 +85,9 @@ async function setVariable(key, value) {
         "';";
 
       console.log(query);
-      versiondb.query(query, (err, result) => {
-        if (err) {
-          console.error(err);
-          reject();
-        } else {
-          resolve();
-        }
-      });
+      const data = settingdb.query(query);
+      console.log("GET DATA : ", data);
+      resolve();
     } catch (error) {
       logger.error("SettingDB query Error : ", error);
       reject();

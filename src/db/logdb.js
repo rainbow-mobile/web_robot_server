@@ -1,10 +1,10 @@
 "use strict";
-const sql = require("mysql");
+const sql = require("mariadb");
 const logger = require("../log/logger");
 
 const logdb = sql.createPool({
   host: "localhost",
-  user: "root",
+  user: "rainbow",
   password: "rainbow",
   database: "logdb",
 });
