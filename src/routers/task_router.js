@@ -124,6 +124,7 @@ router.get("/task/:map", (req, res) => {
 });
 
 router.get("/task/:map/:name", (req, res) => {
+  console.log("GET Task");
   parser
     .parse(path.join(os.homedir(), "maps", req.params.map, req.params.name))
     .then((data) => {

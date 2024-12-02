@@ -445,6 +445,7 @@ router.get("/url/frs", async (req, res) => {
   res.send(global.frs_url);
 });
 router.put("/url/frs", async (req, res) => {
+  console.log("FRS URL Change : ", req.body);
   const { url } = req.body;
   await settingdb.setVariable("frs_url", url);
   server.connectSocket();

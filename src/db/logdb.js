@@ -1,29 +1,7 @@
 "use strict";
 const sql = require("mariadb");
 const logger = require("../log/logger");
-
-const logdb = sql.createPool({
-  host: "localhost",
-  user: "rainbow",
-  password: "rainbow",
-  database: "logdb",
-});
-
-async function setQuery(query) {
-  return await new Promise((resolve, reject) => {
-    try {
-      logdb.query(query, (err, result) => {
-        if (err) {
-          reject({ error: err });
-        }
-        resolve(result);
-      });
-    } catch (error) {
-      logger.error("LogDB query Error : ", error);
-      reject({ error: error });
-    }
-  });
-}
+const { db, setQuery } = require("./main");
 
 async function getState(state) {
   if (state.state.charge == undefined) {
@@ -125,7 +103,6 @@ async function getStateLog() {
 }
 
 module.exports = {
-  setQuery: setQuery,
   updateState: updateState,
   updatePower: updatePower,
   getState: getState,
