@@ -18,12 +18,40 @@ router.use(bodyParser.urlencoded({ limit: "100mb", extended: false }));
 router.use(cors());
 router.use(compression());
 
+const map_dir = path.join(home_path, "maps");
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, map_dir);
+  },
+  filename: (req, file, cb) => {
+    const encodedFilename = Buffer.from(file.originalname, "ascii").toString(
+      "utf8"
+    );
+    cb(null, encodedFilename);
+  },
+});
 function getCloud(name) {
   return path.join(home_path, "maps", name, "cloud.csv").toString();
 }
 function getTopo(name) {
   return path.join(home_path, "maps", name, "topo.json").toString();
 }
+
+// app.post("/update/map", upload.single("file"), (req, res) => {
+//   console.log("파일 업로드 성공:", req.file);
+
+//   // 파일 저장 위치 확인
+//   const tempPath = req.file.path;
+//   const targetPath = path.join(__dirname, "uploads", req.file.originalname);
+
+//   // 파일 이름 변경 및 이동
+//   fs.rename(tempPath, targetPath, (err) => {
+//     if (err) {
+//       return res.status(500).json({ message: "파일 저장 실패" });
+//     }
+//     res.status(200).json({ message: "파일 업로드 성공!" });
+//   });
+// });
 
 //매핑 시작 요청
 router.get("/mapping/start", async (req, res) => {
@@ -101,6 +129,7 @@ router.get("/mapping/reload", (req, res) => {
 
 //맵 cloud.csv 요청
 router.get("/map/cloud/:map_name", (req, res) => {
+  console.log("Cloud get");
   const path = getCloud(req.params.map_name);
   filesystem.existFile(path, (err, fd) => {
     if (err) {
@@ -300,6 +329,11 @@ router.post("/map/current", (req, res) => {
     });
 });
 
+//맵 업로드
+router.post("/map/upload/:map_name", (req, res) => {
+  logger.info("UpLoad Map : " + req.params.map_name);
+});
+
 //GOAL 목록 반환
 router.get("/map/goal/:map_name", (req, res) => {
   const path = getTopo(req.params.map_name);
@@ -327,19 +361,6 @@ router.get("/map/goal/:map_name", (req, res) => {
     }
   });
 });
-
-const upload = multer({
-  storage: multer.diskStorage({
-    filename(req, file, done) {
-      done(null, req.params.file);
-    },
-    destination(req, file, done) {
-      done(null, path.join(map_path, req.params.name));
-    },
-  }),
-  limits: { fileSize: 1024 * 1024 },
-});
-
 // const uploadMiddleware = upload.single('file');
 // router.post('/savemap/:name/:file',uploadMiddleware, (req,res) => {
 //     console.log("SAVEMAP : ",req.params.file);

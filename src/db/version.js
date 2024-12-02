@@ -1,21 +1,7 @@
 "use strict";
 const sql = require("mariadb");
 const logger = require("../log/logger");
-
-const versiondb = sql.createPool({
-  host: "localhost",
-  user: "rainbow",
-  password: "rainbow",
-  database: "versiondb",
-});
-
-// versiondb.connect((err) =>{
-//     if(err){
-//         console.error("versiondb : connet error ",err);
-//         throw err;
-//     }
-//     console.log("versiondb : connected");
-// });
+const { setQuery } = require("./main");
 
 async function makeLogTable(name) {
   return await new Promise((resolve, reject) => {
@@ -28,7 +14,7 @@ async function makeLogTable(name) {
         "new_version varchar(32) not null," +
         "prev_version varchar(32)," +
         "result varchar(32) not null);";
-      versiondb.query(query, (err, result) => {
+      setQuery(query, (err, result) => {
         if (err) {
           reject({ error: err });
         }
@@ -41,23 +27,6 @@ async function makeLogTable(name) {
   });
 }
 
-async function setQuery(query) {
-  return await new Promise((resolve, reject) => {
-    try {
-      versiondb.query(query, (err, result) => {
-        if (err) {
-          reject({ error: err });
-        }
-        resolve(result);
-      });
-    } catch (error) {
-      logger.error("VersionDB query Error : ", error);
-      reject({ error: error });
-    }
-  });
-}
-
 module.exports = {
-  setQuery: setQuery,
   makeLogTable: makeLogTable,
 };

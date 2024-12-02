@@ -50,6 +50,7 @@ var taskState = {
   file: "",
   running: false,
   id: 0,
+  variables: [],
 };
 let robotState;
 
@@ -119,6 +120,15 @@ function getMacAddresses() {
   return macAddresses;
 }
 
+setInterval(() => {
+  if (taskproc) {
+    if (slamnav) {
+      taskproc.emit("status", robotState);
+    } else {
+      taskproc.emit("status", "");
+    }
+  }
+}, 500);
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -138,7 +148,7 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("global_path", (data) => {
-    logger.debug("receive : global_path");
+    // logger.debug("receive : global_path");
     web_io.emit("global_path", data);
   });
 
@@ -151,11 +161,10 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         status: json,
       };
-      console.debug("emit status ", json.time);
-      frsSocket.emit("robots-status", sendData);
+      // console.debug("emit status ", json.time);
+      // frsSocket.emit("robots-status", sendData);
     }
   });
-
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
@@ -178,6 +187,7 @@ slam_io.on("connection", (socket) => {
         message: "disconnected",
       });
     }
+
     if (taskState.running) {
       stopTask();
       web_io.emit("task_error", "disconnected");
@@ -235,6 +245,16 @@ task_io.on("connection", (socket) => {
     logger.error("TaskSocket Error : " + data);
     taskState.running = null;
     web_io.emit("task_error", data);
+  });
+
+  socket.on("init", (data) => {
+    logger.info("TaskSocket Init : " + data.file + ", " + data.running);
+    taskState.file = data.file;
+    taskState.id = data.id;
+    taskState.running = data.running;
+    taskState.variables = JSON.parse(data.variables);
+
+    console.log("Task Variables : ", JSON.parse(data.variables));
   });
 
   socket.on("init", (data) => {
@@ -579,11 +599,17 @@ function getConnection() {
 }
 var frsSocket;
 
+const intervalFrsSocket = setInterval(() => {
+  if (!global.frsConnect) {
+    connectSocket();
+  }
+}, 1000);
+
 const connectSocket = async () => {
-  console.log("connectSocket");
   if (frsSocket) {
     frsSocket.disconnect();
     frsSocket.close();
+    global.frsConnect = false;
     frsSocket = null;
   }
 
@@ -602,8 +628,6 @@ const connectSocket = async () => {
     const sendData = {
       robotMcAdrs: global.robotMcAdrs,
     };
-
-    console.log("sendData : ", sendData);
 
     frsSocket.emit("robots-add", sendData);
 
@@ -625,8 +649,6 @@ const connectSocket = async () => {
     global.frsConnect = false;
   });
 };
-
-connectSocket();
 
 module.exports = {
   Mapping: Mapping,

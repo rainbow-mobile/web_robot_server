@@ -23,6 +23,7 @@ router.get("/log/state", (req, res) => {
 });
 router.get("/log/state/state", (req, res) => {
   try {
+    // console.log("get /log/state/state");
     var sql = "SELECT * from state;";
     logDB.setQuery(sql).then((data) => {
       // 2. 상태 변경 사이에 `discon` 추가하기

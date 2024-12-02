@@ -15,6 +15,7 @@ const router_map = require("./routers/map_router");
 const router_setting = require("./routers/setting_router");
 const router_update = require("./routers/update_router");
 const router_status = require("./routers/status_router");
+const router_upload = require("./routers/upload_router");
 const router_network = require("./routers/network_router");
 const router_state = require("./routers/state_router");
 
@@ -37,6 +38,7 @@ app.use("/", router_update);
 app.use("/", router_status);
 app.use("/", router_network);
 app.use("/", router_init);
+app.use("/", router_upload);
 app.use("/", router_move);
 app.use("/", router_task);
 app.use("/", router_state);
