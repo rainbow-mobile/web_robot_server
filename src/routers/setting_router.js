@@ -10,6 +10,8 @@ const filesystem = require("../filesystem");
 const fs = require("fs");
 const spath = require("../../setting.json");
 const logger = require("../log/logger");
+const settingdb = require("../db/settingdb");
+const server = require("../socket/server");
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -438,4 +440,24 @@ router.post("/setting/preset/:type/:id", (req, res) => {
   }
 });
 
+router.get("/url/frs", async (req, res) => {
+  global.frs_url = await settingdb.getVariable("frs_url");
+  res.send(global.frs_url);
+});
+router.put("/url/frs", async (req, res) => {
+  const { url } = req.body;
+  await settingdb.setVariable("frs_url", url);
+  server.connectSocket();
+  res.send(await settingdb.getVariable("frs_url"));
+});
+
+router.get("/frs", (req, res) => {
+  res.send({
+    connection: global.frsConnect,
+    uuid: global.robotUuid,
+    mac: global.robotMcAdrs,
+    name: global.robotNm,
+    url: global.frs_url,
+  });
+});
 module.exports = router;
