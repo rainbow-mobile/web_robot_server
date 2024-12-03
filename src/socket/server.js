@@ -11,7 +11,6 @@ const socketIo = require("socket.io");
 // const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
 const logDB = require("../db/logdb");
-const settingDB = require("../db/settingdb");
 const stream = require("stream");
 const cors = require("cors");
 const schedule = require("node-schedule");
@@ -178,7 +177,9 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("dockResponse", (data) => {
+    console.log(data);
     const json = JSON.parse(data);
+    console.log(json, json.result);
     logger.info("Slamnav Dock Response : ", json.result);
     if (taskproc) {
       logger.info("send to task : ", json);
@@ -628,7 +629,7 @@ const intervalFrsSocket = setInterval(() => {
   if (!global.frsConnect) {
     connectSocket();
   }
-}, 1000);
+}, 3000);
 
 const connectSocket = async () => {
   if (frsSocket) {
@@ -650,7 +651,7 @@ const connectSocket = async () => {
   frsSocket.on("connect", async () => {
     logger.info("FRS Connected : " + frsSocket.id);
 
-    global.robotUuid = await settingDB.getVariable("robotUuid");
+    global.robotUuid = await settingdb.getVariable("robotUuid");
     global.frsConnect = true;
     const sendData = {
       robotMcAdrs: global.robotMcAdrs,
@@ -665,8 +666,8 @@ const connectSocket = async () => {
         global.robotNm = json.robotNm;
         global.robotUuid = json.robotUuid;
         global.robotMcAdrs = json.robotMcAdrs;
-        settingDB.setVariable("robotUuid", json.robotUuid);
-        settingDB.setVariable("robotName", json.robotNm);
+        settingdb.setVariable("robotUuid", json.robotUuid);
+        settingdb.setVariable("robotName", json.robotNm);
       }
     });
   });

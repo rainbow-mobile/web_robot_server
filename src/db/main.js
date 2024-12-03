@@ -61,7 +61,7 @@ async function setQuery(query) {
     const result = await db.query(query); // Promise 기반으로 처리
     return result; // 성공 시 결과 반환
   } catch (err) {
-    console.error("setQuery Error : ", err.message);
+    console.error("setQuery Error : ", query, err.message);
     throw err; // 에러를 상위로 전달
   }
 }
