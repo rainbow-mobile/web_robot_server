@@ -130,14 +130,14 @@ router.post("/upload/map", async (req, res) => {
 
 // 파일을 요청해서 다운로드하는 엔드포인트
 router.post("/download/map", async (req, res) => {
-  const { name, user_id, token } = req.body;
+  const { name, userId, token } = req.body;
   try {
-    console.log("Map Download : ", name, user_id, token);
+    console.log("Map Download : ", name, userId, token);
 
     if (name == undefined || name == "") {
       res.status(400).send({ message: "parameter missing (name)" });
-    } else if (user_id == undefined || user_id == "") {
-      res.status(400).send({ message: "parameter missing (user_id)" });
+    } else if (userId == undefined || userId == "") {
+      res.status(400).send({ message: "parameter missing (userId)" });
     } else if (token == undefined || token == "") {
       res.status(400).send({ message: "parameter missing (token)" });
     } else {

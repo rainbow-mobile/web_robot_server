@@ -177,6 +177,14 @@ slam_io.on("connection", (socket) => {
     }
   });
 
+  socket.on("dockResponse", (data) => {
+    logger.info("Slamnav Dock Response : ", data.result);
+    if (taskproc) {
+      logger.info("send to task : ", data);
+      taskproc.emit("dockResponse", data);
+    }
+  });
+
   socket.on("disconnect", () => {
     logger.info("SlamSocket Disconnected : " + socket.id);
 
@@ -232,6 +240,22 @@ task_io.on("connection", (socket) => {
     logger.info("TaskSocket Start : " + data);
     taskState.running = true;
     web_io.emit("task_start", data);
+  });
+
+  socket.on("taskDock", () => {
+    logger.info("TaskSocket Command : Dock");
+    if (slamnav) {
+      logger.info("send to Slamnav : dock");
+      slamnav.emit("dock");
+    }
+  });
+
+  socket.on("taskUndock", () => {
+    logger.info("TaskSocket Command : Undock");
+    if (slamnav) {
+      logger.info("send to Slamnav : undock");
+      slamnav.emit("undock");
+    }
   });
 
   socket.on("task_done", (data) => {
