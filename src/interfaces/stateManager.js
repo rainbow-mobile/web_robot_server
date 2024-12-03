@@ -58,6 +58,7 @@ class StateManager {
           power: "false",
           emo: "false",
           charge: "false",
+          dock: "false",
           localization: "none", // "none", "busy", "good", "fail"
           map: "",
         },
