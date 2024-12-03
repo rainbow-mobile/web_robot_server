@@ -129,7 +129,7 @@ router.get("/mapping/reload", (req, res) => {
 
 //맵 cloud.csv 요청
 router.get("/map/cloud/:map_name", (req, res) => {
-  console.log("Cloud get");
+  // console.log("Cloud get");
   const path = getCloud(req.params.map_name);
   filesystem.existFile(path, (err, fd) => {
     if (err) {

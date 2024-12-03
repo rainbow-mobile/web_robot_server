@@ -220,7 +220,7 @@ async function readJson(filepath, callback) {
   return new Promise(async (resolve, reject) => {
     try {
       const filecontent = fs.readFileSync(filepath, "utf-8");
-      console.log(filecontent);
+      // console.log(filecontent);
       const jsonData = JSON.parse(filecontent);
       resolve(jsonData);
     } catch (error) {

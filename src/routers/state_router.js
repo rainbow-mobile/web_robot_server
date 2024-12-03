@@ -5,7 +5,7 @@ const path = require("path");
 const cors = require("cors");
 const router = express.Router();
 const moment = require("moment");
-const logDB = require("../db/logdb.js");
+const db = require("../db/main.js");
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -13,7 +13,7 @@ router.use(cors());
 router.get("/log/state", (req, res) => {
   try {
     var sql = "SELECT * from state;";
-    logDB.setQuery(sql).then((result) => {
+    db.setQuery(sql).then((result) => {
       res.send(result);
     });
   } catch (error) {
@@ -25,7 +25,7 @@ router.get("/log/state/state", (req, res) => {
   try {
     // console.log("get /log/state/state");
     var sql = "SELECT * from state;";
-    logDB.setQuery(sql).then((data) => {
+    db.setQuery(sql).then((data) => {
       // 2. 상태 변경 사이에 `discon` 추가하기
       const addDisconForGaps = (filteredArray) => {
         var result = [];
@@ -83,7 +83,7 @@ router.get("/log/state/state", (req, res) => {
 router.get("/log/power", (req, res) => {
   try {
     var sql = "SELECT * from power;";
-    logDB.setQuery(sql).then((result) => {
+    db.setQuery(sql).then((result) => {
       res.send(result);
     });
   } catch (error) {
@@ -94,7 +94,7 @@ router.get("/log/power", (req, res) => {
 router.get("/log/power/battery", (req, res) => {
   try {
     var sql = "SELECT * from power;";
-    logDB.setQuery(sql).then((data) => {
+    db.setQuery(sql).then((data) => {
       const calculateGapTime = (prev, next) => {
         const gap = (next - prev) / 1000; // 간격을 초 단위로 계산
         return gap;
