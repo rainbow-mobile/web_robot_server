@@ -178,10 +178,11 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("dockResponse", (data) => {
-    logger.info("Slamnav Dock Response : ", data.result);
+    const json = JSON.parse(data);
+    logger.info("Slamnav Dock Response : ", json.result);
     if (taskproc) {
-      logger.info("send to task : ", data);
-      taskproc.emit("dockResponse", data);
+      logger.info("send to task : ", json);
+      taskproc.emit("dockResponse", json);
     }
   });
 
