@@ -6,11 +6,8 @@ const { db, setQuery } = require("./main");
 async function getVariable(key) {
   return await new Promise(async (resolve, reject) => {
     try {
-      console.log(db);
       const query = "SELECT * from variables";
       const data = await setQuery(query);
-
-      console.log(data);
 
       for (var i = 0; i < data.length; i++) {
         if (data[i].keystr == key) {

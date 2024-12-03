@@ -614,11 +614,13 @@ const connectSocket = async () => {
   }
 
   global.frs_url = await settingdb.getVariable("frs_url");
+  global.frs_socket = await settingdb.getVariable("frs_socket");
+  global.frs_api = await settingdb.getVariable("frs_api");
   global.robotMcAdrs = await getMacAddresses()[0].mac;
 
-  console.log("frs : ", global.frs_url, global.robotMcAdrs);
+  console.log("frs : ", global.frs_socket, global.robotMcAdrs);
 
-  frsSocket = socketClient(global.frs_url);
+  frsSocket = socketClient(global.frs_socket);
 
   frsSocket.on("connect", async () => {
     logger.info("FRS Connected : " + frsSocket.id);

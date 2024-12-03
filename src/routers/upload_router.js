@@ -57,16 +57,21 @@ function zipFolder(sourceFolderPath, zipFilePath) {
 }
 
 function unzipFolder(zipFilePath, extractToPath) {
-  const zip = new AdmZip(zipFilePath);
+  try {
+    console.log("unzipFolder ", zipFilePath);
+    const zip = new AdmZip(zipFilePath);
 
-  // 압축 해제할 경로가 없다면 생성
-  if (!fs.existsSync(extractToPath)) {
-    fs.mkdirSync(extractToPath, { recursive: true });
+    // 압축 해제할 경로가 없다면 생성
+    if (!fs.existsSync(extractToPath)) {
+      fs.mkdirSync(extractToPath, { recursive: true });
+    }
+
+    // 압축 해제
+    zip.extractAllTo(extractToPath, true); // true는 기존 파일 덮어쓰기를 의미
+    console.log(`ZIP 파일 압축 해제 완료: ${extractToPath}`);
+  } catch (error) {
+    console.error(error);
   }
-
-  // 압축 해제
-  zip.extractAllTo(extractToPath, true); // true는 기존 파일 덮어쓰기를 의미
-  console.log(`ZIP 파일 압축 해제 완료: ${extractToPath}`);
 }
 
 router.post("/upload/map", async (req, res) => {
@@ -82,10 +87,10 @@ router.post("/upload/map", async (req, res) => {
       res.status(400).send({ message: "parameter missing (name)" });
     } else if (mapNm == undefined || mapNm == "") {
       res.status(400).send({ message: "parameter missing (mapNm)" });
-      // } else if (userId == undefined || userId == "") {
-      //   res.status(400).send({ message: "parameter missing (userId)" });
-      // } else if (token == undefined || token == "") {
-      //   res.status(400).send({ message: "parameter missing (token)" });
+    } else if (userId == undefined || userId == "") {
+      res.status(400).send({ message: "parameter missing (userId)" });
+    } else if (token == undefined || token == "") {
+      res.status(400).send({ message: "parameter missing (token)" });
     } else {
       // ZIP 파일 생성
       const zip = new AdmZip();
@@ -97,30 +102,79 @@ router.post("/upload/map", async (req, res) => {
 
       const formData = new FormData();
       formData.append("file", zipStream, { filename: zipFileName });
+      formData.append("deleteZipAt", "Y");
 
       const config = {
         headers: {
           "content-type": "multipart/form-data; charset=utf-8",
-          //   authorization: token,
+          authorization: "Bearer " + token,
         },
       };
       const response = await axios.post(
-        "http://localhost:11334" + "/download/map/" + name,
-        //     process.env.NEXT_PUBLIC_FRS_URL +
+        global.frs_api + "/api/maps/frs-map/upload",
         formData,
         config
       );
-
       console.log(response.data);
       res.send({ message: "파일 저장 성공" });
     }
   } catch (error) {
-    console.error("파일 업로드 중 오류 발생:", error.message);
-    res.status(500).json({ message: "파일 업로드 실패" });
+    console.error("파일 업로드 중 오류 발생:", error.response.data);
+    res.status(error.response.status).json();
   } finally {
     fs.unlink(zipFilePath, (err) => {
       if (err) console.error("임시 ZIP 파일 삭제 실패:", err);
     });
+  }
+});
+
+// 파일을 요청해서 다운로드하는 엔드포인트
+router.post("/download/map", async (req, res) => {
+  const { name, user_id, token } = req.body;
+  try {
+    console.log("Map Download : ", name, user_id, token);
+
+    if (name == undefined || name == "") {
+      res.status(400).send({ message: "parameter missing (name)" });
+    } else if (user_id == undefined || user_id == "") {
+      res.status(400).send({ message: "parameter missing (user_id)" });
+    } else if (token == undefined || token == "") {
+      res.status(400).send({ message: "parameter missing (token)" });
+    } else {
+      const response = await axios.get(
+        global.frs_api + "/api/maps/frs-map/download",
+        {
+          responseType: "stream",
+          params: { attachmentFileDtlFlNm: name, deleteZipAt: "Y" },
+          headers: { authorization: "Bearer " + token },
+        }
+      );
+
+      const fileStream = fs.createWriteStream(homedir() + "/maps/" + name);
+      response.data.pipe(fileStream);
+
+      fileStream.on("finish", () => {
+        console.log("file download successfully");
+
+        const zipFilePath = path.join(homedir(), "maps", name);
+
+        const extractToPath = path.join(homedir(), "maps", name.split(".")[0]);
+        console.log("Map Download : ", zipFilePath, extractToPath);
+
+        unzipFolder(zipFilePath, extractToPath);
+
+        res.send(extractToPath);
+
+        console.log("압축파일 삭제 : ", homedir() + "/maps/" + name);
+        fs.unlink(homedir() + "/maps/" + name, (err) => {
+          if (err) console.error("임시 ZIP 파일 삭제 실패:", err);
+          console.log("성공");
+        });
+      });
+    }
+  } catch (error) {
+    console.error("파일 다운로드 중 오류 발생:", error.response.status);
+    res.status(error.response.status).send();
   }
 });
 
