@@ -27,6 +27,8 @@ const findKeyword = (line) => {
     "folder",
     "assign",
     "subp",
+    "undock",
+    "dock",
   ];
   const result = [];
   for (const key of keyword) {
@@ -148,6 +150,12 @@ const textToTreeData = async (text) => {
       stack.push(new_node);
     } else if (keyword == "map") {
       const new_node = { label: "map", children: [] };
+      stack[stack.length - 1].children.push(new_node);
+    } else if (keyword == "dock") {
+      const new_node = { label: "dock", children: [] };
+      stack[stack.length - 1].children.push(new_node);
+    } else if (keyword == "undock") {
+      const new_node = { label: "undock", children: [] };
       stack[stack.length - 1].children.push(new_node);
     } else {
       if (start_script) {
@@ -277,6 +285,12 @@ const treeToText = (tree) => {
         break;
       case "map":
         text += `${indent}map\n`;
+        break;
+      case "dock":
+        text += `${indent}dock()\n`;
+        break;
+      case "undock":
+        text += `${indent}undock()\n`;
         break;
       case "script": {
         const lines = node.data.split("\n");

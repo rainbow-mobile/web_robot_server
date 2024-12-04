@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const http = require("http");
 const wrtc = require("wrtc");
+const os = require("os");
 const socketIo = require("socket.io");
 // const Canvas = require("canvas");
 const socketClient = require("socket.io-client");
@@ -14,6 +15,8 @@ const stream = require("stream");
 const cors = require("cors");
 const schedule = require("node-schedule");
 const logger = require("../log/logger");
+const settingdb = require("../db/settingdb");
+const { glob } = require("fs");
 
 const app = express();
 app.use(bodyParser.json());
@@ -33,7 +36,6 @@ const web_io = socketIo(Webserver, {
 });
 
 const streamSocket = socketClient("http://localhost:11337");
-const frsSocket = socketClient("http://10.108.1.27:3001/socket/robots");
 
 streamSocket.on("connect", () => {
   console.log("test ok");
@@ -47,6 +49,7 @@ var taskState = {
   file: "",
   running: false,
   id: 0,
+  variables: [],
 };
 let robotState;
 
@@ -98,6 +101,34 @@ web_io.on("connection", (socket) => {
   });
 });
 
+function getMacAddresses() {
+  const networkInterfaces = os.networkInterfaces();
+  const macAddresses = [];
+
+  for (const [interfaceName, interfaces] of Object.entries(networkInterfaces)) {
+    interfaces.forEach((iface) => {
+      if (!iface.internal && iface.mac) {
+        macAddresses.push({
+          interface: interfaceName,
+          mac: iface.mac,
+        });
+      }
+    });
+  }
+
+  return macAddresses;
+}
+
+setInterval(() => {
+  if (taskproc) {
+    if (slamnav) {
+      taskproc.emit("status", robotState);
+    } else {
+      taskproc.emit("status", "");
+    }
+  }
+}, 500);
+
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -117,7 +148,7 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("global_path", (data) => {
-    logger.debug("receive : global_path");
+    // logger.debug("receive : global_path");
     web_io.emit("global_path", data);
   });
 
@@ -125,11 +156,15 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
-    if (frsSocket.id != undefined) {
-      frsSocket.emit("status", data);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        status: json,
+      };
+      // console.debug("emit status ", json.time);
+      frsSocket.emit("robots-status", sendData);
     }
   });
-
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
@@ -139,6 +174,15 @@ slam_io.on("connection", (socket) => {
       moveState = json;
     } else if (json.command == "stop") {
       // moveState = null;
+    }
+  });
+
+  socket.on("dockResponse", (data) => {
+    const json = JSON.parse(data);
+    logger.info("Slamnav Dock Response : " + json.result);
+    if (taskproc) {
+      logger.info("send to task : " + json);
+      taskproc.emit("dockResponse", json);
     }
   });
 
@@ -152,6 +196,7 @@ slam_io.on("connection", (socket) => {
         message: "disconnected",
       });
     }
+
     if (taskState.running) {
       stopTask();
       web_io.emit("task_error", "disconnected");
@@ -198,6 +243,22 @@ task_io.on("connection", (socket) => {
     web_io.emit("task_start", data);
   });
 
+  socket.on("taskDock", () => {
+    logger.info("TaskSocket Command : Dock");
+    if (slamnav) {
+      logger.info("send to Slamnav : dock");
+      slamnav.emit("dock");
+    }
+  });
+
+  socket.on("taskUndock", () => {
+    logger.info("TaskSocket Command : Undock");
+    if (slamnav) {
+      logger.info("send to Slamnav : undock");
+      slamnav.emit("undock");
+    }
+  });
+
   socket.on("task_done", (data) => {
     logger.info("TaskSocket Stop : " + data);
     taskState.running = null;
@@ -209,6 +270,16 @@ task_io.on("connection", (socket) => {
     logger.error("TaskSocket Error : " + data);
     taskState.running = null;
     web_io.emit("task_error", data);
+  });
+
+  socket.on("init", (data) => {
+    logger.info("TaskSocket Init : " + data.file + ", " + data.running);
+    taskState.file = data.file;
+    taskState.id = data.id;
+    taskState.running = data.running;
+    taskState.variables = JSON.parse(data.variables);
+
+    console.log("Task Variables : ", JSON.parse(data.variables));
   });
 
   socket.on("init", (data) => {
@@ -551,165 +622,60 @@ function getConnection() {
     TASK: taskproc ? true : false,
   };
 }
+var frsSocket;
 
-frsSocket.on("connect", () => {
-  logger.info("FRS Connected : " + frsSocket.id);
-  frsSocket.emit(
-    "robot-status",
-    {
-      robotUuid: "1",
-      status: "test",
-      timestamp: new Date().toISOString(),
-    },
-    (response) => {
-      logger.info(response.data);
-    }
-  );
-});
-frsSocket.on("disconnect", () => {
-  logger.info("FRS Disconnected : " + frsSocket.id);
-});
+const intervalFrsSocket = setInterval(() => {
+  if (!global.frsConnect) {
+    connectSocket();
+  }
+}, 3000);
 
-// let peerConnection;
-// const roomId = "testCamera";
-// ////*********************** Streaming Server */
-// streamSocket.on("connect", () => {
-//   console.log("streamSocket Connected : ", streamSocket.id);
-//   streamSocket.emit("make-room", roomId);
+const connectSocket = async () => {
+  if (frsSocket) {
+    frsSocket.disconnect();
+    frsSocket.close();
+    global.frsConnect = false;
+    frsSocket = null;
+  }
 
-//   const configuration = {
-//     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-//   };
+  global.frs_url = await settingdb.getVariable("frs_url");
+  global.frs_socket = await settingdb.getVariable("frs_socket");
+  global.frs_api = await settingdb.getVariable("frs_api");
+  global.robotMcAdrs = await getMacAddresses()[0].mac;
 
-//   // 피어 연결 생성
-//   peerConnection = new wrtc.RTCPeerConnection(configuration);
+  console.log("frs : ", global.frs_socket, global.robotMcAdrs);
 
-//   peerConnection.onicecandidate = (event) => {
-//     if (event.candidate) {
-//       send({
-//         event: "candidate",
-//         data: event.candidate,
-//       });
-//       // streamSocket.emit("ice-candidate", event.candidate);
-//     }
-//   };
+  frsSocket = socketClient(global.frs_socket);
 
-//   peerConnection.ontrack = (event) => {
-//     remoteVideo.srcObject = event.streams[0]; // 원격 스트림 설정
-//   };
+  frsSocket.on("connect", async () => {
+    logger.info("FRS Connected : " + frsSocket.id);
 
-//   // offer 수신
-//   streamSocket.on("offer", (offer) => {
-//     console.log("Get Offer ", offer);
-//     peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(offer));
-//     peerConnection.createAnswer().then((answer) => {
-//       peerConnection.setLocalDescription(answer);
-//       streamSocket.emit("answer", answer);
-//     });
-//   });
+    global.robotUuid = await settingdb.getVariable("robotUuid");
+    global.frsConnect = true;
+    const sendData = {
+      robotMcAdrs: global.robotMcAdrs,
+    };
 
-//   // answer 수신
-//   streamSocket.on("answer", (answer) => {
-//     peerConnection.setRemoteDescription(new wrtc.RTCSessionDescription(answer));
-//   });
+    frsSocket.emit("robots-add", sendData);
 
-//   // ICE 후보 수신
-//   streamSocket.on("ice-candidate", (candidate) => {
-//     peerConnection.addIceCandidate(new wrtc.RTCIceCandidate(candidate));
-//   });
-//   streamSocket.on("rtc-message", async (message) => {
-//     var content = JSON.parse(message);
-//     console.log("RTCMessage : ", content);
-//     // Offer 수신 : 누군가가 오퍼를 받음
-//     if (content.event == "offer") {
-//       console.log("Receive Offer", content.data);
-//       var offer = content.data;
-//       peerConnection.setRemoteDescription(offer); //받은 Offer SDP -> 상대 피어에 대한 원격 설정으로 저장
+    frsSocket.on("robots-add", (data) => {
+      logger.info("Get UUID : " + data);
+      const json = JSON.parse(data);
+      if (json.robotMcAdrs == global.robotMcAdrs) {
+        global.robotNm = json.robotNm;
+        global.robotUuid = json.robotUuid;
+        global.robotMcAdrs = json.robotMcAdrs;
+        settingdb.setVariable("robotUuid", json.robotUuid);
+        settingdb.setVariable("robotName", json.robotNm);
+      }
+    });
+  });
 
-//       // sendImageAsStream(peerConnection, streamData);
-//       // await getMedia();
-//       // 상대 Peer와 공유할 미디어 트랙을 추가
-//       // peerConnection.addTrack
-//       // myStream
-//       // .getTracks()
-//       // .forEach((track) => peerConnection.addTrack(track, myStream));
-
-//       var answer = await peerConnection.createAnswer();
-
-//       //Answer로 자신의 SDP를 보냄
-//       console.log("Send Answer");
-//       send({
-//         event: "answer",
-//         data: answer,
-//       });
-
-//       //자신의 Local ICE Candidate를 Stun Server로부터 얻어와 등록-> onicecandidate 트리거 -> Candidate를 Socket에 Answer로 보냄
-//       peerConnection.setLocalDescription(answer);
-//     }
-
-//     // Answer 수신 : 오퍼를 보내고 나서 응답이 옴
-//     else if (content.event == "answer") {
-//       console.log("Receive Answer");
-//       answer = content.data;
-//       peerConnection.setRemoteDescription(answer); //받은 Offer SDP -> 상대 피어에 대한 원격 설정으로 저장
-//     }
-
-//     // Candidate 수신
-//     else if (content.event == "candidate") {
-//       console.log("Receive Candidate");
-//       peerConnection.addIceCandidate(content.data); //// Remote Description에 설정되어있는 Peer와의 연결방식을 결정
-//     }
-//   });
-
-//   // Offer를 먼저 전송하는 버튼을 클릭했을 때 실행
-//   async function createOffer() {
-//     await getMedia();
-//     // 상대 Peer와 공유할 미디어 트랙을 추가
-//     myStream
-//       .getTracks()
-//       .forEach((track) => peerConnection.addTrack(track, myStream));
-
-//     // 상대 Peer에게 보낼 SDP Offer 생성
-//     var offer = await peerConnection.createOffer();
-
-//     // 시그널링 서버로 Offer 전송
-//     await send({
-//       event: "offer",
-//       data: offer,
-//     });
-//     console.log("Send Offer");
-
-//     //자신의 Local ICE Candidate를 Stun Server로부터 얻어와 등록-> onicecandidate 트리거 -> Candidate를 Socket에 Answer로 보냄
-//     peerConnection.setLocalDescription(offer);
-//   }
-//   // Browser의 미디어 Stream을 얻어낸다.
-//   async function getMedia() {
-//     try {
-//       myStream = await navigator.mediaDevices.getUserMedia({
-//         audio: true,
-//         video: true,
-//       });
-
-//       // 화면을 받고 싶은 경우
-//       // myStream = await navigator.mediaDevices.getDisplayMedia({
-//       //   video: {
-//       //     displaySurface: "window",
-//       //   },
-//       // });
-//       myFace.srcObject = myStream;
-//     } catch (e) {
-//       console.log("미디어 스트림 에러");
-//     }
-//   }
-//   // Signaling Server에 메세지를 보내는 Function
-//   async function send(message) {
-//     const data = {
-//       roomId: roomId,
-//       ...message,
-//     };
-//     streamSocket.emit("rtc-message", JSON.stringify(data));
-//   }
-// });
+  frsSocket.on("disconnect", () => {
+    logger.info("FRS Disconnected : " + frsSocket.id);
+    global.frsConnect = false;
+  });
+};
 
 module.exports = {
   Mapping: Mapping,
@@ -726,4 +692,5 @@ module.exports = {
   moveResponse: moveResponse,
   getTaskFile: getTaskFile,
   getConnection: getConnection,
+  connectSocket: connectSocket,
 };

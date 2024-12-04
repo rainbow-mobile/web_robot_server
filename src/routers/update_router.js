@@ -9,7 +9,8 @@ const update = require("../update.js");
 const os = require("os");
 const process = require("../process/runTest.js");
 const spath = require("../../setting.json");
-const db = require("../db/version.js");
+const versiondb = require("../db/version.js");
+const db = require("../db/main.js");
 const git = require("../git/git.js");
 
 router.use(bodyParser.json());
@@ -32,7 +33,8 @@ router.get("/versions/git/:filename", async (req, res) => {
 
 router.get("/version/make/:filename", (req, res) => {
   if (req.params.filename != "") {
-    db.makeLogTable(req.params.filename)
+    versiondb
+      .makeLogTable(req.params.filename)
       .then((result) => {
         res.send(result);
       })
@@ -151,7 +153,8 @@ router.post("/update", async (req, res) => {
                           console.error("sqlVersion err: ", err);
                         });
 
-                      db.makeLogTable(body.program)
+                      versiondb
+                        .makeLogTable(body.program)
                         .then(async () => {
                           const sql_log =
                             "INSERT log_" +

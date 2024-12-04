@@ -4,6 +4,7 @@ const axios = require("axios");
 const path = require("path");
 const csv = require("fast-csv");
 const { homedir } = require("os");
+const moment = require("moment");
 const logger = require("./log/logger");
 
 async function getDirEntry(dir, callback) {
@@ -17,7 +18,8 @@ async function getMapList(dir, father = { list: [] }) {
     if (file.isDirectory()) {
       const fullPath = path.join(dir, file.name);
       const stats = await fs.promises.stat(fullPath);
-      const model = { name: file.name, modifiedDate: stats.mtime, list: [] };
+      console.log(stats.mtime, moment(stats.mtime).toString());
+      const model = { name: file.name, modifyDt: stats.mtime, list: [] };
       const models = await getMapList(fullPath, model); // 재귀 호출
       father.list.push(models);
     } else {
@@ -38,7 +40,11 @@ async function getMapList2(dir, father = { list: [] }) {
     if (file.isDirectory()) {
       const fullPath = path.join(dir, file.name);
       const stats = await fs.promises.stat(fullPath);
-      const model = { name: file.name, modifiedDate: stats.mtime, list: [] };
+      const model = {
+        name: file.name,
+        modifyDt: moment(stats.mtime).format("yyyy-MM-DD HH:mm:ss"),
+        list: [],
+      };
       const models = await getMapList2(fullPath, model); // 재귀 호출
       if (models.list.find((obj) => obj.name === "cloud.csv"))
         father.list.push(models);
@@ -47,7 +53,10 @@ async function getMapList2(dir, father = { list: [] }) {
         if (file.name == "cloud.csv" || file.name == "topo.json") {
           const fullPath = path.join(dir, file.name);
           const stats = await fs.promises.stat(fullPath);
-          father.list.push({ name: file.name, modifiedDate: stats.mtime });
+          father.list.push({
+            name: file.name,
+            modifyDt: moment(stats.mtime).format("yyyy-MM-DD HH:mm:ss"),
+          });
         }
       }
     }
@@ -211,6 +220,7 @@ async function readJson(filepath, callback) {
   return new Promise(async (resolve, reject) => {
     try {
       const filecontent = fs.readFileSync(filepath, "utf-8");
+      // console.log(filecontent);
       const jsonData = JSON.parse(filecontent);
       resolve(jsonData);
     } catch (error) {

@@ -106,7 +106,7 @@ router.post("/control/move", async (req, res) => {
           res.send(data);
         })
         .catch((data) => {
-          logger.error("move " + req.body.command + " Error: " + data.message);
+          logger.error("move " + req.body.command + " Error: " + data?.message);
           res.send(data);
         });
     } else if (req.body.command == "jog") {

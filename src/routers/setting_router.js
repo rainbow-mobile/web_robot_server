@@ -10,6 +10,8 @@ const filesystem = require("../filesystem");
 const fs = require("fs");
 const spath = require("../../setting.json");
 const logger = require("../log/logger");
+const settingdb = require("../db/settingdb");
+const server = require("../socket/server");
 
 router.use(bodyParser.json());
 router.use(cors());
@@ -438,4 +440,39 @@ router.post("/setting/preset/:type/:id", (req, res) => {
   }
 });
 
+router.get("/url/frs", async (req, res) => {
+  global.frs_url = await settingdb.getVariable("frs_url");
+  global.frs_socket = await settingdb.getVariable("frs_socket");
+  global.frs_api = await settingdb.getVariable("frs_api");
+  res.send({
+    url: global.frs_url,
+    socket: global.frs_socket,
+    api: global.frs_api,
+  });
+});
+
+router.put("/url/frs", async (req, res) => {
+  console.log("FRS URL Change : ", req.body);
+  const { url } = req.body;
+  await settingdb.setVariable("frs_url", url);
+  await settingdb.setVariable("frs_socket", url + ":3001/socket/robots");
+  await settingdb.setVariable("frs_api", url + ":3000");
+  server.connectSocket();
+  res.send(await settingdb.getVariable("frs_socket"));
+});
+
+router.get("/frs", async (req, res) => {
+  global.frs_url = await settingdb.getVariable("frs_url");
+  global.frs_socket = await settingdb.getVariable("frs_socket");
+  global.frs_api = await settingdb.getVariable("frs_api");
+  res.send({
+    connection: global.frsConnect,
+    uuid: global.robotUuid,
+    mac: global.robotMcAdrs,
+    name: global.robotNm,
+    url: global.frs_url,
+    socket: global.frs_socket,
+    api: global.frs_api,
+  });
+});
 module.exports = router;
