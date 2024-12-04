@@ -62,7 +62,7 @@ async function updateState(state) {
 async function updatePower(state) {
   try {
     var sql =
-      "INSERT power (battery_in, battery_out, battery_current, power, total_power, motor0_temp, motor0_current, motor0_status, motor1_temp, motor1_current, motor1_status, charge_curretn, contact_voltage) values (";
+      "INSERT power (battery_in, battery_out, battery_current, power, total_power, motor0_temp, motor0_current, motor0_status, motor1_temp, motor1_current, motor1_status, charge_current, contact_voltage) values (";
     sql += "'" + state.power.bat_in + "'";
     sql += ", '" + state.power.bat_out + "'";
     sql += ", '" + state.power.bat_current + "'";

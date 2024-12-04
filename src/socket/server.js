@@ -17,6 +17,7 @@ const schedule = require("node-schedule");
 const logger = require("../log/logger");
 const settingdb = require("../db/settingdb");
 const { glob } = require("fs");
+const network = require("../network");
 
 const app = express();
 app.use(bodyParser.json());
@@ -85,7 +86,7 @@ web_io.on("connection", (socket) => {
   });
 
   socket.on("init", () => {
-    logger.info(
+    console.log(
       "WebSocket Init : " +
         socket.id +
         " -> " +
@@ -93,6 +94,7 @@ web_io.on("connection", (socket) => {
         moveState +
         taskState
     );
+    console.log(taskState.running, taskState.file);
     web_io.emit("init", {
       slam: robotState,
       move: moveState,
@@ -161,11 +163,22 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         status: json,
       };
-      // console.debug("emit status ", json.time);
       frsSocket.emit("robots-status", sendData);
     }
   });
   socket.on("move", (data) => {
+    const json = JSON.parse(data);
+    moveResponse(json);
+    logger.debug("receive : move " + json.command + " -> " + json.result);
+    if (json.command == "target" || json.command == "goal") {
+      web_io.emit("move", json);
+      moveState = json;
+    } else if (json.command == "stop") {
+      // moveState = null;
+    }
+  });
+
+  socket.on("moveResponse", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
     logger.debug("receive : move " + json.command + " -> " + json.result);
@@ -188,22 +201,25 @@ slam_io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     logger.info("SlamSocket Disconnected : " + socket.id);
-
-    if (moveState && moveState.result == "accept") {
-      moveResponse({
-        ...moveState,
-        result: "fail",
-        message: "disconnected",
-      });
-    }
-
-    if (taskState.running) {
-      stopTask();
-      web_io.emit("task_error", "disconnected");
-    }
-    taskState.running = false;
-    moveState = null;
     slamnav = null;
+    try {
+      if (moveState && moveState.result == "accept") {
+        moveResponse({
+          ...moveState,
+          result: "fail",
+          message: "disconnected",
+        });
+      }
+
+      if (taskState.running) {
+        stopTask();
+        web_io.emit("task_error", "disconnected");
+      }
+      taskState.running = false;
+      moveState = null;
+    } catch (e) {
+      console.error("Socket Disconnect Error : ", e);
+    }
   });
 });
 
@@ -278,15 +294,6 @@ task_io.on("connection", (socket) => {
     taskState.id = data.id;
     taskState.running = data.running;
     taskState.variables = JSON.parse(data.variables);
-
-    console.log("Task Variables : ", JSON.parse(data.variables));
-  });
-
-  socket.on("init", (data) => {
-    logger.info("TaskSocket Init : " + data.file + ", " + data.running);
-    taskState.file = data.file;
-    taskState.id = data.id;
-    taskState.running = data.running;
   });
 
   socket.on("move", (data) => {
@@ -523,9 +530,13 @@ function moveCommand(data) {
     if (slamnav != null && slamnav != undefined) {
       if (isReadyMove()) {
         slamnav.emit("move", stringifyAllValues(data));
-        logger.debug("moveCommand : " + stringifyAllValues(data));
+        logger.debug("moveCommand");
 
         slamnav.once("move", (data) => {
+          resolve(data);
+          clearTimeout(timeoutId);
+        });
+        slamnav.once("moveResponse", (data) => {
           resolve(data);
           clearTimeout(timeoutId);
         });
@@ -638,6 +649,11 @@ const connectSocket = async () => {
     frsSocket = null;
   }
 
+  const result = await network.getNetwork();
+
+  global.ip_ethernet = result.ethernet[0]?.ip;
+  global.ip_wifi = result.wifi[0]?.ip;
+  console.log("result : ",  global.ip_ethernet,global.ip_wifi);
   global.frs_url = await settingdb.getVariable("frs_url");
   global.frs_socket = await settingdb.getVariable("frs_socket");
   global.frs_api = await settingdb.getVariable("frs_api");
@@ -652,13 +668,17 @@ const connectSocket = async () => {
 
     global.robotUuid = await settingdb.getVariable("robotUuid");
     global.frsConnect = true;
+
+
     const sendData = {
       robotMcAdrs: global.robotMcAdrs,
+      robotIpAdrs: global.ip_wifi==""?global.ip_ethernet:global.ip_wifi
     };
 
-    frsSocket.emit("robots-add", sendData);
+    console.log("Robots Add : ",sendData);
+    frsSocket.emit("robots-init", sendData);
 
-    frsSocket.on("robots-add", (data) => {
+    frsSocket.on("robots-init", (data) => {
       logger.info("Get UUID : " + data);
       const json = JSON.parse(data);
       if (json.robotMcAdrs == global.robotMcAdrs) {
