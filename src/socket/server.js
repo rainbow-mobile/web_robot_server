@@ -128,6 +128,7 @@ setInterval(() => {
     }
   }
 }, 500);
+
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
@@ -161,7 +162,7 @@ slam_io.on("connection", (socket) => {
         status: json,
       };
       // console.debug("emit status ", json.time);
-      // frsSocket.emit("robots-status", sendData);
+      frsSocket.emit("robots-status", sendData);
     }
   });
   socket.on("move", (data) => {
@@ -177,12 +178,10 @@ slam_io.on("connection", (socket) => {
   });
 
   socket.on("dockResponse", (data) => {
-    console.log(data);
     const json = JSON.parse(data);
-    console.log(json, json.result);
-    logger.info("Slamnav Dock Response : ", json.result);
+    logger.info("Slamnav Dock Response : " + json.result);
     if (taskproc) {
-      logger.info("send to task : ", json);
+      logger.info("send to task : " + json);
       taskproc.emit("dockResponse", json);
     }
   });
