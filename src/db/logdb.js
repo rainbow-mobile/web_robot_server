@@ -7,7 +7,7 @@ async function getState(state) {
   if (state.state.charge == undefined) {
     console.log(state);
   }
-  if (state.state.charge == "true") {
+  if (state.state.charge != "none" && state.state.dock == "true") {
     return "Charging";
   } else {
     if (state.state.power == "false") {
@@ -40,14 +40,15 @@ async function getState(state) {
 async function updateState(state) {
   try {
     var sql =
-      "INSERT state (state, auto_state, localization, power, emo, obs_state, charging, inlier_ratio, inlier_error) values (";
+      "INSERT state (state, auto_state, localization, power, emo, obs_state, charging, dock, inlier_ratio, inlier_error) values (";
     sql += "'" + (await getState(state)) + "'";
     sql += ", '" + state.condition.auto_state + "'";
     sql += ", '" + state.state.localization + "'";
-    sql += state.state.power ? ", '1'" : ", '0'";
-    sql += state.state.emo ? ", '1'" : ", '0'";
+    sql += state.state.power === "true" ? ", '1'" : ", '0'";
+    sql += state.state.emo === "true" ? ", '1'" : ", '0'";
     sql += ", '" + state.condition.obs_state + "'";
-    sql += state.state.charge ? ", '1'" : ", '0'";
+    sql += ", '" + state.state.charge + "'";
+    sql += state.state.dock === "true" ? ", '1'" : ", '0'";
     sql += ", '" + state.condition.inlier_ratio + "'";
     sql += ", '" + state.condition.inlier_error + "');";
 
@@ -61,7 +62,7 @@ async function updateState(state) {
 async function updatePower(state) {
   try {
     var sql =
-      "INSERT power (battery_in, battery_out, battery_current, power, total_power, motor0_temp, motor0_current, motor0_status, motor1_temp, motor1_current, motor1_status) values (";
+      "INSERT power (battery_in, battery_out, battery_current, power, total_power, motor0_temp, motor0_current, motor0_status, motor1_temp, motor1_current, motor1_status, charge_current, contact_voltage) values (";
     sql += "'" + state.power.bat_in + "'";
     sql += ", '" + state.power.bat_out + "'";
     sql += ", '" + state.power.bat_current + "'";
@@ -71,8 +72,20 @@ async function updatePower(state) {
     sql += ", '" + state.motor[0].current + "'";
     sql += ", '" + state.motor[0].status + "'";
     sql += ", '" + state.motor[1].temp + "'";
-    sql += ", '" + state.motor[0].current + "'";
-    sql += ", '" + state.motor[1].status + "');";
+    sql += ", '" + state.motor[1].current + "'";
+    sql += ", '" + state.motor[1].status + "'";
+    sql +=
+      ", '" +
+      (state.power.charge_current !== undefined
+        ? state.power.charge_current
+        : 0) +
+      "'";
+    sql +=
+      ", '" +
+      (state.power.contact_voltage !== undefined
+        ? state.power.contact_voltage
+        : 0) +
+      "');";
 
     // console.log("updatePower Querry: ", sql);
     await setQuery(sql);
