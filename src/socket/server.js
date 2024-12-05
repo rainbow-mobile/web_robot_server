@@ -635,11 +635,9 @@ function getConnection() {
 }
 var frsSocket;
 
-const intervalFrsSocket = setInterval(() => {
-  if (!global.frsConnect) {
-    connectSocket();
-  }
-}, 3000);
+setTimeout(()=>{
+  connectSocket();
+},5000);
 
 const connectSocket = async () => {
   if (frsSocket) {
@@ -650,7 +648,6 @@ const connectSocket = async () => {
   }
 
   const result = await network.getNetwork();
-
   global.ip_ethernet = result.ethernet[0]?.ip;
   global.ip_wifi = result.wifi[0]?.ip;
   console.log("result : ",  global.ip_ethernet,global.ip_wifi);
@@ -661,38 +658,46 @@ const connectSocket = async () => {
 
   console.log("frs : ", global.frs_socket, global.robotMcAdrs);
 
+  console.log("connectSocket : ",global.frs_socket)
   frsSocket = socketClient(global.frs_socket);
-
   frsSocket.on("connect", async () => {
-    logger.info("FRS Connected : " + frsSocket.id);
-
-    global.robotUuid = await settingdb.getVariable("robotUuid");
-    global.frsConnect = true;
-
-
-    const sendData = {
-      robotMcAdrs: global.robotMcAdrs,
-      robotIpAdrs: global.ip_wifi==""?global.ip_ethernet:global.ip_wifi
-    };
-
-    console.log("Robots Add : ",sendData);
-    frsSocket.emit("robots-init", sendData);
-
-    frsSocket.on("robots-init", (data) => {
-      logger.info("Get UUID : " + data);
-      const json = JSON.parse(data);
-      if (json.robotMcAdrs == global.robotMcAdrs) {
-        global.robotNm = json.robotNm;
-        global.robotUuid = json.robotUuid;
-        global.robotMcAdrs = json.robotMcAdrs;
-        settingdb.setVariable("robotUuid", json.robotUuid);
-        settingdb.setVariable("robotName", json.robotNm);
-      }
-    });
+    try{
+      logger.info("FRS Connected : " + frsSocket.id);
+  
+      frsSocket.off();
+      global.robotUuid = await settingdb.getVariable("robotUuid");
+      global.frsConnect = true;
+  
+  
+      const sendData = {
+        robotMcAdrs: global.robotMcAdrs,
+        robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
+      };
+  
+      console.log("Robots Add : ",sendData);
+      frsSocket.emit("robots-init", sendData);
+  
+      frsSocket.on("robots-init", (data) => {
+        const json = JSON.parse(data);
+        if (json.robotMcAdrs == global.robotMcAdrs) {
+          logger.info("Get UUID : " + data);
+          global.robotNm = json.robotNm;
+          global.robotUuid = json.robotUuid;
+          global.robotMcAdrs = json.robotMcAdrs;
+          settingdb.setVariable("robotUuid", json.robotUuid);
+          settingdb.setVariable("robotName", json.robotNm);
+        }
+      });
+    }catch(e){
+      console.error(e);
+    }
   });
+
 
   frsSocket.on("disconnect", () => {
     logger.info("FRS Disconnected : " + frsSocket.id);
+    frsSocket.off();
+    frsSocket.close();
     global.frsConnect = false;
   });
 };
