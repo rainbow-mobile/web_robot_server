@@ -170,12 +170,12 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         data: data,
       };
+      console.log("Frs Emit GlobalPath : "+data.length);
       frsSocket.emit("global_path", sendData);
     }
   });
 
   socket.on("status", (data) => {
-    console.log("status in");
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
@@ -725,8 +725,8 @@ const connectSocket = async () => {
       // })
       frsSocket.on("move",(data) => {
         const json = JSON.parse(data);
-        logger.info("Frs Move Command : " + json.command);
-        slamnav.emit("move",data);
+        logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
+        slamnav.emit("move",stringifyAllValues(json));
       })
     }catch(e){
       console.error(e);
