@@ -40,7 +40,8 @@ const create_state = `CREATE TABLE state(
 	power tinyint(1) not null,
 	emo tinyint(1) not null,
 	obs_state varchar(32) not null,
-	charging tinyint(1) not null,
+	charging varchar(32) not null,
+	dock tinyint(1),
 	inlier_ratio double not null,
 	inlier_error double not null	
 );`;
@@ -56,7 +57,9 @@ const create_power = `CREATE TABLE power(
 	motor0_status int not null,
 	motor1_temp double not null,
 	motor1_current double not null,
-	motor1_status int not null	
+	motor1_status int not null,	
+	charge_current double not null,
+	contact_voltage double not null
 );`;
 const create_variables = `CREATE TABLE variables(
 	keystr varchar(128) not null primary key,

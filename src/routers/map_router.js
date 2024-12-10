@@ -139,7 +139,7 @@ router.get("/map/cloud/:map_name", (req, res) => {
       filesystem
         .readCsv(path)
         .then((data) => {
-          res.send(pako.gzip(new Uint8Array(data)));
+          res.send(data);
         })
         .catch((error) => {
           logger.error(
