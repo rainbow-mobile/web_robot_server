@@ -25,6 +25,7 @@ const router_task = require("./routers/task_router");
 
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUI = require("swagger-ui-express");
+const { homedir } = require("os");
 
 const httplogStream = fs.createWriteStream("Log/HTTP.log", { flags: "a" });
 
@@ -73,6 +74,25 @@ const mainServer = http.createServer(app);
 
 network.scan();
 // monitor.getServerInfo();
+
+const createFolderIfNotExists = (folderPath) => {
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
+    console.log('폴더가 생성되었습니다:', folderPath);
+  } else {
+    console.log('폴더가 이미 존재합니다:', folderPath);
+  }
+};
+const init = () => {
+  try{
+    createFolderIfNotExists(homedir()+"/upload")
+    createFolderIfNotExists(homedir()+"/maps")
+  }catch(e){
+    console.error(e);
+  }
+}
+init();
+
 
 mainServer.on("error", (e) => {
   logger.error("Server Error : ", e);

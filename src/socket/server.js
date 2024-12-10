@@ -139,6 +139,13 @@ slam_io.on("connection", (socket) => {
 
   socket.on("lidar_cloud", (cloud) => {
     web_io.emit("lidar", cloud);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: cloud,
+      };
+      frsSocket.emit("lidar", sendData);
+    }
   });
 
   socket.on("mapping_cloud", (cloud) => {
@@ -147,11 +154,25 @@ slam_io.on("connection", (socket) => {
 
   socket.on("local_path", (data) => {
     web_io.emit("local_path", data);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: data,
+      };
+      frsSocket.emit("local_path", sendData);
+    }
   });
 
   socket.on("global_path", (data) => {
-    // logger.debug("receive : global_path");
     web_io.emit("global_path", data);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: data,
+      };
+      console.log("Frs Emit GlobalPath : "+data.length);
+      frsSocket.emit("global_path", sendData);
+    }
   });
 
   socket.on("status", (data) => {
@@ -169,9 +190,11 @@ slam_io.on("connection", (socket) => {
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
+    
     logger.debug("receive : move " + json.command + " -> " + json.result);
     if (json.command == "target" || json.command == "goal") {
       web_io.emit("move", json);
+      
       moveState = json;
     } else if (json.command == "stop") {
       // moveState = null;
@@ -325,6 +348,14 @@ function stringifyAllValues(obj) {
 function moveResponse(data) {
   if (taskproc != null) {
     taskproc.emit("move", data);
+}
+  if (frsSocket != null) {
+    const sendData = {
+      robotUuid: global.robotUuid,
+      data: data,
+    };
+    console.log("move frsSocket emit");
+    frsSocket.emit("move", sendData);
   }
 }
 
@@ -381,7 +412,7 @@ function runTask() {
   return new Promise((resolve, reject) => {
     if (taskproc != null) {
       taskproc.emit("run");
-      logger.info("emit run Task : " + path);
+      logger.info("emit run Task ");
 
       taskproc.on("run", (data) => {
         logger.info("load run Success : " + data.file);
@@ -688,6 +719,12 @@ const connectSocket = async () => {
           settingdb.setVariable("robotName", json.robotNm);
         }
       });
+      
+      frsSocket.on("move",(data) => {
+        const json = JSON.parse(data);
+        logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
+        slamnav.emit("move",stringifyAllValues(json));
+      })
     }catch(e){
       console.error(e);
     }
