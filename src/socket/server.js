@@ -17,6 +17,7 @@ const schedule = require("node-schedule");
 const logger = require("../log/logger");
 const settingdb = require("../db/settingdb");
 const { glob } = require("fs");
+const network = require("../network");
 
 const app = express();
 app.use(bodyParser.json());
@@ -85,7 +86,7 @@ web_io.on("connection", (socket) => {
   });
 
   socket.on("init", () => {
-    logger.info(
+    console.log(
       "WebSocket Init : " +
         socket.id +
         " -> " +
@@ -93,6 +94,7 @@ web_io.on("connection", (socket) => {
         moveState +
         taskState
     );
+    console.log(taskState.running, taskState.file);
     web_io.emit("init", {
       slam: robotState,
       move: moveState,
@@ -137,6 +139,13 @@ slam_io.on("connection", (socket) => {
 
   socket.on("lidar_cloud", (cloud) => {
     web_io.emit("lidar", cloud);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: cloud,
+      };
+      frsSocket.emit("lidar", sendData);
+    }
   });
 
   socket.on("mapping_cloud", (cloud) => {
@@ -145,11 +154,25 @@ slam_io.on("connection", (socket) => {
 
   socket.on("local_path", (data) => {
     web_io.emit("local_path", data);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: data,
+      };
+      frsSocket.emit("local_path", sendData);
+    }
   });
 
   socket.on("global_path", (data) => {
-    // logger.debug("receive : global_path");
     web_io.emit("global_path", data);
+    if (frsSocket != null && frsSocket.id != undefined) {
+      const sendData = {
+        robotUuid: global.robotUuid,
+        data: data,
+      };
+      console.log("Frs Emit GlobalPath : "+data.length);
+      frsSocket.emit("global_path", sendData);
+    }
   });
 
   socket.on("status", (data) => {
@@ -161,11 +184,25 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         status: json,
       };
-      // console.debug("emit status ", json.time);
       frsSocket.emit("robots-status", sendData);
     }
   });
+
   socket.on("move", (data) => {
+    const json = JSON.parse(data);
+    moveResponse(json);
+    
+    logger.debug("receive : move " + json.command + " -> " + json.result);
+    if (json.command == "target" || json.command == "goal") {
+      web_io.emit("move", json);
+      
+      moveState = json;
+    } else if (json.command == "stop") {
+      // moveState = null;
+    }
+  });
+
+  socket.on("moveResponse", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
     logger.debug("receive : move " + json.command + " -> " + json.result);
@@ -188,22 +225,25 @@ slam_io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     logger.info("SlamSocket Disconnected : " + socket.id);
-
-    if (moveState && moveState.result == "accept") {
-      moveResponse({
-        ...moveState,
-        result: "fail",
-        message: "disconnected",
-      });
-    }
-
-    if (taskState.running) {
-      stopTask();
-      web_io.emit("task_error", "disconnected");
-    }
-    taskState.running = false;
-    moveState = null;
     slamnav = null;
+    try {
+      if (moveState && moveState.result == "accept") {
+        moveResponse({
+          ...moveState,
+          result: "fail",
+          message: "disconnected",
+        });
+      }
+
+      if (taskState.running) {
+        stopTask();
+        web_io.emit("task_error", "disconnected");
+      }
+      taskState.running = false;
+      moveState = null;
+    } catch (e) {
+      console.error("Socket Disconnect Error : ", e);
+    }
   });
 });
 
@@ -278,15 +318,6 @@ task_io.on("connection", (socket) => {
     taskState.id = data.id;
     taskState.running = data.running;
     taskState.variables = JSON.parse(data.variables);
-
-    console.log("Task Variables : ", JSON.parse(data.variables));
-  });
-
-  socket.on("init", (data) => {
-    logger.info("TaskSocket Init : " + data.file + ", " + data.running);
-    taskState.file = data.file;
-    taskState.id = data.id;
-    taskState.running = data.running;
   });
 
   socket.on("move", (data) => {
@@ -318,6 +349,14 @@ function stringifyAllValues(obj) {
 function moveResponse(data) {
   if (taskproc != null) {
     taskproc.emit("move", data);
+}
+  if (frsSocket != null) {
+    const sendData = {
+      robotUuid: global.robotUuid,
+      data: data,
+    };
+    console.log("move frsSocket emit");
+    frsSocket.emit("move", sendData);
   }
 }
 
@@ -374,7 +413,7 @@ function runTask() {
   return new Promise((resolve, reject) => {
     if (taskproc != null) {
       taskproc.emit("run");
-      logger.info("emit run Task : " + path);
+      logger.info("emit run Task ");
 
       taskproc.on("run", (data) => {
         logger.info("load run Success : " + data.file);
@@ -523,9 +562,13 @@ function moveCommand(data) {
     if (slamnav != null && slamnav != undefined) {
       if (isReadyMove()) {
         slamnav.emit("move", stringifyAllValues(data));
-        logger.debug("moveCommand : " + stringifyAllValues(data));
+        logger.debug("moveCommand");
 
         slamnav.once("move", (data) => {
+          resolve(data);
+          clearTimeout(timeoutId);
+        });
+        slamnav.once("moveResponse", (data) => {
           resolve(data);
           clearTimeout(timeoutId);
         });
@@ -624,11 +667,9 @@ function getConnection() {
 }
 var frsSocket;
 
-const intervalFrsSocket = setInterval(() => {
-  if (!global.frsConnect) {
-    connectSocket();
-  }
-}, 3000);
+setTimeout(()=>{
+  connectSocket();
+},5000);
 
 const connectSocket = async () => {
   if (frsSocket) {
@@ -638,6 +679,10 @@ const connectSocket = async () => {
     frsSocket = null;
   }
 
+  const result = await network.getNetwork();
+  global.ip_ethernet = result.ethernet[0]?.ip;
+  global.ip_wifi = result.wifi[0]?.ip;
+  console.log("result : ",  global.ip_ethernet,global.ip_wifi);
   global.frs_url = await settingdb.getVariable("frs_url");
   global.frs_socket = await settingdb.getVariable("frs_socket");
   global.frs_api = await settingdb.getVariable("frs_api");
@@ -645,34 +690,54 @@ const connectSocket = async () => {
 
   console.log("frs : ", global.frs_socket, global.robotMcAdrs);
 
+  console.log("connectSocket : ",global.frs_socket)
   frsSocket = socketClient(global.frs_socket);
-
   frsSocket.on("connect", async () => {
-    logger.info("FRS Connected : " + frsSocket.id);
+    try{
+      logger.info("FRS Connected : " + frsSocket.id);
+  
+      frsSocket.off();
+      global.robotUuid = await settingdb.getVariable("robotUuid");
+      global.frsConnect = true;
+    
+      const sendData = {
+        robotMcAdrs: global.robotMcAdrs,
+        robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
+      };
+  
+      console.log("Robots Add : ",sendData);
+      frsSocket.emit("robots-init", sendData);
+  
+      frsSocket.on("robots-init", (data) => {
+        const json = JSON.parse(data);
+        if (json.robotMcAdrs == global.robotMcAdrs) {
+          logger.info("Get UUID : " + data);
+          global.robotNm = json.robotNm;
+          global.robotUuid = json.robotUuid;
+          global.robotMcAdrs = json.robotMcAdrs;
+          settingdb.setVariable("robotUuid", json.robotUuid);
+          settingdb.setVariable("robotName", json.robotNm);
+        }
+      });
 
-    global.robotUuid = await settingdb.getVariable("robotUuid");
-    global.frsConnect = true;
-    const sendData = {
-      robotMcAdrs: global.robotMcAdrs,
-    };
-
-    frsSocket.emit("robots-add", sendData);
-
-    frsSocket.on("robots-add", (data) => {
-      logger.info("Get UUID : " + data);
-      const json = JSON.parse(data);
-      if (json.robotMcAdrs == global.robotMcAdrs) {
-        global.robotNm = json.robotNm;
-        global.robotUuid = json.robotUuid;
-        global.robotMcAdrs = json.robotMcAdrs;
-        settingdb.setVariable("robotUuid", json.robotUuid);
-        settingdb.setVariable("robotName", json.robotNm);
-      }
-    });
+      // frsSocket.on("robots-status",(data)=>{
+      //   console.log("robots-status : ",data);
+      // })
+      frsSocket.on("move",(data) => {
+        const json = JSON.parse(data);
+        logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
+        slamnav.emit("move",stringifyAllValues(json));
+      })
+    }catch(e){
+      console.error(e);
+    }
   });
+
 
   frsSocket.on("disconnect", () => {
     logger.info("FRS Disconnected : " + frsSocket.id);
+    frsSocket.off();
+    frsSocket.close();
     global.frsConnect = false;
   });
 };
