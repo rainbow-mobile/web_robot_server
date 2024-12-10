@@ -34,6 +34,7 @@ function getCloud(name) {
   return path.join(home_path, "maps", name, "cloud.csv").toString();
 }
 function getTopo(name) {
+  console.log(`getTopo name: ${name}`)
   return path.join(home_path, "maps", name, "topo.json").toString();
 }
 
