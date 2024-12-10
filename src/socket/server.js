@@ -756,7 +756,7 @@ const connectSocket = async () => {
     frsSocket.off();
     frsSocket.close();
     global.frsConnect = false;
-  });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
+  });
 };
 
 module.exports = {
