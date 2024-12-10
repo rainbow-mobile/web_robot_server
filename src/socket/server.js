@@ -141,7 +141,7 @@ setInterval(async() => {
       robotUuid: global.robotUuid,
       data: lidarCloud
     };
-    console.log("lidar send: ",lidarCloud.data.length)
+    //console.log("lidar send: ",lidarCloud.data.length)
     frsSocket.emit("lidar",pako.gzip(JSON.stringify(lidarData)));
 
   const statusData = {
@@ -150,7 +150,7 @@ setInterval(async() => {
   };
   frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
   }
-}, 5000);
+}, 100);
 
 
 ////**********************************Slamserver */
@@ -756,7 +756,7 @@ const connectSocket = async () => {
     frsSocket.off();
     frsSocket.close();
     global.frsConnect = false;
-  });
+  });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
 };
 
 module.exports = {

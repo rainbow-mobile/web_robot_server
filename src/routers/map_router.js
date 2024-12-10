@@ -11,7 +11,7 @@ const fs = require("fs");
 const compression = require("compression");
 const socket = require("../socket/server");
 const logger = require("../log/logger");
-
+const pako = require("pako")
 const home_path = "/home/rainbow";
 router.use(bodyParser.json({ limit: "100mb" }));
 router.use(bodyParser.urlencoded({ limit: "100mb", extended: false }));
