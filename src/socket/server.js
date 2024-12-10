@@ -187,7 +187,6 @@ slam_io.on("connection", (socket) => {
       frsSocket.emit("robots-status", sendData);
     }
   });
-
   socket.on("move", (data) => {
     const json = JSON.parse(data);
     moveResponse(json);
@@ -699,7 +698,8 @@ const connectSocket = async () => {
       frsSocket.off();
       global.robotUuid = await settingdb.getVariable("robotUuid");
       global.frsConnect = true;
-    
+  
+  
       const sendData = {
         robotMcAdrs: global.robotMcAdrs,
         robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
@@ -719,10 +719,7 @@ const connectSocket = async () => {
           settingdb.setVariable("robotName", json.robotNm);
         }
       });
-
-      // frsSocket.on("robots-status",(data)=>{
-      //   console.log("robots-status : ",data);
-      // })
+      
       frsSocket.on("move",(data) => {
         const json = JSON.parse(data);
         logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
