@@ -16,6 +16,7 @@ const cors = require("cors");
 const schedule = require("node-schedule");
 const logger = require("../log/logger");
 const settingdb = require("../db/settingdb");
+const pako = require("pako");
 const { glob } = require("fs");
 const network = require("../network");
 
@@ -53,6 +54,9 @@ var taskState = {
   variables: [],
 };
 let robotState;
+let lidarCloud = {data:[]};
+let GlobaPath = [];
+let LocalPath = [];
 
 Slamserver.on("error", (e) => {
   logger.error("SlamSocket Error : ", e);
@@ -131,21 +135,34 @@ setInterval(() => {
   }
 }, 500);
 
+setInterval(async() => {
+  if (frsSocket?.id && slamnav) {
+    const lidarData = {
+      robotUuid: global.robotUuid,
+      data: lidarCloud
+    };
+    console.log("lidar send: ",lidarCloud.data.length)
+    frsSocket.emit("lidar",pako.gzip(JSON.stringify(lidarData)));
+
+  const statusData = {
+    robotUuid: global.robotUuid,
+    status: robotState,
+  };
+  frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
+  }
+}, 5000);
+
+
 ////**********************************Slamserver */
 slam_io.on("connection", (socket) => {
   socket.request = null;
   logger.info("SlamSocket Connected : " + socket.id);
   slamnav = socket;
-
+  console.log("SlamSocket Events : ",socket.eventNames());
+  
   socket.on("lidar_cloud", (cloud) => {
     web_io.emit("lidar", cloud);
-    if (frsSocket != null && frsSocket.id != undefined) {
-      const sendData = {
-        robotUuid: global.robotUuid,
-        data: cloud,
-      };
-      frsSocket.emit("lidar", sendData);
-    }
+    lidarCloud = cloud;
   });
 
   socket.on("mapping_cloud", (cloud) => {
@@ -159,7 +176,7 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         data: data,
       };
-      frsSocket.emit("local_path", sendData);
+      frsSocket.emit("local_path", pako.gzip(JSON.stringify(sendData)));
     }
   });
 
@@ -171,7 +188,7 @@ slam_io.on("connection", (socket) => {
         data: data,
       };
       console.log("Frs Emit GlobalPath : "+data.length);
-      frsSocket.emit("global_path", sendData);
+      frsSocket.emit("global_path", pako.gzip(JSON.stringify(sendData)));
     }
   });
 
@@ -179,13 +196,6 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
-    if (frsSocket != null && frsSocket.id != undefined) {
-      const sendData = {
-        robotUuid: global.robotUuid,
-        status: json,
-      };
-      frsSocket.emit("robots-status", sendData);
-    }
   });
   socket.on("move", (data) => {
     const json = JSON.parse(data);
@@ -222,6 +232,7 @@ slam_io.on("connection", (socket) => {
     }
   });
 
+  console.log("SlamSocket Events : ",socket.eventNames());
   socket.on("disconnect", () => {
     logger.info("SlamSocket Disconnected : " + socket.id);
     slamnav = null;
@@ -352,10 +363,10 @@ function moveResponse(data) {
   if (frsSocket != null) {
     const sendData = {
       robotUuid: global.robotUuid,
-      data: data,
+      data: stringifyAllValues(data)
     };
     console.log("move frsSocket emit");
-    frsSocket.emit("move", sendData);
+    frsSocket.emit("move", pako.gzip(JSON.stringify(sendData)));
   }
 }
 
@@ -664,12 +675,20 @@ function getConnection() {
     TASK: taskproc ? true : false,
   };
 }
-var frsSocket;
+var frsSocket = null;
 
 setTimeout(()=>{
   connectSocket();
 },5000);
+function isGzip(data) {
+  // 데이터가 최소 2바이트 이상이어야 합니다.
+  if (data.length < 2) {
+      return false;
+  }
 
+  // 데이터의 첫 2바이트가 0x1f 0x8b인지 확인 (gzip 시그니처)
+  return data[0] === 0x1f && data[1] === 0x8b;
+}
 const connectSocket = async () => {
   if (frsSocket) {
     frsSocket.disconnect();
@@ -706,12 +725,14 @@ const connectSocket = async () => {
       };
   
       console.log("Robots Add : ",sendData);
-      frsSocket.emit("robots-init", sendData);
+      frsSocket.emit("robots-init", pako.gzip(JSON.stringify(sendData)));
   
       frsSocket.on("robots-init", (data) => {
-        const json = JSON.parse(data);
+
+        const json = JSON.parse(pako.ungzip(data, {to:'string'}));
+        
         if (json.robotMcAdrs == global.robotMcAdrs) {
-          logger.info("Get UUID : " + data);
+          logger.info(`Get UUID : uuid(${json.robotUuid}), ip(${json.robotIpAdrs}), mc(${json.robotMcAdrs}), name(${json.robotNm})`);
           global.robotNm = json.robotNm;
           global.robotUuid = json.robotUuid;
           global.robotMcAdrs = json.robotMcAdrs;
@@ -719,9 +740,8 @@ const connectSocket = async () => {
           settingdb.setVariable("robotName", json.robotNm);
         }
       });
-      
       frsSocket.on("move",(data) => {
-        const json = JSON.parse(data);
+        const json = JSON.parse(pako.ungzip(data, {to:'string'}));
         logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
         slamnav.emit("move",stringifyAllValues(json));
       })
