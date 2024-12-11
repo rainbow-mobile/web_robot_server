@@ -141,8 +141,7 @@ setInterval(async() => {
       robotUuid: global.robotUuid,
       data: lidarCloud
     };
-    //console.log("lidar send: ",lidarCloud.data.length)
-    frsSocket.emit("lidar",pako.gzip(JSON.stringify(lidarData)));
+    frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
 
   const statusData = {
     robotUuid: global.robotUuid,
@@ -176,7 +175,7 @@ slam_io.on("connection", (socket) => {
         robotUuid: global.robotUuid,
         data: data,
       };
-      frsSocket.emit("local_path", pako.gzip(JSON.stringify(sendData)));
+      frsSocket.emit("local-path", pako.gzip(JSON.stringify(sendData)));
     }
   });
 
@@ -188,7 +187,7 @@ slam_io.on("connection", (socket) => {
         data: data,
       };
       console.log("Frs Emit GlobalPath : "+data.length);
-      frsSocket.emit("global_path", pako.gzip(JSON.stringify(sendData)));
+      frsSocket.emit("global-path", pako.gzip(JSON.stringify(sendData)));
     }
   });
 
@@ -366,7 +365,7 @@ function moveResponse(data) {
       data: stringifyAllValues(data)
     };
     console.log("move frsSocket emit");
-    frsSocket.emit("move", pako.gzip(JSON.stringify(sendData)));
+    frsSocket.emit("rrs-move", pako.gzip(JSON.stringify(sendData)));
   }
 }
 
