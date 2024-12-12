@@ -50,7 +50,7 @@ async function getMapList2(dir, father = { list: [] }) {
         father.list.push(models);
     } else {
       if (father.length != 0) {
-        if (file.name == "cloud.csv" || file.name == "topo.json") {
+        if (file.name == "cloud.csv" || file.name == "topo.json" || file.name.split('.')[1] == "task") {
           const fullPath = path.join(dir, file.name);
           const stats = await fs.promises.stat(fullPath);
           father.list.push({
