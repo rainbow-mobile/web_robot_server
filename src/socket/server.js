@@ -742,7 +742,9 @@ const connectSocket = async () => {
       frsSocket.on("move",(data) => {
         const json = JSON.parse(pako.ungzip(data, {to:'string'}));
         logger.info(`Frs Move Command : ${json.command}, ${json.id}`);
-        slamnav.emit("move",stringifyAllValues(json));
+        if(slamnav){
+          slamnav.emit("move",stringifyAllValues(json));
+        }
       })
     }catch(e){
       console.error(e);
