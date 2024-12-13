@@ -54,7 +54,7 @@ async function updateState(state) {
 
     await setQuery(sql);
   } catch (error) {
-    console.error("updateState Error : ", error);
+    // console.error("updateState Error : ", error);
   }
 }
 
@@ -90,7 +90,7 @@ async function updatePower(state) {
     // console.log("updatePower Querry: ", sql);
     await setQuery(sql);
   } catch (error) {
-    console.error("updatePower Error : ", error);
+    // console.error("updatePower Error : ", error);
   }
 }
 
