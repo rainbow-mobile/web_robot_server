@@ -138,7 +138,7 @@ setInterval(() => {
 }, 500);
 
 setInterval(async() => {
-  if (global.frsConnect) {
+  if (global.frsConnect && global.robotUuid != "" ) {
     if(slamnav){
       const lidarData = {
         robotUuid: global.robotUuid,
@@ -369,8 +369,8 @@ function stringifyAllValues(obj) {
 function moveResponse(data) {
   if (taskproc != null) {
     taskproc.emit("move", data);
-}
-  if (frsSocket != null) {
+  }
+  if (global.frsConnect && global.robotUuid != "") {
     const sendData = {
       robotUuid: global.robotUuid,
       data: stringifyAllValues(data)
