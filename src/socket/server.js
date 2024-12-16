@@ -151,7 +151,7 @@ setInterval(async() => {
       robotUuid: global.robotUuid,
       status: {...robotState, slam:slamnav?true:false, task:taskState},
     };
-    // console.log("FRS emit ",global.robotUuid);
+    console.log("FRS emit ",global.robotUuid);
     frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
   }
 }, 100);

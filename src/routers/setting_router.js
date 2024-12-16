@@ -470,9 +470,9 @@ router.get("/frs", async (req, res) => {
     uuid: global.robotUuid,
     mac: global.robotMcAdrs,
     name: global.robotNm,
-    url: global.frs_url,
-    socket: global.frs_socket,
-    api: global.frs_api,
+    url: global.frs_url?global.frs_url:"",
+    socket: global.frs_socket?global.frs_socket:"",
+    api: global.frs_api?global.frs_api:"",
   });
 });
 module.exports = router;
