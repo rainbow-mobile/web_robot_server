@@ -48,6 +48,7 @@ var taskproc = null;
 var web = null;
 var moveState = null;
 var taskState = {
+  connection: false,
   file: "",
   running: false,
   id: 0,
@@ -132,22 +133,26 @@ setInterval(() => {
     } else {
       taskproc.emit("status", "");
     }
+    getTaskFile()
   }
 }, 500);
 
 setInterval(async() => {
-  if (frsSocket?.id && slamnav) {
-    const lidarData = {
-      robotUuid: global.robotUuid,
-      data: lidarCloud
-    };
-    frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
+  if (global.frsConnect) {
+    if(slamnav){
+      const lidarData = {
+        robotUuid: global.robotUuid,
+        data: lidarCloud
+      };
+      // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
+    }
 
-  const statusData = {
-    robotUuid: global.robotUuid,
-    status: robotState,
-  };
-  frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
+    const statusData = {
+      robotUuid: global.robotUuid,
+      status: {...robotState, slam:slamnav?true:false, task:taskState},
+    };
+    // console.log("FRS emit ",global.robotUuid);
+    frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
   }
 }, 100);
 
@@ -170,7 +175,7 @@ slam_io.on("connection", (socket) => {
 
   socket.on("local_path", (data) => {
     web_io.emit("local_path", data);
-    if (frsSocket != null && frsSocket.id != undefined) {
+    if (frsSocket != null && global.frsConnect) {
       const sendData = {
         robotUuid: global.robotUuid,
         data: data,
@@ -181,7 +186,7 @@ slam_io.on("connection", (socket) => {
 
   socket.on("global_path", (data) => {
     web_io.emit("global_path", data);
-    if (frsSocket != null && frsSocket.id != undefined) {
+    if (frsSocket != null && global.frsConnect) {
       const sendData = {
         robotUuid: global.robotUuid,
         data: data,
@@ -195,6 +200,7 @@ slam_io.on("connection", (socket) => {
     let json = JSON.parse(data);
     robotState = json;
     web_io.emit("status", data);
+
   });
 
   socket.on("move", (data) => {
@@ -276,9 +282,14 @@ schedule.scheduleJob("0 * * * *", () => {
 task_io.on("connection", (socket) => {
   logger.info("TaskSocket Connected : " + socket.id);
   taskproc = socket;
+  taskState.connection = true;
 
   socket.on("disconnect", () => {
     logger.info("TaskSocket Disconnected : " + socket.id);
+    taskState.connection = false;
+    taskState.file = "";
+    taskState.running = false;
+    taskState.id = 0;
     taskproc = null;
   });
 
@@ -375,7 +386,7 @@ function getTaskFile() {
     if (taskproc != null) {
       taskproc.emit("file");
 
-      taskproc.on("file", (data) => {
+      taskproc.once("file", (data) => {
         taskState.file = data.file;
         taskState.id = data.id;
         taskState.running = data.running;
@@ -727,8 +738,8 @@ const connectSocket = async () => {
       frsSocket.emit("robots-init", pako.gzip(JSON.stringify(sendData)));
   
       frsSocket.on("robots-init", (data) => {
-
         const json = JSON.parse(pako.ungzip(data, {to:'string'}));
+        console.log("robots-init : ", json)
         
         if (json.robotMcAdrs == global.robotMcAdrs) {
           logger.info(`Get UUID : uuid(${json.robotUuid}), ip(${json.robotIpAdrs}), mc(${json.robotMcAdrs}), name(${json.robotNm})`);
