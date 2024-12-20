@@ -25,7 +25,8 @@ export class NetworkService {
     async wifiScan() {
         return new Promise(async (resolve, reject) => {
           try {
-            exec("nmcli dev wifi rescan", () => {
+            exec("nmcli dev wifi rescan", (err) => {
+                console.log(err);
               // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
               wifi.scan((error, networks) => {
                 if (error) {
