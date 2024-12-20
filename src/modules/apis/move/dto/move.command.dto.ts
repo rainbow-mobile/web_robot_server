@@ -112,4 +112,14 @@ export class MoveCommandDto {
   })
   @Expose()
   wz: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1,50)
+  @ApiProperty({
+    description: 'Time',
+    example: '0'
+  })
+  @Expose()
+  time: string;
 }

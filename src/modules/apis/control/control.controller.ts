@@ -142,7 +142,7 @@ export class ControlController {
         return res.send(response);
 
       }catch(error){
-        httpLogger.error(`mapping/save Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`localization Error : ${error.status} -> ${error.data}`);
         return res.status(error.status).send(error.data);
       }
     }
