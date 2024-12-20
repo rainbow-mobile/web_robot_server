@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@users/*": ["./src/modules/apis/users/*"],
+      "@users/entity/*": ["./src/modules/apis/users/entity/*"],
+      "@permissions/*": ["./src/permissions/*"],
+      "@sockets/*": ["./src/modules/sockets/*"],
+      "@status/*": ["./src/modules/apis/status/*"],
+      "@task/*": ["./src/modules/apis/task/*"],
+      "@middleware/*": ["./src/common/middleware/*"],
+      "@constants/*": ["./src/common/constants/*"],
+      "@common/*": ["./src/common/*"],
+      "@interface/*": ["./src/common/interface/*"],
+      "@auth/*": ["./src/auth/*"],
+      "@enum/*": ["./src/enum/*"],
+      "@roles/*": ["./src/roles/*"],
+      "@robots/*": ["./src/robots/*"],
+      "@groups/*": ["./src/groups/*"]
+    }
+  }
+}

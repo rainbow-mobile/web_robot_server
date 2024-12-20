@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 1
+    },
+    "auditLog": "log/%DATE%/.499ffd2c36782e31e070c32f742890b29e7e6dbd-audit.json",
+    "files": [
+        {
+            "date": 1734567978990,
+            "name": "log/2024-12-19/socket-2024-12-19-error.log",
+            "hash": "9d00c23e4d9fd70fbef464839818f5b365521f65b32383d8061e9caad082815c"
+        },
+        {
+            "date": 1734652861713,
+            "name": "log/2024-12-20/socket-2024-12-20-error.log",
+            "hash": "deb3b57f18404ad0d33e88d658534d024188a0b72c912ae28fa04c2688540121"
+        }
+    ],
+    "hashType": "sha256"
+}
