@@ -25,11 +25,13 @@ export interface StatusPayload {
       connection: string;
       status: string;
       temp: string;
+      current: string;
     },
     {
       connection: string;
       status: string;
       temp: string;
+      current: string;
     },
   ];
   lidar: [
@@ -50,16 +52,19 @@ export interface StatusPayload {
     bat_current: string;
     power: string;
     total_power: string;
+    charge_current: string;
+    contact_voltage: string;
   };
   state: {
     power: string;
     emo: string;
     charge: string;
     localization: string;
+    dock: string;
     map: string;
   };
   condition: {
-    audo_state: string;
+    auto_state: string;
     obs_state: string;
     inlier_error: string;
     inlier_ratio: string;
@@ -99,11 +104,13 @@ export const defaultStatusPayload: StatusPayload = {
       connection: 'false',
       status: '0',
       temp: '0',
+      current: '0'
     },
     {
       connection: 'false',
       status: '0',
       temp: '0',
+      current: '0'
     },
   ],
   lidar: [
@@ -124,16 +131,19 @@ export const defaultStatusPayload: StatusPayload = {
     bat_current: '0',
     power: '0',
     total_power: '0',
+    charge_current: '0',
+    contact_voltage: '0'
   },
   state: {
     power: 'false',
+    dock: 'false',
     emo: 'false',
     charge: 'false',
     localization: 'none', // "none", "busy", "good", "fail"
     map: '',
   },
   condition: {
-    audo_state: 'stop',
+    auto_state: 'stop',
     obs_state: 'none',
     inlier_error: '0',
     inlier_ratio: '0',

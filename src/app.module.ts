@@ -15,6 +15,7 @@ import { SettingModule } from './modules/apis/setting/setting.module';
 import { VariablesModule } from './modules/apis/variables/variables.module';
 import { NetworkModule } from './modules/apis/network/network.module';
 import { LogModule } from './modules/apis/log/log.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { UploadModule } from './modules/apis/upload/upload.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

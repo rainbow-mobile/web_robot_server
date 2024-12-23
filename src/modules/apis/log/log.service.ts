@@ -1,12 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Entity, Column, PrimaryColumn, CreateDateColumn, Timestamp } from 'typeorm';
+import { Entity, Column, PrimaryColumn, CreateDateColumn, Timestamp, LessThan } from 'typeorm';
 import { StateLogEntity } from './entity/state.entity';
+import { Cron } from '@nestjs/schedule';
 import { EntityManager, Repository } from 'typeorm';
 import { PowerLogEntity } from './entity/power.entity';
 import * as moment from 'moment';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { StatusPayload } from '@common/interface/robot/status.interface';
+import { Http } from 'winston/lib/winston/transports';
 
 @Injectable()
 export class LogService {
@@ -197,5 +200,99 @@ export class LogService {
                 reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR})
             }
         })
+    }
+
+
+    async readState(state:StatusPayload) {
+      if (state.state.charge == undefined) {
+        console.log(state);
+      }
+      if (state.state.charge != "none" && state.state.dock == "true") {
+        return "Charging";
+      } else {
+        if (state.state.power == "false") {
+          return "Power Off";
+        } else if (parseFloat(state.condition.mapping_ratio) > 1) {
+          return "Mapping";
+        } else {
+          if (
+            state.state.map == "" ||
+            state.state.localization != "good" ||
+            state.motor[0].status != "1" ||
+            state.motor[1].status != "1"
+          ) {
+            return "Not Ready";
+          } else if (state.condition.obs_state != "none") {
+            return "Obstacle";
+          } else if (state.condition.auto_state == "move") {
+            return "Moving";
+          } else if (state.condition.auto_state == "pause") {
+            return "Paused";
+          } else if (state.condition.auto_state == "stop") {
+            return "Ready";
+          } else {
+            return "?";
+          }
+        }
+      }
+    }
+
+    // 12시간 지난 데이터를 삭제
+    @Cron('0 * * * * *') // 매 분마다 실행
+    async deleteOldData(): Promise<void> {
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+      await this.stateRepository.delete({ time: LessThan(twelveHoursAgo) });
+      await this.powerRepository.delete({ time: LessThan(twelveHoursAgo) });
+    }
+
+    async emitState(state:StatusPayload){
+      return new Promise(async(resolve, reject) => {
+        try {      
+          const newLog:StateLogEntity = {
+            state:await this.readState(state),
+            auto_state: state.condition.auto_state,
+            localization: state.state.localization,
+            obs_state: state.condition.obs_state,
+            charging: state.state.charge,
+            power: state.state.power=="true"?true:false,
+            emo: state.state.emo=="true"?true:false,
+            dock: state.state.dock=="true"?true:false,
+            inlier_error: parseFloat(state.condition.inlier_error),
+            inlier_ratio: parseFloat(state.condition.inlier_ratio)
+          }
+          await this.stateRepository.save(newLog);
+          resolve(newLog);
+        } catch (error) {
+          console.error("emitState Error : ", error);
+          reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
+        }
+      });
+    }
+
+    async emitPower(state:StatusPayload){
+      return new Promise(async(resolve, reject) => {
+        try {      
+          const newLog:PowerLogEntity = {
+            battery_in:parseFloat(state.power.bat_in),
+            battery_out:parseFloat(state.power.bat_out),
+            battery_current:parseFloat(state.power.bat_current),
+            power:parseFloat(state.power.power),
+            total_power:parseFloat(state.power.total_power),
+            motor0_status:parseInt(state.motor[0].status),
+            motor0_temp:parseFloat(state.motor[0].temp),
+            motor0_current:parseFloat(state.motor[0].current),
+            motor1_status:parseInt(state.motor[1].status),
+            motor1_temp:parseFloat(state.motor[1].temp),
+            motor1_current:parseFloat(state.motor[1].current),
+            charge_current: parseFloat(state.power.charge_current?state.power.charge_current:'0'),
+            contact_voltage: parseFloat(state.power.contact_voltage?state.power.contact_voltage:'0')
+          }
+          await this.powerRepository.save(newLog);
+          resolve(newLog);
+        } catch (error) {
+          console.error("emitPower Error : ", error);
+          reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
+        }
+      });
     }
 }

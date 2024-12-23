@@ -4,7 +4,7 @@ import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
 @Entity('state')
 export class StateLogEntity{
     @PrimaryColumn({name:'time', type: 'timestamp', default:()=>'CURRENT_TIMESTAMP'})
-    time: Date;
+    time?: Date;
 
     @Column({name:'state', type: 'varchar', length: 32})
     state: string;

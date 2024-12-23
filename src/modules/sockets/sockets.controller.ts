@@ -6,6 +6,7 @@ import { SocketGateway } from './gateway/sockets.gateway';
 import { VariablesService } from '../apis/variables/variables.service';
 import { Response } from 'express';
 import socketLogger from '@common/logger/socket.logger';
+import { FrsUrlDto } from './dto/frs.url.dto';
 
 @ApiTags('소켓 관련 API (Sockets)')
 @Controller('sockets')
@@ -25,6 +26,10 @@ export class SocketsController{
   }
 
   @Get('frs/url')
+  @ApiOperation({
+    summary:'FRS URL 조회',
+    description:'DB에 저장된 FRS URL 정보 조회 url(URL), socket(SOCKETURL), api(APIURL)'
+  })
   async getFrsUrl(@Res() res: Response){
     try{
       if(!global.frs_url)
@@ -42,15 +47,17 @@ export class SocketsController{
   }
 
   @Put('frs/url')
-  async updateFrsUrl(@Body() data:{url:string}, @Res() res: Response){
+  @ApiOperation({
+    summary:'FRS URL 변경',
+    description:'입력된 url 값으로 FRS URL 변경 및 재연결시도'
+  })
+  async updateFrsUrl(@Body() data:FrsUrlDto, @Res() res: Response){
     try{
       const url =data.url;
       console.log(url);
       if(url == "" || !url.includes('http://')){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
-
-      
 
       global.frs_url = url;
       global.frs_api = url+":3000";
@@ -66,8 +73,40 @@ export class SocketsController{
       return res.status(error.status).send(error.data);
     }
   }
+  @Put('frs/url/test')
+  @ApiOperation({
+    summary:'FRS URL 변경',
+    description:'입력된 url 값으로 FRS URL 변경 및 재연결시도 (TEST버전으로 3010, 3011 포트로 연결)'
+  })
+  async updateFrsUrlTest(@Body() data:FrsUrlDto, @Res() res: Response){
+    try{
+      const url =data.url;
+      console.log(url);
+      if(url == "" || !url.includes('http://')){
+        return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
+      }
+
+      global.frs_url = url;
+      global.frs_api = url+":3010";
+      global.frs_socket = url+":3011/socket/robots";
+      await this.variableService.upsertVariable('frs_url',global.frs_url);
+      await this.variableService.upsertVariable('frs_api',global.frs_api);
+      await this.variableService.upsertVariable('frs_socket',global.frs_socket);
+
+      this.socketGateway.connectFrsSocket(global.frs_socket);
+      res.send({url:url,socket:global.frs_socket,api:global.frs_api});
+    }catch(error){
+      httpLogger.error(`GET /network/frs Error : ${error.status} -> ${error.data}`)
+      return res.status(error.status).send(error.data);
+    }
+  }
+
 
   @Get('frs')
+  @ApiOperation({
+    summary:'FRS 소켓 정보 요청',
+    description:'connection(FRS연결상태), uuid(로봇UUID), mac(로봇맥주소), name(로봇이름), url(URL), socket(SOCKETURL), api(APIURL)'
+  })
   async getFrsInfo(@Res() res: Response){
     try{
       console.log("get frs ",global.robotUuid, global.robotUuid, global.frsConnect, global.robotMcAdrs)
@@ -93,6 +132,10 @@ export class SocketsController{
   }
 
   @Get('status')
+  @ApiOperation({
+    summary:'로봇 상태조회',
+    description:'SLAMNAV에서 송신하는 status에 Task state, slam connection 추가하여 조회'
+  })
   async getStatus(@Res() res: Response){
     res.send({...this.socketGateway.robotState,slam:this.socketGateway.slamnav?true:false, task:this.socketGateway.taskState});
   }

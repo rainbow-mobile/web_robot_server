@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpStatus, Post, Put, Res } from '@nestjs/common';
 import { NetworkService } from './network.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import httpLogger from '@common/logger/http.logger';
 import { NetworkDto } from './dto/network.dto';
@@ -15,6 +15,10 @@ export class NetworkController {
 
 
   @Get('current')
+  @ApiOperation({
+    summary:'현재 네트워크 상태 조회',
+    description:'연결된 이더넷, 와이파이, 블루투스테더링 상태 반환'
+  })
   async getCurrentNetwork(@Res() res: Response){
     try{
       const response = await this.networkService.getNetwork();
@@ -27,6 +31,10 @@ export class NetworkController {
   }
 
   @Get('wifi')
+  @ApiOperation({
+    summary:'주변 와이파이 리스트 조회',
+    description:'연결가능한 주변 와이파이 리스트 반환'
+  })
   async getWifiList(@Res() res: Response){
     try{
       const response = await this.networkService.getWifiList();
@@ -39,6 +47,10 @@ export class NetworkController {
   }
 
   @Get('wifi/scan')
+  @ApiOperation({
+    summary:'주변 와이파이 리스트 조회(재스캔)',
+    description:'연결가능한 주변 와이파이 리스트 반환 (다시 스캔)'
+  })
   async scanWifiList(@Res() res: Response){
     try{
       const response = await this.networkService.wifiScan();
@@ -50,6 +62,10 @@ export class NetworkController {
   }
 
   @Put()
+  @ApiOperation({
+    summary:'연결된 네트워크 정보 수정',
+    description:'연결된 네트워크 정보 업데이트'
+  })
   async updateNetwork(@Body() data:NetworkDto,@Res() res: Response){
     try{
       const response = await this.networkService.setIP(data);
@@ -62,6 +78,10 @@ export class NetworkController {
   }
 
   @Post('wifi')
+  @ApiOperation({
+    summary:'와이파이 새로 연결',
+    description:'와이파이 새로 연결'
+  })
   async connectWifi(@Body() data:NetworkWifiDto, @Res() res: Response){
     try{
       const response = await this.networkService.connectWifi(data);
