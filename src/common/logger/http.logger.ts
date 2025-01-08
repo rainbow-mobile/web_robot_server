@@ -1,37 +1,22 @@
+import { homedir } from 'os';
 import { createLogger, format, transports } from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 const customFormat = format.printf(({ timestamp, level, message }) => {
-  if (level === 'debug') {
-    return `${timestamp} ${level}: ${JSON.stringify(message)}`;
-  }
-  return `${timestamp} ${level}: ${message}`;
+  return `${timestamp} [${level}] ${message}`;
 });
 
 const httpLogger = createLogger({
-  level: 'info',
+  level: 'debug',
   format: format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     customFormat,
   ),
   transports: [
     new (DailyRotateFile as any)({
-      filename: './log/%DATE%/http-%DATE%-debug.log',
+      filename: homedir()+'/log/http/%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      level: 'debug',
-      maxFiles: '1d',
-    }),
-    new (DailyRotateFile as any)({
-      filename: './log/%DATE%/http-%DATE%-warn.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'warn',
-      maxFiles: '1d',
-    }),
-    new (DailyRotateFile as any)({
-      filename: './log/%DATE%/http-%DATE%-error.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      maxFiles: '1d',
+      level:'debug'
     }),
     new transports.Console({
       level: 'debug',

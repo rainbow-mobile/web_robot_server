@@ -70,6 +70,8 @@ export interface StatusPayload {
     inlier_ratio: string;
     mapping_error: string;
     mapping_ratio: string;
+    contact_voltage: string;
+    charge_current: string;
   };
   setting: {
     platform_type: string;
@@ -149,6 +151,8 @@ export const defaultStatusPayload: StatusPayload = {
     inlier_ratio: '0',
     mapping_error: '0',
     mapping_ratio: '0',
+    contact_voltage: '0',
+    charge_current: '0'
   },
   setting: {
     platform_type: '',

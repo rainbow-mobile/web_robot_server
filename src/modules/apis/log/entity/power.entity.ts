@@ -4,7 +4,7 @@ import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
 @Entity('power')
 export class PowerLogEntity{
     @PrimaryColumn({name:'time', type: 'timestamp', default:()=>'CURRENT_TIMESTAMP'})
-    time?: Date;
+    time: Date;
 
     @Column({name:'battery_in', type: 'double'})
     battery_in: number;

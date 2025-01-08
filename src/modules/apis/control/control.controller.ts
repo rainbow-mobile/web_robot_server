@@ -49,7 +49,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"start",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`mapping/start Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping start: ${error.status} -> ${error.data}`);
         res.status(error.status).send(error.data);
       }
     }
@@ -67,7 +67,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"stop",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`mapping/stop Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping stop: ${error.status} -> ${error.data}`);
         res.status(error.status).send(error.data);
       }
     }
@@ -84,13 +84,13 @@ export class ControlController {
     async mappingSave(@Param('name') name:string, @Res() res: Response){
       try{
         if(name == ""){
-          httpLogger.warn(`Mapping Save Parameter Missing : name`)
+          httpLogger.warn(`[COMMAND] Mapping Save Parameter Missing : name`)
           return res.status(HttpStatus.BAD_REQUEST).send({message:'Mapping Save Parameter Missing : name'});
         }
         const response = await this.controlService.mappingCommand({command:"save",name:name, time:Date.now().toString()});
         return res.send(response);
       }catch(error){
-        httpLogger.error(`mapping/save Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping save: ${name}, ${error.status} -> ${error.data}`);
         return res.status(error.status).send(error.data);
       }
     }
@@ -109,7 +109,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"reload",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`mapping/reload Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping reload: ${error.status} -> ${error.data}`);
         res.status(error.status).send(error.data);
       }
     }
@@ -126,23 +126,24 @@ export class ControlController {
     })
     async localization(@Body() data:LocalizationDto, @Res() res: Response){
       try{
+        httpLogger.info(`[COMMAND] Localization: ${JSON.stringify(data)}`)
         if(data.command == "init"){
           if(data.x == "" || data.y == "" || data.rz == ""){
-            httpLogger.warn(`Localization Parameter Missing : x, y, rz`)
+            httpLogger.warn(`[COMMAND] Localization Parameter Missing : x, y, rz`)
             return res.status(HttpStatus.BAD_REQUEST).send({message:`Localization Parameter Missing : x, y, rz`});
           }
         }else if(data.command == "autoinit" || data.command == "semiautoinit"){
 
         }else if(data.command == "start" || data.command == "stop"){
         }else{
-          httpLogger.warn(`Localization Command Unknown : ${data.command}`)
+          httpLogger.warn(`[COMMAND] Localization Command Unknown : ${data.command}`)
           return res.status(HttpStatus.BAD_REQUEST).send({message:`Localization Command Unknown : ${data.command}`});
         }
         const response = await this.controlService.Localization({...data, time:Date.now().toString()});
         return res.send(response);
 
       }catch(error){
-        httpLogger.error(`localization Error : ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] localization: ${error.status} -> ${error.data}, ${JSON.stringify(data)}`);
         return res.status(error.status).send(error.data);
       }
     }

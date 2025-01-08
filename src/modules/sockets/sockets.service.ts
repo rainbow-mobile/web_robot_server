@@ -8,9 +8,9 @@ export class SocketService {
 
     private saver = setInterval(() => {
         if(this.socketGateway.slamnav){
-            console.log("emitState")
           this.logService.emitState(this.socketGateway.robotState);
           this.logService.emitPower(this.socketGateway.robotState);
+          this.logService.emitStatus(this.socketGateway.robotState, this.socketGateway.slamnav?true:false, this.socketGateway.taskState);
         }
     }, 10000);
 

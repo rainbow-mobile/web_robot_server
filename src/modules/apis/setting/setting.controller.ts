@@ -53,16 +53,16 @@ export class SettingController {
   })
   async saveSetting(@Param('type') type:string, @Body() data:JSON, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] save Setting: ${type}, ${JSON.stringify(data)}`)
       if(type == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
 
-      console.log(data);
       const response = await this.settingService.saveSetting(type,data);
-      console.log(response);
+      httpLogger.debug(`[SETTING] save Setting Response: ${JSON.stringify(response)}`)
       res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/${type} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] save Setting: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -74,13 +74,15 @@ export class SettingController {
   })
   async getPresetList(@Param('type') type:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] get Preset List: ${type}`)
       if(type == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
       const response = await this.settingService.getPresetList(type);
+      httpLogger.debug(`[SETTING] get Preset List: ${JSON.stringify(response)}`)
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/preset/${type} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] get Preset List: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -92,13 +94,15 @@ export class SettingController {
   })
   async makePreset(@Param('type') type:string, @Param('id') id:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] make Preset: type=${type}, id=${id}`)
       if(type == "" || id == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
       const response = await this.settingService.makePreset(type, id);
+      httpLogger.debug(`[SETTING] make Preset: ${JSON.stringify(response)}`)
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/preset/${type}/${id} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] make Preset: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -110,13 +114,15 @@ export class SettingController {
   })
   async getPreset(@Param('type') type:string, @Param('id') id:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] get Preset: type=${type}, id=${id}`)
       if(type == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
       const response = await this.settingService.getPreset(type, id);
+      httpLogger.debug(`[SETTING] get Preset: ${JSON.stringify(response)}`)
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/preset/${type}/${id} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] get Preset: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -128,6 +134,7 @@ export class SettingController {
   })
   async savePreset(@Param('type') type:string, @Param('id') id:string, @Body() data:PresetDto, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] save Preset: type=${type}, id=${id}, data=${JSON.stringify(data)}`)
       if(type == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
@@ -141,9 +148,10 @@ export class SettingController {
       }
 
       const response = await this.settingService.savePreset(type, id, data);
+      httpLogger.debug(`[SETTING] save Preset: ${JSON.stringify(response)}`)
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/preset/${type}/${id} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] save Preset: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -155,14 +163,16 @@ export class SettingController {
   })
   async deletePreset(@Param('type') type:string, @Param('id') id:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[SETTING] delete Preset: type=${type}, id=${id}`)
       if(type == "" || id == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400});
       }
 
       const response = await this.settingService.deletePreset(type, id);
+      httpLogger.debug(`[SETTING] delete Preset: ${JSON.stringify(response)}`)
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/preset/${type}/${id} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] delete Preset: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }

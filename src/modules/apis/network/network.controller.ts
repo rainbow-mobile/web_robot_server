@@ -21,11 +21,12 @@ export class NetworkController {
   })
   async getCurrentNetwork(@Res() res: Response){
     try{
+      httpLogger.debug(`[NETWORK] getCurrentNetwork`);
       const response = await this.networkService.getNetwork();
-      console.log(response);
+      httpLogger.debug(`[NETWORK] getCurrentNetwork: ${JSON.stringify(response)}`);
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /network/current Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[NETWORK] getCurrentNetwork: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -37,11 +38,12 @@ export class NetworkController {
   })
   async getWifiList(@Res() res: Response){
     try{
+      httpLogger.debug(`[NETWORK] getWifiList`);
       const response = await this.networkService.getWifiList();
-      console.log(response);
+      httpLogger.debug(`[NETWORK] getWifiList: ${JSON.stringify(response)}`);
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /network/wifi Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[NETWORK] getWifiList: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -53,10 +55,11 @@ export class NetworkController {
   })
   async scanWifiList(@Res() res: Response){
     try{
+      httpLogger.debug(`[NETWORK] scanWifiList`);
       const response = await this.networkService.wifiScan();
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /network/wifi/scan Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[NETWORK] scanWifiList: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -68,11 +71,12 @@ export class NetworkController {
   })
   async updateNetwork(@Body() data:NetworkDto,@Res() res: Response){
     try{
+      httpLogger.debug(`[NETWORK] updateNetwork`);
       const response = await this.networkService.setIP(data);
-      console.log(response);
+      httpLogger.debug(`[NETWORK] updateNetwork: ${JSON.stringify(response)}`);
       res.send(response);
     }catch(error){
-      httpLogger.error(`PUT /network Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[NETWORK] updateNetwork: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -84,8 +88,9 @@ export class NetworkController {
   })
   async connectWifi(@Body() data:NetworkWifiDto, @Res() res: Response){
     try{
+      httpLogger.debug(`[NETWORK] connectWifi`);
       const response = await this.networkService.connectWifi(data);
-      console.log(response);
+      httpLogger.debug(`[NETWORK] connectWifi: ${JSON.stringify(response)}`);
       res.send(response);
     }catch(error){
       httpLogger.error(`POST /network/wifi Error : ${error.status} -> ${error.data}`)

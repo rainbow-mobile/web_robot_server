@@ -24,7 +24,9 @@ export class UploadController {
     const zipFileName = `${data.name}.zip`;
     const zipFilePath = path.join(homedir(), "maps", zipFileName);
     try{
+      httpLogger.info(`[UPLOAD] uploadMap: ${JSON.stringify(data)}`)
       await this.uploadService.zipFolder(originalFilePath, zipFilePath);
+      httpLogger.info(`[UPLOAD] uploadMap: zip Done`)
 
       // ZIP 파일 전송
       const zipStream = fs.createReadStream(zipFilePath);
@@ -39,20 +41,21 @@ export class UploadController {
           authorization: "Bearer " + data.token,
         },
       };
-      console.log("send /frs-map/upload ",global.frs_api)
+      httpLogger.info(`[UPLOAD] uploadMap: send FRS`)
       const response = await axios.post(
         global.frs_api + "/api/maps/frs-map/upload",
         formData,
         config
       );
-      console.log(response.data);
+      httpLogger.info(`[UPLOAD] uploadMap: send FRS Response: ${JSON.stringify(response.data)}`)
       res.send({ message: "파일 저장 성공" });
     }catch(error){
-      httpLogger.error(`uplodaMap Error : ${error}`)
+      httpLogger.error(`[UPLOAD] uploadMap: ${JSON.stringify(error)}`)
       res.status(error.status).send(error.data);
     }finally{
       fs.unlink(zipFilePath, (err) => {
-        if (err) console.error("임시 ZIP 파일 삭제 실패:", err);
+        if (err) 
+          httpLogger.error(`[UPLOAD] uploadMap: Delete ZipFile Failed...${JSON.stringify(err)}`)
       });
     }
   }
@@ -67,8 +70,7 @@ export class DownloadController {
   @Post('map')
   async downloadMap(@Body() data: DownloadMapDto, @Res() res: Response){
     try {
-      console.log("Map Download : ", data.name, data.userId, data.token);
-
+        httpLogger.info(`[UPLOAD] DownloadMap: ${JSON.stringify(data)}`)
         const response = await axios.get(
           global.frs_api + "/api/maps/frs-map/download",
           {
@@ -82,26 +84,27 @@ export class DownloadController {
         response.data.pipe(fileStream);
 
         fileStream.on("finish", async() => {
-          console.log("file download successfully");
-
+          httpLogger.info(`[UPLOAD] DownloadMap: Done`)
           const zipFilePath = path.join(homedir(), "maps", data.name);
 
           const extractToPath = path.join(homedir(), "maps", data.name.split(".")[0]);
-          console.log("Map Download : ", zipFilePath, extractToPath);
+          httpLogger.info(`[UPLOAD] DownloadMap: Zip (${zipFilePath}, ${extractToPath})`)
 
           await this.uploadService.unzipFolder(zipFilePath, extractToPath);
 
           res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.MAP.SUCCESS_201});
 
-          console.log("압축파일 삭제 : ", homedir() + "/maps/" + data.name);
+          httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`)
           fs.unlink(homedir() + "/maps/" + data.name, (err) => {
-            if (err) console.error("임시 ZIP 파일 삭제 실패:", err);
-            console.log("성공");
+            if (err) 
+              httpLogger.error(`[UPLOAD] DownloadMap: Zip Delete Fail ${JSON.stringify(err)}`)
+
+            httpLogger.info(`[UPLOAD] DownloadMap: Zip Delete Done`)
           });
         });
       
     } catch (error) {
-      console.error("파일 다운로드 중 오류 발생:", error.response.status);
+      httpLogger.error(`[UPLOAD] DownloadMap: Download Fail ${JSON.stringify(error.response.data)}`)
       res.status(error.response.status).send();
     }
   }
@@ -116,32 +119,30 @@ export class PublishController {
   async publishedMap(@Req() req: Request, @Param('mapNm') mapNm:string, @Res() res: Response){
     uploadMiddleware(req, res, async(err) => {
       if (err) {
-        console.error(err);
+        httpLogger.error(`[UPLOAD] PublishMap: ${JSON.stringify(err)}`)
         return res.status(400).send({ message: '파일 업로드 실패', error: err.message });
       }
 
       try{
+        httpLogger.info(`[UPLOAD] PublishMap: Download Done`)
         const zipFilePath = path.join(homedir(), "upload", req.file.originalname);
   
         const extractToPath = path.join(homedir(), "maps", mapNm);
-        console.log("Map Download : ", zipFilePath, extractToPath);
+        httpLogger.info(`[UPLOAD] PublishMap: ${zipFilePath}, ${extractToPath}`)
   
         await this.uploadService.unzipFolder(zipFilePath, extractToPath);
   
-        console.log("압축파일 삭제 : ", homedir() + "/upload/" + req.file.originalname);
-
         res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.MAP.SUCCESS_201,
           filename: req.file.filename});  
-          
-
-
       }catch(error){
         httpLogger.error(`PublishMap Error : ${mapNm}, ${req.file.originalname}, ${error}`)
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500)
       }finally{
         fs.unlink(homedir() + "/upload/" + req.file.originalname, (err) => {
-          if (err) console.error("임시 ZIP 파일 삭제 실패:", err);
+          if (err) 
+            httpLogger.error(`[UPLOAD] PublishMap: Delete Zip (${homedir()+'/upload'+req.file.originalname}) ${JSON.stringify(err)}`)
           // 성공적으로 업로드된 파일 정보 반환
+          httpLogger.info(`[UPLOAD] PublishMap: Delete Zip (${homedir()+'/upload'+req.file.originalname})`)
         });
       }
     });

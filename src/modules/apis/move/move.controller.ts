@@ -85,10 +85,11 @@ export class MoveController {
       }
 
       const newData = {...data,time:Date.now().toString()}
+      httpLogger.debug(`[MOVE] move: ${JSON.stringify(newData)}`)
 
       if(data.command != "jog"){
         const response = await this.moveService.moveCommand(newData);
-        console.log("response : ", response);
+        httpLogger.debug(`[MOVE] move Response: ${JSON.stringify(response)}`)
         return res.send(response);
       }else{
         this.moveService.moveJog(newData);
@@ -118,15 +119,17 @@ export class MoveController {
   async moveStop(@Res() res: Response) {
     try {
       const newData = {command:'stop',time:Date.now().toString()}
-      console.log(newData);
+      httpLogger.debug(`[MOVE] moveStop: ${JSON.stringify(newData)}`)
       const response = await this.moveService.moveCommand(newData);
-      console.log("response : ", response);
+      httpLogger.debug(`[MOVE] moveStop Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
+      httpLogger.error(`[MOVE] movsStop: ${JSON.stringify(error)}`);
       httpLogger.error(error);
       return res.status(error.status).send(error.data);
     }
   }
+  
   /**
    * @description 로봇 이동 명령을 처리하는 API 엔드포인트
    * @author yjheo4@rainbow-robotics.com
@@ -145,12 +148,12 @@ export class MoveController {
   async movePause(@Res() res: Response) {
     try {
       const newData = {command:'pause',time:Date.now().toString()}
-      console.log(newData);
+      httpLogger.debug(`[MOVE] movePause: ${JSON.stringify(newData)}`)
       const response = await this.moveService.moveCommand(newData);
-      console.log("response : ", response);
+      httpLogger.debug(`[MOVE] movePause Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
-      httpLogger.error(error);
+      httpLogger.error(`[MOVE] movePause: ${JSON.stringify(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -172,12 +175,12 @@ export class MoveController {
   async moveResume(@Res() res: Response) {
     try {
       const newData = {command:'resume',time:Date.now().toString()}
-      console.log(newData);
+      httpLogger.debug(`[MOVE] moveResume: ${JSON.stringify(newData)}`)
       const response = await this.moveService.moveCommand(newData);
-      console.log("response : ", response);
+      httpLogger.debug(`[MOVE] moveResume Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
-      httpLogger.error(error);
+      httpLogger.error(`[MOVE] moveResume: ${JSON.stringify(error)}`);
       return res.status(error.status).send(error.data);
     }
   }

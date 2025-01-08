@@ -84,24 +84,25 @@ export class MapService {
     async loadMap(mapNm:string) {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {
-            console.log("loadMap");
+            httpLogger.info(`[MAP] loadMap: ${mapNm}`)
             this.socketGateway.server.to('slamnav').emit("mapload",
                 {
                   name: mapNm,
                   time: Date.now().toString(),
                 });
-            httpLogger.info("emit Slamnav : loadMap "+mapNm);
     
             this.socketGateway.slamnav.once("mapload", (data) => {
-                httpLogger.info("emit Slamnav Success : " + data.result);
+                httpLogger.info(`[MAP] Slamnav Mapload Response: ${JSON.stringify(data)}`);
                 resolve(data);
                 clearTimeout(timeoutId);
             });
     
             const timeoutId = setTimeout(() => {
+                httpLogger.warn(`[MAP] loadMap: Timeout`)
             reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
             }, 5000); // 5초 타임아웃
         } else {
+            httpLogger.warn(`[MAP] loadMap: Disconnect`)
             reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
         }
         });

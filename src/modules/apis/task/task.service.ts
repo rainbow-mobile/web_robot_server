@@ -58,27 +58,26 @@ export class TaskService {
   async loadTask(path:string){
     return new Promise((resolve, reject) => {
       if(this.socketGateway.taskman != null){
+        httpLogger.info(`[TASK] loadTask: ${path}`);
         this.socketGateway.server.to('taskman').emit("load", path);
-        httpLogger.info("emit load Task : " + path);
   
         this.socketGateway.taskman.once("task_load", (data) => {
-          console.log(data.file, data.id, data.running);
+          httpLogger.info(`[TASK] loadTask Response: ${JSON.stringify(data)}`)
           if (data.result == "success") {
             this.socketGateway.taskState.file = data.file;
-            httpLogger.info("load Task Success : " + data.file);
             resolve(data);
           } else {
-            httpLogger.error("load Task Failed : " + data.file);
             reject({status:HttpStatus.NOT_FOUND,data:{message:"로드에 실패하였습니다",data:data}});
           }
           clearTimeout(timeoutId);
         });
   
         const timeoutId = setTimeout(() => {
-          httpLogger.error("load Task Timeout");
+          httpLogger.error(`[TASK] loadTask: Timeout`);
           reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
         }, 5000); // 5초 타임아웃
       }else{
+        httpLogger.error(`[TASK] loadTask: Disconnect`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
       }
     });
@@ -87,19 +86,21 @@ export class TaskService {
   async runTask() {
   return new Promise((resolve, reject) => {
     if (this.socketGateway.taskman != null) {
+      httpLogger.info(`[TASK] runTask`);
       this.socketGateway.server.to('taskman').emit("run");
-      httpLogger.info("emit run Task");
 
       this.socketGateway.taskman.once("run", (data) => {
-        httpLogger.info("load run Success : " + data.file);
+        httpLogger.info(`[TASK] runTask Response: ${JSON.stringify(data)}`);
         resolve(data);
         clearTimeout(timeoutId);
       });
 
       const timeoutId = setTimeout(() => {
+        httpLogger.error(`[TASK] runTask Response: Timeout`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
       }, 5000); // 5초 타임아웃
     } else {
+      httpLogger.error(`[TASK] runTask Response: Disconnect`);
       reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
     }
   });
@@ -108,19 +109,21 @@ export class TaskService {
 async stopTask() {
   return new Promise((resolve, reject) => {
     if (this.socketGateway.taskman != null) {
+      httpLogger.info(`[TASK] stopTask`);
       this.socketGateway.server.to('taskman').emit("stop");
-      httpLogger.info("emit stop Task ");
 
       this.socketGateway.taskman.once("stop", (data) => {
-        httpLogger.info("load stop Success : " + data.file);
+        httpLogger.info(`[TASK] stopTask Response: ${JSON.stringify(data)}`);
         resolve(data);
         clearTimeout(timeoutId);
       });
 
       const timeoutId = setTimeout(() => {
+        httpLogger.error(`[TASK] stopTask Response: Timeout`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
       }, 5000); // 5초 타임아웃
     } else {
+      httpLogger.error(`[TASK] stopTask Response: Disconnect`);
       reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
     }
   });

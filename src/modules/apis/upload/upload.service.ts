@@ -47,19 +47,19 @@ export class UploadService {
               
                 // 압축 파일 생성
                 zip.writeZip(zipFilePath);
-                console.log(`ZIP 파일 생성 완료: ${zipFilePath}`);
+                httpLogger.info(`[UPLOAD] zipFolder: Done ${zipFilePath}`)
                 resolve(zipFilePath);
             }catch(error){
-                httpLogger.error(`ZipFolder Error : ${sourceFolderPath}, ${zipFilePath}, ${error}`)
+              httpLogger.error(`[UPLOAD] zipFolder: ${sourceFolderPath}, ${zipFilePath}, ${JSON.stringify(error)}`)
                 reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
             }
         })
     }
 
-    async unzipFolder(zipFilePath, extractToPath) {
+    async unzipFolder(zipFilePath:string, extractToPath:string) {
         return new Promise((resolve, reject) => {
             try {
-              console.log("unzipFolder ", zipFilePath);
+              httpLogger.info(`[UPLOAD] unzipFoler: ${zipFilePath}, ${extractToPath}`);
               const zip = new AdmZip(zipFilePath);
           
               // 압축 해제할 경로가 없다면 생성
@@ -69,10 +69,10 @@ export class UploadService {
           
               // 압축 해제
               zip.extractAllTo(extractToPath, true); // true는 기존 파일 덮어쓰기를 의미
-              console.log(`ZIP 파일 압축 해제 완료: ${extractToPath}`);
+              httpLogger.info(`[UPLOAD] unzipFolder: Done ${extractToPath}`)
               resolve('');
             } catch (error) {
-              httpLogger.error(`unzipFolder Error : ${zipFilePath}, ${extractToPath}, ${error}`);
+              httpLogger.error(`[UPLOAD] unzipFolder: ${zipFilePath}, ${extractToPath}, ${JSON.stringify(error)}`)
               reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
             }
         });

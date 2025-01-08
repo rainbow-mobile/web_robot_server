@@ -27,7 +27,10 @@ import { getMacAddresses, stringifyAllValues } from '@common/util/network.util';
 import { Global, OnModuleDestroy } from '@nestjs/common';
 import * as pako from 'pako';
 import { connect } from 'http2';
+import { TransformationType } from 'class-transformer';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Socket')
 @Global()
 @WebSocketGateway(11337)
 export class SocketGateway
@@ -49,35 +52,35 @@ export class SocketGateway
   interval_frs = null;
 
   async afterInit(server: Server) {
-
+    socketLogger.debug(`[TEST] Socket afterInit`)
   }
 
   async connectFrsSocket(url:string){
     try{
       if(this.frsSocket?.connected){
         this.frsSocket.disconnect();
-        socketLogger.info(`FRS Socket disconnect`);
+        socketLogger.info(`[CONNECT] FRS Socket disconnect`);
         clearInterval(this.interval_frs);
         this.frsSocket.close();
         global.frsConnect = false;
         this.frsSocket = null;
       }
 
-      this.frsSocket = io(url
-      );
+      this.frsSocket = io(url,{transports:["websocket"]});
       this.frsSocket.off();
+      socketLogger.debug(`[CONNECT] FRS Socket URL: ${url}`);
   
       this.frsSocket.on('connect', () => {
-        socketLogger.info(`FRS Socket connected`);
+        socketLogger.info(`[CONNECT] FRS Socket connected`);
         global.frsConnect = true;
-
-        global.robotMcAdrs =getMacAddresses()[0].mac;
+        global.robotMcAdrs = getMacAddresses()[0].mac;
   
         const sendData = {
           robotMcAdrs: global.robotMcAdrs,
           robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
         };
 
+        socketLogger.debug(`[CONNECT] FRS robots-init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('robots-init', pako.gzip(JSON.stringify(sendData)));
 
         this.interval_frs = setInterval(() => {
@@ -87,70 +90,68 @@ export class SocketGateway
                 robotUuid: global.robotUuid,
                 data: this.lidarCloud
               };
+              // socketLogger.debug(`[CONNECT] FRS emit Lidar : ${global.robotUuid}`);
               // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
             }
             const statusData = {
               robotUuid: global.robotUuid,
               status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
             };
-            console.log("FRS emit ",global.robotUuid);
+            socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${global.robotMcAdrs}`);
             this.frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
-            
           }
         }, 5000);
-
       });
 
       this.frsSocket.on('disconnect', (data) => {
-        socketLogger.error(`FRS Socket disconnected, ${data}`);
+        socketLogger.error(`[CONNECT] FRS Socket disconnected: ${JSON.stringify(data)}`);
         global.frsConnect = false;
         clearInterval(this.interval_frs);
       });
 
       this.frsSocket.on('error', (error) => {
-        socketLogger.error(error);
+        socketLogger.error(`[CONNECT] FRS Socket error: ${JSON.stringify(error)}`);
       })
+
       this.frsSocket.on('robots-init', (data) => {
-        const json = JSON.parse(pako.ungzip(data, {to:'string'}));
-        console.log("robots-init : ", json.robotMcAdrs)
-        if (json.robotMcAdrs == global.robotMcAdrs) {
-          socketLogger.info(`Get Robot UUID : uuid(${json.robotUuid}), ip(${json.robotIpAdrs}), mc(${json.robotMcAdrs}), name(${json.robotNm})`);
-          global.robotNm = json.robotNm;
-          global.robotUuid = json.robotUuid;
-          global.robotMcAdrs = json.robotMcAdrs;
+        try{
+          const json = JSON.parse(pako.ungzip(data, {to:'string'}));
+          socketLogger.debug(`[INIT] FRS Get robots-init: ${JSON.stringify(json)}`)
+          if (json.robotMcAdrs == global.robotMcAdrs) {
+            socketLogger.info(`[INIT] Get Robot UUID from FRS: uuid(${json.robotUuid}), ip(${json.robotIpAdrs}), mc(${json.robotMcAdrs}), name(${json.robotNm})`);
+            global.robotNm = json.robotNm;
+            global.robotUuid = json.robotUuid;
+            global.robotMcAdrs = json.robotMcAdrs;
+          }
+        }catch(error){
+          socketLogger.error(`[INIT] FrsSocket robots-init Error : ${JSON.stringify(data)}, ${JSON.stringify(error)}`)
         }
       });
 
       this.frsSocket.on('move',(data) => {
         try{
           const json = JSON.parse(pako.ungzip(data, {to:'string'}));
-          socketLogger.info(`FrsSocket Move Command : ${json.command}, ${json.id}`);
-
-
+          socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
           if(this.slamnav){
               this.slamnav.emit("move",stringifyAllValues(json))
           }
-
         }catch(error){
-          socketLogger.error(`FrsSocket move Error : ${error}`)
+          socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(data)}, ${JSON.stringify(error)}`)
         }
       })
     }catch(error){
-      console.error(error);
+      socketLogger.error(`[CONNECT] FRS Socket connect`);
     }
   }
 
   onModuleDestroy() {
-    console.log("DISTROYs")
+    socketLogger.warn(`[CONNECT] Socket Gateway Destroy`)
     this.frsSocket.disconnect();
   }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
   handleConnection(client: Socket) {
-    console.log(
-      `Client connected: ${client.handshake.query.name}, ${client.id}`,
-    );
-    console.log(client.handshake.address.split(':')[3]);
+    socketLogger.info(`[CONNECT] New Client: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
     if (client.handshake.query.name == 'slamnav') {
       this.slamnav = client;
     }else if (client.handshake.query.name == 'taskman') {
@@ -163,9 +164,7 @@ export class SocketGateway
 
   // 클라이언트가 연결 해제되면 룸에서 leave 시킬 수 있음
   handleDisconnect(client: Socket) {
-    console.log(
-      `Client disconnected: ${client.handshake.query.name}, ${client.id}`,
-    );
+    socketLogger.info(`[CONNECT] Client disconnected: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
 
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
@@ -204,11 +203,11 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(
-        `Task Start : ${payload.file}, ${payload.id}, ${payload.running}`,
+        `[RESPONSE] Task Start: ${JSON.stringify(payload)}`
       );
       this.server.emit('task_start', payload);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] Task Start: ${error.stack}`);
       throw error();
     }
   }
@@ -222,24 +221,29 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(
-        `Task Done : ${payload.file}, ${payload.id}, ${payload.running}`,
+        `[RESPONSE] Task Done : ${JSON.stringify(payload)}`
       );
       this.server.emit('task_done', payload);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] Task Done: ${error.stack}`);
       throw error();
     }
   }
 
   @SubscribeMessage('task_load')
   async handleTaskLoadMessage(@MessageBody() payload:TaskPayload){
-    this.taskState.file = payload.file;
-    this.taskState.id = payload.id;
-    this.taskState.running = payload.running;
-    socketLogger.debug(
-      `Task Load : ${payload.file}, ${payload.id}, ${payload.running}`,
-    );
-    this.server.emit('task_load', payload);
+    try {
+      this.taskState.file = payload.file;
+      this.taskState.id = payload.id;
+      this.taskState.running = payload.running;
+      socketLogger.debug(
+        `[RESPONSE] Task Load : ${JSON.stringify(payload)}`
+      );
+      this.server.emit('task_load', payload);
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] Task Load: ${error.stack}`);
+      throw error();
+    }
   }
   
   @SubscribeMessage('task_error')
@@ -252,11 +256,11 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(
-        `Task Error : ${payload.file}, ${payload.id}, ${payload.running}`,
+        `[RESPONSE] Task Error : ${JSON.stringify(payload)}`
       );
       this.server.emit('task_error', payload);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] Task Error: ${error.stack}`);
       throw error();
     }
   }
@@ -269,11 +273,11 @@ export class SocketGateway
   @SubscribeMessage('task_id')
   async handleTaskIdMessage(@MessageBody() payload: number) {
     try {
-      socketLogger.debug(`Task Id Change : ${payload}`);
+      socketLogger.debug(`[RESPONSE] Task Id Change : ${JSON.stringify(payload)}`);
       this.taskState.id = payload;
       this.server.emit('task_id', payload);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] Task Id Change: ${error.stack}`);
       throw error();
     }
   }
@@ -289,20 +293,11 @@ export class SocketGateway
       const json = JSON.parse(payload);
       this.server.to('slamnav').emit('move', json);
 
-      if (json.command == 'target') {
-        socketLogger.debug(
-          `Task Move Command : ${json.command}, ${json.x}, ${json.y}, ${json.rz}, ${json.preset}`,
-        );
-      } else if (json.command == 'goal') {
-        socketLogger.debug(
-          `Task Move Command : ${json.command}, ${json.id}, ${json.preset}`,
-        );
-      } else {
-        socketLogger.debug(`Task Move Command : ${json.command}`);
-      }
-      //   this.server.to('/slamnav').emit('move', json);
+      socketLogger.debug(
+        `[COMMAND] Task Move: ${JSON.stringify(json)}`,
+      );
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[COMMAND] Task Move: ${error.stack}`);
       throw error();
     }
   }
@@ -326,21 +321,11 @@ export class SocketGateway
       this.server.emit('moveResponse', json);
       this.moveState = json;
 
-      if (json.command == 'target') {
-        socketLogger.debug(
-          `SLAMNAV Move Response : ${json.command}, ${json.result}, ${json.x}, ${json.y}, ${json.rz}, ${json.preset}`,
-        );
-      } else if (json.command == 'goal') {
-        socketLogger.debug(
-          `SLAMNAV Move Response : ${json.command}, ${json.result}, ${json.id}, ${json.preset}`,
-        );
-      } else {
-        socketLogger.debug(
-          `SLAMNAV Move Response : ${json.command}, ${json.result} `,
-        );
-      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`,
+      );
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${error.stack}`);
       throw error();
     }
   }
@@ -358,22 +343,12 @@ export class SocketGateway
         this.server.emit('moveResponse', json);
         this.moveState = json;
   
-        if (json.command == 'target') {
-          socketLogger.debug(
-            `SLAMNAV Move Response : ${json.command}, ${json.result}, ${json.x}, ${json.y}, ${json.rz}, ${json.preset}`,
-          );
-        } else if (json.command == 'goal') {
-          socketLogger.debug(
-            `SLAMNAV Move Response : ${json.command}, ${json.result}, ${json.id}, ${json.preset}`,
-          );
-        } else {
-          socketLogger.debug(
-            `SLAMNAV Move Response : ${json.command}, ${json.result} `,
-          );
-        }
+        socketLogger.debug(
+          `[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`,
+        );
       }
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${error.stack}`);
       throw error();
     }
   }
@@ -384,7 +359,7 @@ export class SocketGateway
       this.server.emit("lidar",payload);
       this.lidarCloud = payload;
     }catch(error){
-      socketLogger.error(error.stack);
+      socketLogger.error(`[STATUS] Lidar: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -394,7 +369,7 @@ export class SocketGateway
     try{
       this.server.emit("mapping",payload);
     }catch(error){
-      socketLogger.error(error.stack);
+      socketLogger.error(`[STATUS] Mapping Cloud: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -411,7 +386,7 @@ export class SocketGateway
         this.frsSocket.emit("local-path", pako.gzip(JSON.stringify(sendData)));
       }
     }catch(error){
-      socketLogger.error(error.stack);
+      socketLogger.error(`[STATUS] LocalPath: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -419,6 +394,7 @@ export class SocketGateway
   async handleGlobalPathdMessage(@MessageBody() payload:any[]){
     try{
       this.server.emit("global_path",payload);
+      socketLogger.debug(`[STATUS] GlobalPath: ${JSON.stringify(payload)}`)
       if(this.frsSocket.connected && global.robotUuid != ""){
         const sendData = {
           robotUuid: global.robotUuid,
@@ -427,7 +403,7 @@ export class SocketGateway
         this.frsSocket.emit("global-path", pako.gzip(JSON.stringify(sendData)));
       }
     }catch(error){
-      socketLogger.error(error.stack);
+      socketLogger.error(`[STATUS] GlobalPath: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -445,12 +421,10 @@ export class SocketGateway
       this.taskState.file = payload.file;
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
-      socketLogger.debug(
-        `Task Init : ${payload.file}, ${payload.id}, ${payload.running}`,
-      );
+      socketLogger.debug(`[INIT] Task Init: ${JSON.stringify(payload)}`);
       this.server.emit('task_init', this.taskState);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[INIT] Task Init: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -461,10 +435,10 @@ export class SocketGateway
   ){
     try {
       this.taskState.variables = payload;
-      socketLogger.debug(`Task Variables : ${payload.length}`);
+      socketLogger.debug(`[INIT] Task Variables: ${JSON.stringify(payload)}`);
       this.server.emit('task_variables',this.taskState);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[INIT] Task Variables: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -482,11 +456,11 @@ export class SocketGateway
       };
 
       socketLogger.debug(
-        `Web Init : ${this.taskState.file}, ${this.taskState.id}, ${this.taskState.running}, ${this.moveState.command}, ${this.moveState.result}`,
+        `[INIT] Web Init : ${JSON.stringify(payload)}`,
       );
       this.server.emit('Webinit', payload);
     } catch (error) {
-      socketLogger.error(error.stack);
+      socketLogger.error(`[INIT] Web Init: ${JSON.stringify(error)}`);
       throw error();
     }
   }
@@ -499,13 +473,6 @@ export class SocketGateway
 
 
   //****************************************************** functions */
-
-  // 특정 클라이언트에 메시지 전송
-  sendEmit(command: string, message: string): void {
-    socketLogger.debug(`send Emit ${command} : ${message}`);
-    this.server.emit(command, JSON.parse(message));
-  }
-
   getConnection(){
     // console.log(this.slamnav, this.taskman);
     return({

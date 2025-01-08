@@ -26,16 +26,15 @@ export class NetworkService {
         return new Promise(async (resolve, reject) => {
           try {
             exec("nmcli dev wifi rescan", (err) => {
-                console.log(err);
+                httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(err)}`)
               // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
               wifi.scan((error, networks) => {
                 if (error) {
-                  console.error(error);
+                  httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(error)}`)
                   reject();
                 } else {
                   this.wifi_list = [];
                   for (const net of networks) {
-                    // console.log(net);
                     var flag = false;
                     if (net.ssid != "") {
                       for (var w of this.wifi_list) {
@@ -59,7 +58,7 @@ export class NetworkService {
               });
             });
           } catch (error) {
-            console.error(error);
+            httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(error)}`)
             reject();
           }
         });
@@ -73,7 +72,7 @@ export class NetworkService {
         return new Promise(async (resolve, reject) => {
             exec("nmcli device show", async(err, stdout, stderr) => {
                 if (err) {
-                    console.error(`getNetwork Error: ${err}`);
+                    httpLogger.error(`[NETOWRK] getNetwork: ${JSON.stringify(err)}`)
                     reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}});
                 } else {
                     try {
@@ -107,7 +106,7 @@ export class NetworkService {
                         
                         resolve({ethernet:this.curEthernet,wifi:this.curWifi,bt:this.curBluetooth});
                     } catch (error) {
-                    console.error(error);
+                        httpLogger.error(`[NETOWRK] getNetwork: ${JSON.stringify(error)}`)
                     reject();
                     }
                 }
@@ -160,7 +159,7 @@ export class NetworkService {
                 });
                 resolve(network);
             } catch (error) {
-                console.error(error);
+                httpLogger.error(`[NETWORK] transNMCLI: ${JSON.stringify(error)}`)
                 reject();
             }
         });
@@ -172,14 +171,14 @@ export class NetworkService {
             // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
             wifi.getCurrentConnections((error, networks) => {
             if (error) {
-                console.error(error);
+                httpLogger.error(`[NETWORK] getCurrentConnections: ${JSON.stringify(error)}`)
                 reject();
             } else {
                 resolve(networks);
             }
             });
         } catch (error) {
-            console.error(error);
+            httpLogger.error(`[NETWORK] getCurrentConnections: ${JSON.stringify(error)}`)
             reject();
         }
         });
@@ -206,7 +205,7 @@ export class NetworkService {
             dns_str +
             " ipv4.method manual";
     
-            httpLogger.info("SET IP : " + cmd);
+            httpLogger.info(`[NETWORK] SET IP: ${cmd}, ${JSON.stringify(info)}`);
             exec(cmd, async (err, stdout, stderr) => {
             if (err) {
                 httpLogger.error("SET IP Error : ", err);
@@ -216,81 +215,30 @@ export class NetworkService {
                 'sudo nmcli device up "' + info.device + '"',
                 async (err, stdout, stderr) => {
                     if (err) {
-                    console.error(`Error: ${err}`);
-                    reject();
+                        httpLogger.error(`[NETWORK] SET IP: ${cmd}, ${JSON.stringify(err)}`);
+                        reject();
                     } else {
-                    console.log(stdout);
-                    resolve(stdout);
+                        httpLogger.debug(`[NETWORK] setIP Response: ${stdout}`)
+                        resolve(stdout);
                     }
                 }
                 );
-                // resolve(stdout);
             }
             });
         } catch (error) {
-            httpLogger.error("SET IP Error : ", error);
+            httpLogger.error(`[NETWORK] SET IP: ${JSON.stringify(error)}`);
             reject(error);
         }
         });
     }
-  
-    async setWifi(info) {
-        return new Promise(async (resolve, reject) => {
-        try {
-            console.log("setWifi!!", info.name);
-    
-            let dns_str = '"';
-            for (var i = 0; i < info.dns.length; i++) {
-            dns_str += info.dns[i] + " ";
-            }
-            dns_str += '"';
-    
-            const cmd =
-            "sudo nmcli con modify " +
-            info.name +
-            " ipv4.addresses " +
-            info.ip +
-            "/" +
-            info.mask +
-            " ipv4.gateway " +
-            info.gateway +
-            " ipv4.dns " +
-            dns_str +
-            " ipv4.method manual";
-            console.log("setWifi CMD : ", cmd);
-            exec(cmd, async (err, stdout, stderr) => {
-            if (err) {
-                console.error(`Error: ${err}`);
-                reject();
-            } else {
-                exec(
-                "sudo nmcli device up " + info.device,
-                async (err, stdout, stderr) => {
-                    if (err) {
-                    console.error(`Error: ${err}`);
-                    reject();
-                    } else {
-                    console.log(stdout);
-                    resolve(stdout);
-                    }
-                }
-                );
-            }
-            });
-        } catch (error) {
-            console.error(error);
-            reject();
-        }
-        });
-    }
-    
+      
     async connectWifi(info) {
     return new Promise(async (resolve, reject) => {
         try {
             let cmd_line;
             if (info.password == undefined || info.password == "") {
-            cmd_line = 'sudo -S nmcli dev wifi connect "' + info.ssid + '"';
-            // 'echo "rainbow" | sudo -S nmcli dev wifi connect "' + info.ssid + '"';
+                cmd_line = 'sudo -S nmcli dev wifi connect "' + info.ssid + '"';
+                // 'echo "rainbow" | sudo -S nmcli dev wifi connect "' + info.ssid + '"';
             } else {
             cmd_line =
                 'sudo -S nmcli dev wifi connect "' +
@@ -299,10 +247,10 @@ export class NetworkService {
                 info.password +
                 '"';
             }
-            httpLogger.info("Connect Wifi : " + cmd_line);
+            httpLogger.info(`[NETWORK] Connect Wifi : ${cmd_line}, ${JSON.stringify(info)}`);
             exec(cmd_line, async (err, stdout, stderr) => {
                 if (err) {
-                    httpLogger.error("Connect Wifi Error : " + err);
+                    httpLogger.error(`[NETWORK] Connect Wifi: ${JSON.stringify(err)}`);
                     if (err.toString().includes("Secrets were required")) {
                         reject({...info,
                             data:{message: HttpStatusMessagesConstants.NETWORK.FAIL_CONNECT_PASSWORD_400},
@@ -320,7 +268,7 @@ export class NetworkService {
                         })
                     }
                 } else {
-                    httpLogger.info("Connect Wifi Result : " + stdout);
+                    httpLogger.info(`[NETWORK] Connect Wifi Response: ${stdout}`);
                     if (stdout.includes("successfully")) {
                         resolve({...info, message: HttpStatusMessagesConstants.NETWORK.SUCCESS_CONNECT_200 });
                     } else if (stdout.includes("Secrets were required")) {
@@ -335,7 +283,6 @@ export class NetworkService {
                         })
                     } else {
                         reject({...info,
-                            
                             status: HttpStatus.INTERNAL_SERVER_ERROR,
                             data: {stdout:stdout,message: HttpStatusMessagesConstants.NETWORK.FAIL_CONNECT_500}
                         })
@@ -343,7 +290,7 @@ export class NetworkService {
                 }
             });
         } catch (error) {
-            httpLogger.warn("Connect Wifi Error : " + error);
+            httpLogger.warn(`[NETWORK] Connect Wifi: ${JSON.stringify(error)}`);
             if (error.toString().includes("Secrets were required")) {
                 resolve({
                     ...info,
@@ -351,13 +298,13 @@ export class NetworkService {
                     message: "Secrets were required, but not provided",
                 });
             } else if (error.toString().includes("property is invalid")) {
-            resolve({
-                ...info,
-                result: "fail",
-                message: "Secrets were required, but not invalid",
-            });
+                resolve({
+                    ...info,
+                    result: "fail",
+                    message: "Secrets were required, but not invalid",
+                });
             } else {
-            resolve(error);
+                resolve(error);
             }
         }
     });

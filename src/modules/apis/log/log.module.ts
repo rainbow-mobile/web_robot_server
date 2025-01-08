@@ -4,12 +4,15 @@ import { LogController } from './log.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StateLogEntity } from './entity/state.entity';
 import { PowerLogEntity } from './entity/power.entity';
+import { StatusLogEntity } from './entity/status.entity';
+import { SocketsModule } from '@sockets/sockets.module';
 
 @Module({
   imports:[
     TypeOrmModule.forFeature([
       StateLogEntity,
-      PowerLogEntity
+      PowerLogEntity,
+      StatusLogEntity
     ])
   ],
   controllers: [LogController],

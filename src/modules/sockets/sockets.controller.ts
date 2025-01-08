@@ -15,13 +15,11 @@ export class SocketsController{
    this.conSocket();
   }
 
- 
   async conSocket(){
-    console.log("Connect Socket")
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
-    socketLogger.info(`ConnectSocket First : ${global.frs_socket}`)
+    socketLogger.info(`[CONNECT] ConnectSocket : ${global.frs_socket}`)
     this.socketGateway.connectFrsSocket(global.frs_socket);
   }
 
@@ -54,7 +52,7 @@ export class SocketsController{
   async updateFrsUrl(@Body() data:FrsUrlDto, @Res() res: Response){
     try{
       const url =data.url;
-      console.log(url);
+      httpLogger.info(`[SOCKET] set FRS URL: ${JSON.stringify(data)}`)
       if(url == "" || !url.includes('http://')){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
@@ -69,10 +67,11 @@ export class SocketsController{
       this.socketGateway.connectFrsSocket(global.frs_socket);
       res.send({url:url,socket:global.frs_socket,api:global.frs_api});
     }catch(error){
-      httpLogger.error(`GET /network/frs Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[SOCKET] set FRS URL: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
+
   @Put('frs/url/test')
   @ApiOperation({
     summary:'FRS URL 변경',
@@ -81,7 +80,7 @@ export class SocketsController{
   async updateFrsUrlTest(@Body() data:FrsUrlDto, @Res() res: Response){
     try{
       const url =data.url;
-      console.log(url);
+      httpLogger.warn(`[SOCKET] update FRS URL Test: ${url}`)
       if(url == "" || !url.includes('http://')){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
@@ -96,7 +95,7 @@ export class SocketsController{
       this.socketGateway.connectFrsSocket(global.frs_socket);
       res.send({url:url,socket:global.frs_socket,api:global.frs_api});
     }catch(error){
-      httpLogger.error(`GET /network/frs Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[SOCKET] update FRS URL Test: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -109,7 +108,7 @@ export class SocketsController{
   })
   async getFrsInfo(@Res() res: Response){
     try{
-      console.log("get frs ",global.robotUuid, global.robotUuid, global.frsConnect, global.robotMcAdrs)
+      httpLogger.info(`[SOCKET] get FRS: ${JSON.stringify(global)}`)
       if(!global.frs_url)
         global.frs_url = await this.variableService.getVariable('frs_url');
       if(!global.frs_api)
@@ -126,7 +125,7 @@ export class SocketsController{
         socket:global.frs_socket,
         api:global.frs_api});
     }catch(error){
-      httpLogger.error(`GET /network/frs Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[SOCKET] get FRS: ${JSON.stringify(error)}`)
       return res.status(error.status).send(error.data);
     }
   }

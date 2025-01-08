@@ -36,7 +36,7 @@ import { UploadModule } from './modules/apis/upload/upload.module';
         database: 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
-        logging: true,
+        logging: false
       }),
       // useFactory: (configService: ConfigService) => ({
       //   type: 'mariadb',

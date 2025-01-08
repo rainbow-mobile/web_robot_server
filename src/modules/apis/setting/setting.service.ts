@@ -20,9 +20,7 @@ export class SettingService {
     async saveSetting(type:string, data:JSON){
         try{
             const fileData = await this.transformSettingToJson(await readJson(Path.join(homedir(),'slamnav2','config',type,'config.json')));
-    
             const mergeData = await this.deepMerge(fileData, data);
-            console.log("merge : ",mergeData.default)
             const newData = await this.transformSettingToFile(mergeData);
 
             return await saveJson(Path.join(homedir(),'slamnav2','config',type,'config.json'),newData);
