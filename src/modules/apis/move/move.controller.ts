@@ -25,6 +25,7 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
+import { errorToJson } from '@common/util/error.util';
 
 @ApiTags('이동 관련 API (move)')
 @Controller('move')
@@ -59,44 +60,43 @@ export class MoveController {
   })
   async moveControl(@Body() data:MoveCommandDto, @Res() res: Response) {
     try {
+      httpLogger.info(`[MOVE] moveControl: ${JSON.stringify(data)}`);
+
       if(data.command == "goal"){
-        httpLogger.info(`moveControl goal : ${data.id}, ${data.method}, ${data.preset}`);
         if(data.id == "" || data.method == "" || data.preset == ""){
-          httpLogger.warn(`move Goal parameter missing`);
+          httpLogger.warn(`[MOVE] moveControl: move Goal parameter missing`);
           return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (id, method, preset)"});
         }
       }else if(data.command == "target"){
-        httpLogger.info(`moveControl target : ${data.x}, ${data.y}, ${data.z}, ${data.rz}, ${data.method}, ${data.preset}`);
         if(data.x == "" || data.y == "" || data.rz == "" || data.method == "" || data.preset == ""){
-          httpLogger.warn(`move Target parameter missing`);
+          httpLogger.warn(`[MOVE] moveControl: move Target parameter missing`);
           return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (x, y, rz, method, preset)"});
         }
       }else if(data.command == "jog"){
-        httpLogger.info(`moveControl jog : ${data.vx}, ${data.vy}, ${data.wz}`);
         if(data.vx == "" || data.vy == "" || data.wz == ""){
-          httpLogger.warn(`move Target parameter missing`);
+          httpLogger.warn(`[MOVE] moveControl: move Target parameter missing`);
           return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (x, y, rz, method, preset)"});
         }
       }else if(data.command == "stop" || data.command == "pause" || data.command == "resume"){
 
       }else{
-        httpLogger.warn(`move Command parameter unknown : ${data.command}`);
+        httpLogger.warn(`[MOVE] moveControl: move Command parameter unknown : ${data.command}`);
         return res.status(HttpStatus.BAD_REQUEST).send({message:"Unknown Parameter (command)"});
       }
 
       const newData = {...data,time:Date.now().toString()}
-      httpLogger.debug(`[MOVE] move: ${JSON.stringify(newData)}`)
+      httpLogger.debug(`[MOVE] moveControl: ${JSON.stringify(newData)}`)
 
       if(data.command != "jog"){
         const response = await this.moveService.moveCommand(newData);
-        httpLogger.debug(`[MOVE] move Response: ${JSON.stringify(response)}`)
+        httpLogger.debug(`[MOVE] moveControl Response: ${JSON.stringify(response)}`)
         return res.send(response);
       }else{
         this.moveService.moveJog(newData);
         return res.send();
       }
     } catch (error) {
-      httpLogger.error(error);
+      httpLogger.error(`[MOVE] moveControl: ${JSON.stringify(data)}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -124,8 +124,7 @@ export class MoveController {
       httpLogger.debug(`[MOVE] moveStop Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
-      httpLogger.error(`[MOVE] movsStop: ${JSON.stringify(error)}`);
-      httpLogger.error(error);
+      httpLogger.error(`[MOVE] moveStop:  ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -153,7 +152,7 @@ export class MoveController {
       httpLogger.debug(`[MOVE] movePause Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
-      httpLogger.error(`[MOVE] movePause: ${JSON.stringify(error)}`);
+      httpLogger.error(`[MOVE] movePause: ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -180,7 +179,7 @@ export class MoveController {
       httpLogger.debug(`[MOVE] moveResume Response: ${JSON.stringify(response)}`)
       return res.send(response);
     } catch (error) {
-      httpLogger.error(`[MOVE] moveResume: ${JSON.stringify(error)}`);
+      httpLogger.error(`[MOVE] moveResume: ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }

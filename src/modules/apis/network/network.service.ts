@@ -26,11 +26,13 @@ export class NetworkService {
         return new Promise(async (resolve, reject) => {
           try {
             exec("nmcli dev wifi rescan", (err) => {
-                httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(err)}`)
+                if(err){
+                    httpLogger.error(`[NETOWRK] WifiScan1: ${JSON.stringify(err)}`)
+                }
               // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
               wifi.scan((error, networks) => {
                 if (error) {
-                  httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(error)}`)
+                  httpLogger.error(`[NETOWRK] WifiScan2: ${JSON.stringify(error)}`)
                   reject();
                 } else {
                   this.wifi_list = [];
@@ -58,7 +60,7 @@ export class NetworkService {
               });
             });
           } catch (error) {
-            httpLogger.error(`[NETOWRK] WifiScan: ${JSON.stringify(error)}`)
+            httpLogger.error(`[NETOWRK] WifiScan3: ${JSON.stringify(error)}`)
             reject();
           }
         });

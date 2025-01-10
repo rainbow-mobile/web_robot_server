@@ -9,6 +9,7 @@ import { StatusTestDto } from './dto/status.dto';
 import * as pako from 'pako';
 import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
+import { errorToJson } from '@common/util/error.util';
 
 @Controller('log')
 export class LogController {
@@ -40,7 +41,7 @@ export class LogController {
       const data = await this.logService.getStatus(param);
       res.send(data);
     }catch(error){
-      httpLogger.error(`[LOG] getStatus Log : ${JSON.stringify(error)}`);
+      httpLogger.error(`[LOG] getStatus Log : ${errorToJson(error)}`);
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
     }
   }
@@ -64,7 +65,7 @@ export class LogController {
       const response = await this.logService.archiveOldDataDay();
       res.send(response);
     }catch(error){
-      httpLogger.error(`[LOG] archiveStatus: ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] archiveStatus: ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }
@@ -76,7 +77,7 @@ export class LogController {
       await this.logService.emitStatusTest(data.time);
       res.send();
     }catch(error){
-      httpLogger.error(`[LOG] emitTestStatus: ${JSON.stringify(data)}, ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] emitTestStatus: ${JSON.stringify(data)}, ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }
@@ -105,7 +106,7 @@ export class LogController {
       const response = await this.logService.getLogs('http',param);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[LOG] getApiLog: ${JSON.stringify(param)}, ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] getApiLog: ${JSON.stringify(param)}, ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }
@@ -122,7 +123,7 @@ export class LogController {
       
       res.send(response);
     }catch(error){
-      httpLogger.error(`[LOG] getSocketLog: ${JSON.stringify(param)}, ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] getSocketLog: ${JSON.stringify(param)}, ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }
@@ -135,19 +136,30 @@ export class LogController {
       
       res.send(new PaginationResponse(param.getOffset(), param.getLimit(), []));
     }catch(error){
-      httpLogger.error(`[LOG] getSlamnavLog: ${JSON.stringify(param)}, ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] getSlamnavLog: ${JSON.stringify(param)}, ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }
 
+  @Get(':key/:value')
+  async getLogValueKey(@Param('key') key:string, @Param('value') value:string, @Res() res: Response){
+    try{
+      httpLogger.debug(`[LOG] getLogValueKey: ${key}, ${value}`)
+      const response = await this.logService.getStatusParam(key+"/"+value);
+      res.send(response);
+    }catch(error){
+      httpLogger.error(`[LOG] getLogValueKey: ${key}, ${errorToJson(error)}`)
+      res.status(error.status).send(error.data);
+    }
+  }
   @Get(':key')
   async getLogKey(@Param('key') key:string, @Res() res: Response){
     try{
       httpLogger.debug(`[LOG] getLogKey: ${key}`)
-      const response = await this.logService.getPowerLog(key);
+      const response = await this.logService.getStatusParam(key);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[LOG] getLogKey: ${key}, ${JSON.stringify(error)}`)
+      httpLogger.error(`[LOG] getLogKey: ${key}, ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }
   }

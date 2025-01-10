@@ -22,6 +22,7 @@ import * as AdmZip from 'adm-zip';
 import { DateUtil } from '@common/util/date.util';
 import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class LogService {
@@ -37,7 +38,7 @@ export class LogService {
         
         private readonly dataSource: DataSource
     ){
-      this.checkTables('status',Query.create_status);
+      this.checkTables('status',Query.create_status);  
     }
 
     async getState():Promise<StateLogEntity[]>{
@@ -131,7 +132,7 @@ export class LogService {
           
               resolve(filteredChanges);
           }catch(error){
-              httpLogger.error(`getStateState Error : ${error}`);
+              httpLogger.error(`[LOG] getStateState Error : ${errorToJson(error)}`);
               reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR})
           }
       })
@@ -217,16 +218,16 @@ export class LogService {
               
                   resolve(filteredChanges);
             }catch(error){
-                httpLogger.error(`getStateState Error : ${error}`);
+                httpLogger.error(`[LOG] getStateState Error : ${errorToJson(error)}`);
                 reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR})
             }
         })
     }
 
-    async getPowerLog(key:string){
+    async getStatusLog(key:string){
         return new Promise(async(resolve, reject) => {
             try{
-                const data = await this.powerRepository.find();
+                const data = await this.statusRepository.find();
 
                 const calculateGapTime = (prev, next) => {
                   const gap = (next - prev) / 1000; // 간격을 초 단위로 계산
@@ -302,7 +303,7 @@ export class LogService {
                   const finalArray = addDisconForGaps(newDataMap);
                   resolve(finalArray);
             }catch(error){
-                httpLogger.error(`getPowerLog Error : ${error}`);
+                httpLogger.error(`[LOG] getStatusLog Error : ${errorToJson(error)}`);
                 reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR})
             }
         })
@@ -353,7 +354,6 @@ export class LogService {
                     }
                   }
                   return { time, level, category:category?category:'', text };
-                  
               }
               return null; // 일치하지 않는 라인은 무시
             }).filter(log => log !== null) as Array<{ 
@@ -383,7 +383,7 @@ export class LogService {
         return new PaginationResponse(count, param.getLimit(), logs);
         
       }catch(error){
-        httpLogger.error(`getLogs Error : ${error}`)
+        httpLogger.error(`[LOG] getLogs Error : ${errorToJson(error)}`)
       }
     }
 
@@ -422,7 +422,7 @@ export class LogService {
           
         return new PaginationResponse(count, param.getLimit(), sanitizeLogs);
       }catch(error){
-        httpLogger.error(`getStatus Error : ${error}`)
+        httpLogger.error(`[LOG] getStatus Error : ${errorToJson(error)}`)
       }
     }
 
@@ -496,7 +496,7 @@ export class LogService {
           await this.stateRepository.save(newLog);
           resolve(newLog);
         } catch (error) {
-          httpLogger.error(`[LOG] emitState: ${JSON.stringify(error)}`)
+          httpLogger.error(`[LOG] emitState: ${errorToJson(error)}`)
           reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
         }
       });
@@ -524,7 +524,7 @@ export class LogService {
           await this.powerRepository.save(newLog);
           resolve(newLog);
         } catch (error) {
-          httpLogger.error(`[LOG] emitPower: ${JSON.stringify(error)}`)
+          httpLogger.error(`[LOG] emitPower: ${errorToJson(error)}`)
           reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
         }
       });
@@ -603,7 +603,7 @@ export class LogService {
           await this.statusRepository.save(newLog);
           resolve(newLog);
         }catch(error){
-          httpLogger.error(`[LOG] emitStatus: ${JSON.stringify(error)}`)
+          httpLogger.error(`[LOG] emitStatus: ${errorToJson(error)}`)
           reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
         }
       });
@@ -680,14 +680,13 @@ export class LogService {
           await this.statusRepository.save(newLog);
           resolve(newLog);
         }catch(error){
-          httpLogger.error(`[LOG] emitStatus: ${JSON.stringify(error)}`)
+          httpLogger.error(`[LOG] emitStatus: ${errorToJson(error)}`)
           reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
         }
       });
     }
 
     async checkTables(name:string, query:string) {
-      httpLogger.debug(`[LOG] checkTables: ${name}, ${query}`)
       const queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       try{
@@ -702,14 +701,15 @@ export class LogService {
         const tableExists = rows["COUNT(*)"] > 0;
       
         if (!tableExists) {
-          httpLogger.info(`Table "${name}" does not exist. Creating...`);
+          httpLogger.info(`[LOG] checkTable: Table "${name}" does not exist. Creating...`);
           await queryRunner.query(query);
-          httpLogger.info(`Table "${name}" created successfully.`);
+          httpLogger.info(`[LOG] checkTable: Table "${name}" created successfully.`);
         }
       }catch(error){
-        httpLogger.error(`[LOG] checkTable: ${JSON.stringify(error)}`)
+        httpLogger.error(`[LOG] checkTable: ${errorToJson(error)}`)
       }
     }
+
 
     async archiveOldDataDay(): Promise<void> {
       //오래전 ~ 1일 전 데이터를 모두 각각 파일 이름으로 저장
@@ -718,12 +718,13 @@ export class LogService {
       let dt = startDt;
       const endDt = new Date();
       endDt.setDate(endDt.getDate() - 60);
+      endDt.setHours(0,0,0,0);
 
-      while(!(dt.getFullYear() == endDt.getFullYear() && dt.getMonth() == endDt.getMonth() && dt.getDate() == endDt.getDate())){
+      while(dt < endDt){
         await this.archiveOldDBData(DateUtil.formatDateYYYYMMDD(dt));
         await this.archiveOldJSONData('socket',DateUtil.formatDateYYYYMMDD(dt));
         await this.archiveOldJSONData('http',DateUtil.formatDateYYYYMMDD(dt));
-        dt.setDate(dt.getDate() - 1);
+        dt.setDate(dt.getDate() + 1);
         httpLogger.debug(`[LOG] archiveOldDataDay: nextDt(${dt}), endDt(${endDt})`)
       }
 
@@ -786,7 +787,7 @@ export class LogService {
 
         fs.unlink(filePath,(err)=>{
           if(err){
-            httpLogger.error(`[LOG] ArchiveOldDBData File Unlink : ${filePath}, ${err}`);
+            httpLogger.error(`[LOG] ArchiveOldDBData File Unlink : ${filePath}, ${errorToJson(err)}`);
           }
         });
 
@@ -817,7 +818,7 @@ export class LogService {
 
         fs.unlink(filePath,(err)=>{
           if(err){
-            httpLogger.error(`[LOG] archiveOldJSONData: Archive unlink Error : ${err}`);
+            httpLogger.error(`[LOG] archiveOldJSONData: Archive unlink Error : ${errorToJson(err)}`);
           }
         });
 
@@ -835,7 +836,7 @@ export class LogService {
         await this.dataSource.query(`OPTIMIZE TABLE ${tableName}`);
         httpLogger.info(`[LOG] optimizeTable: Table ${tableName} optimized successfully`);
       } catch (error) {
-        httpLogger.error(`[LOG] optimizeTable: optimizing table ${tableName}, ${JSON.stringify(error)}`);
+        httpLogger.error(`[LOG] optimizeTable: optimizing table ${tableName}, ${errorToJson(error)}`);
         throw error;
       }
     }

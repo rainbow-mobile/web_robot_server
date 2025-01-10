@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { DateUtil } from '@common/util/date.util';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class TaskService {
@@ -14,7 +15,7 @@ export class TaskService {
   
   async getTaskList(path: string): Promise<any[]> {
     try {
-      httpLogger.info(`getTaskList : ${path}`);
+      httpLogger.info(`[TASK] getTaskList : ${path}`);
       const files = await fs.promises.readdir(path, { withFileTypes: true });
       let list = [];
 
@@ -27,7 +28,7 @@ export class TaskService {
       });
       return list;
     } catch (e) {
-      httpLogger.error('task list get : Error , ', e);
+      httpLogger.error(`[TASK] getTaskList: ${errorToJson(e)}`);
     }
   }
 
@@ -47,9 +48,11 @@ export class TaskService {
         });
   
         const timeoutId = setTimeout(() => {
+          httpLogger.warn(`[TASK] getTaskInfo: Timeout`);
           reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
         }, 5000); // 5초 타임아웃
       } else {
+        httpLogger.warn(`[TASK] getTaskInfo: Disconnect`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
       }
     });
@@ -73,11 +76,11 @@ export class TaskService {
         });
   
         const timeoutId = setTimeout(() => {
-          httpLogger.error(`[TASK] loadTask: Timeout`);
+          httpLogger.warn(`[TASK] loadTask: Timeout`);
           reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
         }, 5000); // 5초 타임아웃
       }else{
-        httpLogger.error(`[TASK] loadTask: Disconnect`);
+        httpLogger.warn(`[TASK] loadTask: Disconnect`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
       }
     });
@@ -96,11 +99,11 @@ export class TaskService {
       });
 
       const timeoutId = setTimeout(() => {
-        httpLogger.error(`[TASK] runTask Response: Timeout`);
+        httpLogger.warn(`[TASK] runTask Response: Timeout`);
         reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});
       }, 5000); // 5초 타임아웃
     } else {
-      httpLogger.error(`[TASK] runTask Response: Disconnect`);
+      httpLogger.warn(`[TASK] runTask Response: Disconnect`);
       reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
     }
   });
@@ -216,8 +219,6 @@ async textToTreeData(text){
       const new_tree = line.includes("{");
       const end_tree = line.includes("}") && !line.includes("{");
   
-      // console.log(keyword, stack,new_tree,end_tree);
-
       if (keyword == "begin") {
         const new_node = { label: "begin", children: [] };
         stack[stack.length - 1].children.push(new_node);
@@ -348,7 +349,7 @@ async textToTreeData(text){
       }
     });
   }catch(error){
-    httpLogger.error(error);
+    httpLogger.error(`[TASK] textToTreeData: ${errorToJson(error)}`);
   }
 
   return [root];
@@ -356,10 +357,10 @@ async textToTreeData(text){
 
 async parse(dir:string) {
   return new Promise(async (resolve, reject) => {
-    httpLogger.info(`parse : ${dir}`)
+    httpLogger.info(`[TASK] parse : ${dir}`)
     fs.open(dir, "r", async(err, fd) => {
       if (err) {
-        httpLogger.error(err);
+        httpLogger.error(`[TASK] parse: ${errorToJson(err)}`);
         reject();
       } else {
         const file = fs.readFileSync(dir, "utf-8");
@@ -375,13 +376,12 @@ async parse(dir:string) {
 async save(dir, data) {
   return new Promise(async (resolve, reject) => {
     const text = await this.treeToText(data);
-    // console.log(text);
     fs.writeFile(dir, text, (err) => {
       if (err) {
-        httpLogger.error("Save File " + dir + " Error :", err);
+        httpLogger.error(`[TASK] save: ${dir}, ${errorToJson(err)}`);
         reject(err);
       }
-      httpLogger.info("Save File Success : " + dir);
+      httpLogger.info("[TASK] save: " + dir);
       resolve(text);
     });
   });
@@ -397,7 +397,6 @@ async treeToText(tree){
       indent = " ".repeat((indentLevel - 1) * 4);
     }
 
-    console.log(node.label, node.data);
     switch (node.label) {
       case "begin":
         text += `${indent}begin\n`;
@@ -513,7 +512,7 @@ async list(dir) {
     });
     return list;
   } catch (e) {
-    httpLogger.error("task list get : Error , ", e);
+    httpLogger.error(`[TASK] list: ${dir}, ${errorToJson(e)}`);
   }
 }
 }

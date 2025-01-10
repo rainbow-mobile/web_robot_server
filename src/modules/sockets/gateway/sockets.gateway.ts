@@ -29,13 +29,17 @@ import * as pako from 'pako';
 import { connect } from 'http2';
 import { TransformationType } from 'class-transformer';
 import { ApiTags } from '@nestjs/swagger';
+import { MqttClientService } from '@sockets/mqtt/mqtt.service';
+import { errorToJson } from '@common/util/error.util';
 
-@ApiTags('Socket')
 @Global()
 @WebSocketGateway(11337)
 export class SocketGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {
+  constructor(private readonly mqttService:MqttClientService){
+
+  }
   @WebSocketServer()
   server: Server; // WebSocket server 객체
   socket: Socket;
@@ -50,10 +54,6 @@ export class SocketGateway
   lidarCloud: any[] = [];
 
   interval_frs = null;
-
-  async afterInit(server: Server) {
-    socketLogger.debug(`[TEST] Socket afterInit`)
-  }
 
   async connectFrsSocket(url:string){
     try{
@@ -97,20 +97,20 @@ export class SocketGateway
               robotUuid: global.robotUuid,
               status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
             };
-            socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${global.robotMcAdrs}`);
+            socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${this.robotState.time}`);
             this.frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
           }
         }, 5000);
       });
 
       this.frsSocket.on('disconnect', (data) => {
-        socketLogger.error(`[CONNECT] FRS Socket disconnected: ${JSON.stringify(data)}`);
+        socketLogger.error(`[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`);
         global.frsConnect = false;
         clearInterval(this.interval_frs);
       });
 
       this.frsSocket.on('error', (error) => {
-        socketLogger.error(`[CONNECT] FRS Socket error: ${JSON.stringify(error)}`);
+        socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
       })
 
       this.frsSocket.on('robots-init', (data) => {
@@ -123,8 +123,9 @@ export class SocketGateway
             global.robotUuid = json.robotUuid;
             global.robotMcAdrs = json.robotMcAdrs;
           }
+          this.mqttService.connect();
         }catch(error){
-          socketLogger.error(`[INIT] FrsSocket robots-init Error : ${JSON.stringify(data)}, ${JSON.stringify(error)}`)
+          socketLogger.error(`[INIT] FrsSocket robots-init Error : ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       });
 
@@ -136,7 +137,7 @@ export class SocketGateway
               this.slamnav.emit("move",stringifyAllValues(json))
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(data)}, ${JSON.stringify(error)}`)
+          socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
     }catch(error){
@@ -207,8 +208,7 @@ export class SocketGateway
       );
       this.server.emit('task_start', payload);
     } catch (error) {
-      socketLogger.error(`[RESPONSE] Task Start: ${error.stack}`);
-      throw error();
+      socketLogger.error(`[RESPONSE] Task Start: ${errorToJson(error)}`);
     }
   }
   @SubscribeMessage('task_done')
@@ -225,8 +225,7 @@ export class SocketGateway
       );
       this.server.emit('task_done', payload);
     } catch (error) {
-      socketLogger.error(`[RESPONSE] Task Done: ${error.stack}`);
-      throw error();
+      socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
 
@@ -241,8 +240,8 @@ export class SocketGateway
       );
       this.server.emit('task_load', payload);
     } catch (error) {
-      socketLogger.error(`[RESPONSE] Task Load: ${error.stack}`);
-      throw error();
+      socketLogger.error(`[RESPONSE] Task Load: ${errorToJson(error)}`);
+
     }
   }
   
@@ -260,7 +259,7 @@ export class SocketGateway
       );
       this.server.emit('task_error', payload);
     } catch (error) {
-      socketLogger.error(`[RESPONSE] Task Error: ${error.stack}`);
+      socketLogger.error(`[RESPONSE] Task Error: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -277,7 +276,7 @@ export class SocketGateway
       this.taskState.id = payload;
       this.server.emit('task_id', payload);
     } catch (error) {
-      socketLogger.error(`[RESPONSE] Task Id Change: ${error.stack}`);
+      socketLogger.error(`[RESPONSE] Task Id Change: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -297,7 +296,7 @@ export class SocketGateway
         `[COMMAND] Task Move: ${JSON.stringify(json)}`,
       );
     } catch (error) {
-      socketLogger.error(`[COMMAND] Task Move: ${error.stack}`);
+      socketLogger.error(`[COMMAND] Task Move: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -325,7 +324,7 @@ export class SocketGateway
         `[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`,
       );
     } catch (error) {
-      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${error.stack}`);
+      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -348,7 +347,7 @@ export class SocketGateway
         );
       }
     } catch (error) {
-      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${error.stack}`);
+      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -359,7 +358,7 @@ export class SocketGateway
       this.server.emit("lidar",payload);
       this.lidarCloud = payload;
     }catch(error){
-      socketLogger.error(`[STATUS] Lidar: ${JSON.stringify(error)}`);
+      socketLogger.error(`[STATUS] Lidar: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -369,7 +368,7 @@ export class SocketGateway
     try{
       this.server.emit("mapping",payload);
     }catch(error){
-      socketLogger.error(`[STATUS] Mapping Cloud: ${JSON.stringify(error)}`);
+      socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -386,7 +385,7 @@ export class SocketGateway
         this.frsSocket.emit("local-path", pako.gzip(JSON.stringify(sendData)));
       }
     }catch(error){
-      socketLogger.error(`[STATUS] LocalPath: ${JSON.stringify(error)}`);
+      socketLogger.error(`[STATUS] LocalPath: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -403,7 +402,7 @@ export class SocketGateway
         this.frsSocket.emit("global-path", pako.gzip(JSON.stringify(sendData)));
       }
     }catch(error){
-      socketLogger.error(`[STATUS] GlobalPath: ${JSON.stringify(error)}`);
+      socketLogger.error(`[STATUS] GlobalPath: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -424,7 +423,7 @@ export class SocketGateway
       socketLogger.debug(`[INIT] Task Init: ${JSON.stringify(payload)}`);
       this.server.emit('task_init', this.taskState);
     } catch (error) {
-      socketLogger.error(`[INIT] Task Init: ${JSON.stringify(error)}`);
+      socketLogger.error(`[INIT] Task Init: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -438,7 +437,7 @@ export class SocketGateway
       socketLogger.debug(`[INIT] Task Variables: ${JSON.stringify(payload)}`);
       this.server.emit('task_variables',this.taskState);
     } catch (error) {
-      socketLogger.error(`[INIT] Task Variables: ${JSON.stringify(error)}`);
+      socketLogger.error(`[INIT] Task Variables:  ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -460,16 +459,11 @@ export class SocketGateway
       );
       this.server.emit('Webinit', payload);
     } catch (error) {
-      socketLogger.error(`[INIT] Web Init: ${JSON.stringify(error)}`);
+      socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
       throw error();
     }
   }
-
-  @SubscribeMessage('taskLoad')
-  async handleTest() {
-    console.log('taskLoad');
-  }
-
+  
 
 
   //****************************************************** functions */

@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class UploadService {
@@ -50,7 +51,7 @@ export class UploadService {
                 httpLogger.info(`[UPLOAD] zipFolder: Done ${zipFilePath}`)
                 resolve(zipFilePath);
             }catch(error){
-              httpLogger.error(`[UPLOAD] zipFolder: ${sourceFolderPath}, ${zipFilePath}, ${JSON.stringify(error)}`)
+              httpLogger.error(`[UPLOAD] zipFolder: ${sourceFolderPath}, ${zipFilePath}, ${errorToJson(error)}`)
                 reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
             }
         })
@@ -72,7 +73,7 @@ export class UploadService {
               httpLogger.info(`[UPLOAD] unzipFolder: Done ${extractToPath}`)
               resolve('');
             } catch (error) {
-              httpLogger.error(`[UPLOAD] unzipFolder: ${zipFilePath}, ${extractToPath}, ${JSON.stringify(error)}`)
+              httpLogger.error(`[UPLOAD] unzipFolder: ${zipFilePath}, ${extractToPath}, ${errorToJson(error)}`)
               reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
             }
         });

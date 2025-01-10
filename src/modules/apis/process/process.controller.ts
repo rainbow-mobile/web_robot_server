@@ -21,7 +21,7 @@ export class ProcessController {
     try{
       res.send(await this.socketGateway.getConnection());
     }catch(error){
-      httpLogger.error(`GET /process/connection Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[PROCESS] getConnection: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }

@@ -17,7 +17,6 @@ import { NetworkModule } from './modules/apis/network/network.module';
 import { LogModule } from './modules/apis/log/log.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,17 +37,6 @@ import { UploadModule } from './modules/apis/upload/upload.module';
         synchronize: false,
         logging: false
       }),
-      // useFactory: (configService: ConfigService) => ({
-      //   type: 'mariadb',
-      //   host: configService.get<string>('MARIADB_HOST'),
-      //   port: configService.get<number>('MARIADB_PORT'),
-      //   username: configService.get<string>('MARIADB_USERNAME'),
-      //   password: configService.get<string>('MARIADB_PASSWORD'),
-      //   database: configService.get<string>('MARIADB_DATABASE'),
-      //   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      //   synchronize: false,
-      //   logging: true,
-      // }),
     }),
     UsersModule,
     SocketsModule,

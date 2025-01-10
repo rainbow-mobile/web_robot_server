@@ -6,21 +6,21 @@ import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 export class MoveService {
     constructor(private readonly socketGateway: SocketGateway){}
 
-    async moveCommand(data:{}) {
+    async moveCommand(data:any) {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {
             this.socketGateway.server.to('slamnav').emit("move",data);
-            httpLogger.info("emit Slamnav : move");
+            httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
     
-            this.socketGateway.slamnav.once("moveResponse", (data) => {
-                httpLogger.info("emit Slamnav Success : " + data.result);
-                resolve(data);
+            this.socketGateway.slamnav.once("moveResponse", (data2) => {
+                httpLogger.info(`[MOVE] moveCommand Response: ${JSON.stringify(data2)}`);
+                resolve(data2);
                 clearTimeout(timeoutId);
             });
             
-            this.socketGateway.slamnav.once("move", (data) => {
-                httpLogger.info("emit Slamnav Success : " + data.result);
-                resolve(data);
+            this.socketGateway.slamnav.once("move", (data2) => {
+                httpLogger.info(`[MOVE] moveCommand Response: ${JSON.stringify(data2)}`);
+                resolve(data2);
                 clearTimeout(timeoutId);
             });
     
@@ -38,8 +38,4 @@ export class MoveService {
             this.socketGateway.server.to('slamnav').emit("move",data);
         }
     }
-
-    
-    
-  
 }

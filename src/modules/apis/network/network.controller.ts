@@ -93,9 +93,8 @@ export class NetworkController {
       httpLogger.debug(`[NETWORK] connectWifi: ${JSON.stringify(response)}`);
       res.send(response);
     }catch(error){
-      httpLogger.error(`POST /network/wifi Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`[NETWORK] connectWifi: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
-
 }

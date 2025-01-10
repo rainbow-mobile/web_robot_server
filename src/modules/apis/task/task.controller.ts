@@ -28,6 +28,7 @@ import httpLogger from '@common/logger/http.logger';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import path from 'path';
 import { TaskSaveDto } from './dto/task.save.dto';
+import { errorToJson } from '@common/util/error.util';
 
 @ApiTags('태스크 관련 API (task)')
 @Controller('task')
@@ -54,10 +55,10 @@ export class TaskController {
   })
   async getTaskFile(@Res() res: Response) {
     try {
-      httpLogger.info(`getTaskFile`);
+      httpLogger.info(`[TASK] getTaskFile: ${JSON.stringify(this.socketGateway.taskState)}`);
       return res.send(this.socketGateway.taskState);
     } catch (error) {
-      httpLogger.error(`/task Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[TASK] getTaskFile: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -79,12 +80,12 @@ export class TaskController {
   })
   async getTaskInfo(@Res() res: Response) {
     try {
-      httpLogger.info(`getTaskInfo`);
+      httpLogger.info(`[TASK] getTaskInfo`);
       const info = await this.taskService.getTaskInfo();
-      httpLogger.info(`getTaskInfo : file(${info.file}), taskId(${info.id}), running(${info.running}), variables length(${info.variables.length})`)
+      httpLogger.info(`[TASK] getTaskInfo: file(${info.file}), taskId(${info.id}), running(${info.running}), variables length(${info.variables.length})`)
       return res.send(info);
     } catch (error) {
-      httpLogger.error(`/task/info Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[TASK] getTaskInfo: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -122,7 +123,7 @@ export class TaskController {
 
         return res.send(data);
       } catch (error) {
-        httpLogger.error(error);
+        httpLogger.error(`[TASK] loadTask: ${mapName}, ${taskName}, ${errorToJson(error)}`);
         return res.status(error.status).send(error.data);
       }
     }
@@ -139,11 +140,11 @@ export class TaskController {
   })
   async runTask(@Res() res: Response) {
     try {
-      httpLogger.info(`runTask`);
+      httpLogger.info(`[TASK] runTask`);
       await this.taskService.runTask();
       return res.status(HttpStatus.ACCEPTED).send({message:'성공적으로 요청했습니다'});
     } catch (error) {
-      httpLogger.error('runTask Error : '+error);
+      httpLogger.error(`[TASK] runTask: ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -161,11 +162,11 @@ export class TaskController {
   })
   async stopTask(@Res() res: Response) {
     try {
-      httpLogger.info(`stopTask`);
+      httpLogger.info(`[TASK] stopTask`);
       await this.taskService.stopTask();
       return res.status(HttpStatus.ACCEPTED).send({message:'성공적으로 요청했습니다'});
     } catch (error) {
-      httpLogger.error('stopTask Error : '+error);
+      httpLogger.error(`[TASK] stopTask Error : ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -192,13 +193,13 @@ export class TaskController {
   })
   async readTaskList(@Param('mapName') mapName: string, @Res() res: Response) {
     try {
-      httpLogger.info(`readTaskList : ${mapName}`);
+      httpLogger.info(`[TASK] readTaskList: ${mapName}`);
       const tasks = await this.taskService.getTaskList(
         os.homedir() + '/maps/' + mapName,
       );
       return res.send(tasks);
     } catch (error) {
-      httpLogger.error(error);
+      httpLogger.error(`[TASK] readTaskList: ${mapName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -228,13 +229,17 @@ export class TaskController {
   })
   async readTask(@Param('mapName') mapName: string, @Param('taskName') taskName: string,@Res() res: Response) {
     try {
-      httpLogger.info(`readTask : ${os.homedir()} ${mapName},${taskName}`);
-      const task = await this.taskService.parse(
-        os.homedir()+"/maps/"+mapName+"/"+taskName
-      );
+      httpLogger.info(`[TASK] readTask: ${mapName},${taskName}`);
+
+      if(taskName.split('.').length == 1){
+        taskName += ".task";
+      }
+
+      const path = os.homedir()+"/maps/"+mapName+"/"+taskName;
+      const task = await this.taskService.parse(path);
       return res.send(task);
     } catch (error) {
-      httpLogger.error("here"+error);
+      httpLogger.error(`[TASK] readTask: ${mapName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -264,12 +269,19 @@ export class TaskController {
   async saveTask(@Body() data:TaskSaveDto, @Param('mapName') mapName: string, @Param('taskName') taskName: string,@Res() res: Response) {
     try {
       httpLogger.info(`readTask : ${os.homedir()} ${mapName},${taskName}`);
+
+      if(taskName.split('.').length == 1){
+        taskName += ".task";
+      }
+
       const task = await this.taskService.save(
         os.homedir()+"/maps/"+mapName+"/"+taskName, data.data
       );
+
       return res.send(task);
+
     } catch (error) {
-      httpLogger.error("here"+error);
+      httpLogger.error(`[TASK] saveTask: ${mapName}, ${taskName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }

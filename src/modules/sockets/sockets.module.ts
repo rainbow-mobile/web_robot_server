@@ -8,11 +8,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { StateLogEntity } from '../apis/log/entity/state.entity';
 import { PowerLogEntity } from '../apis/log/entity/power.entity';
+import { MqttClientService } from './mqtt/mqtt.service';
 
 @Module({
   imports:[VariablesModule, LogModule],
   controllers: [SocketsController],
-  providers: [SocketGateway,SocketService],
+  providers: [SocketGateway,SocketService,MqttClientService],
   exports: [SocketGateway],
 })
 

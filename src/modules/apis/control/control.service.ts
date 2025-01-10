@@ -10,11 +10,11 @@ export class ControlService {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {
             this.socketGateway.server.to('slamnav').emit("mapping",data);
-            httpLogger.info("emit Slamnav : mapping "+data.command);
+            httpLogger.info(`[CONTROL] mapping: ${JSON.stringify(data)}`);
     
-            this.socketGateway.slamnav.once("mapping", (data) => {
-                httpLogger.info("emit Slamnav Success : " + data.result);
-                resolve(data);
+            this.socketGateway.slamnav.once("mapping", (data2) => {
+                httpLogger.info(`[CONTROL] mapping Response: ${JSON.stringify(data2)}`);
+                resolve(data2);
                 clearTimeout(timeoutId);
             });
     
@@ -31,15 +31,14 @@ export class ControlService {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {
             this.socketGateway.server.to('slamnav').emit("localization",data);
-            httpLogger.info("emit Slamnav : Localization "+data.command);
+            httpLogger.info(`[CONTROL] localization: ${JSON.stringify(data)}`);
     
             if(data.command == "start" || data.command == "stop"){
-                httpLogger.info("emit Slamnav Success Auto : " + data.command);
                 resolve({command : data.command, result: 'accept'})
             }else{
-                this.socketGateway.slamnav.once("localization", (data) => {
-                    httpLogger.info("emit Slamnav Success : " + data.result);
-                    resolve(data);
+                this.socketGateway.slamnav.once("localization", (data2) => {
+                    httpLogger.info(`[CONTROL] localization Response: ${JSON.stringify(data2)}`);
+                    resolve(data2);
                     clearTimeout(timeoutId);
                 });
             }

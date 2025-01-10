@@ -19,10 +19,11 @@ export class MapController {
   })
   async getList(@Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] getList`);
       const response = await this.mapService.getMapList();
       res.send(response);
     }catch(error){
-      httpLogger.error(`/map Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getList: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -34,13 +35,15 @@ export class MapController {
   })
   async loadMap(@Param('mapNm') mapNm:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] loadMap: ${mapNm}`);
       if(mapNm == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }
       const response = await this.mapService.loadMap(mapNm);
+      httpLogger.info(`[MAP] loadMap Response: ${response}`)
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /map/goals/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] loadMap ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -52,10 +55,11 @@ export class MapController {
   })
   async getCloud(@Param('mapNm') mapNm:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] getCloud: ${mapNm}`);
       const response = await this.mapService.readCloud(mapNm);
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /map/cloud/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getCloud ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -67,6 +71,7 @@ export class MapController {
   })
   async saveCloud(@Param('mapNm') mapNm:string, @Body() data:any[], @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] saveCloud: ${mapNm}`);
       if(mapNm == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }else if(!Array.isArray(data) || data.length == 0){
@@ -75,7 +80,7 @@ export class MapController {
       const response = await this.mapService.saveCloud(mapNm,data);
       res.send(response);
     }catch(error){
-      httpLogger.error(`POST /map/cloud/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] saveCloud ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -88,13 +93,14 @@ export class MapController {
   })
   async getTopology(@Param('mapNm') mapNm:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] getTopology: ${mapNm}`);
       if(mapNm == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }
       const response = await this.mapService.readTopology(mapNm);
       res.send(response);
     }catch(error){
-      httpLogger.error(`GET /map/topo/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getTopology ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -107,6 +113,7 @@ export class MapController {
   })
   async saveTopology(@Param('mapNm') mapNm:string, @Body() data:JSON, @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] saveTopology: ${mapNm}`);
       if(mapNm == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }else if(!Array.isArray(data) || data.length == 0){
@@ -115,7 +122,7 @@ export class MapController {
       const response = await this.mapService.saveTopology(mapNm,data);
       res.send(response);
     }catch(error){
-      httpLogger.error(`POST /map/topo/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] saveTopology ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -125,8 +132,9 @@ export class MapController {
     summary: '맵 골 리스트 요청',
     description:'맵 골 리스트를 요청합니다.'
   })
-  async getGols(@Param('mapNm') mapNm:string, @Res() res: Response){
+  async getGoals(@Param('mapNm') mapNm:string, @Res() res: Response){
     try{
+      httpLogger.debug(`[MAP] getGoals: ${mapNm}`);
       if(mapNm == ""){
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }
@@ -141,7 +149,7 @@ export class MapController {
       }
       res.send(goals);
     }catch(error){
-      httpLogger.error(`GET /map/goals/${mapNm} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getGoals ${mapNm}: ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }

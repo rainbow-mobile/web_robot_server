@@ -7,6 +7,8 @@ import { VariablesService } from '../apis/variables/variables.service';
 import { Response } from 'express';
 import socketLogger from '@common/logger/socket.logger';
 import { FrsUrlDto } from './dto/frs.url.dto';
+import { MqttClientService } from './mqtt/mqtt.service';
+import { errorToJson } from '@common/util/error.util';
 
 @ApiTags('소켓 관련 API (Sockets)')
 @Controller('sockets')
@@ -16,6 +18,7 @@ export class SocketsController{
   }
 
   async conSocket(){
+    global.mqtt_url = await this.variableService.getVariable('mqtt_url');
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
@@ -39,7 +42,7 @@ export class SocketsController{
       
       res.send({url:global.frs_url,socket:global.frs_socket,api:global.frs_api});
     }catch(error){
-      httpLogger.error(`GET /network/frs Error : ${error.status} -> ${error.data}`)
+      httpLogger.error(`SOCKET] getFrsUrl: ${error.status} -> ${error.data}`)
       return res.status(error.status).send(error.data);
     }
   }
@@ -51,15 +54,17 @@ export class SocketsController{
   })
   async updateFrsUrl(@Body() data:FrsUrlDto, @Res() res: Response){
     try{
-      const url =data.url;
+      const url = data.url;
       httpLogger.info(`[SOCKET] set FRS URL: ${JSON.stringify(data)}`)
       if(url == "" || !url.includes('http://')){
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
 
+      global.mqtt_url = url.replace('http://','mqtt://')+":1883";
       global.frs_url = url;
-      global.frs_api = url+":3000";
-      global.frs_socket = url+":3001/socket/robots";
+      global.frs_api = url+":3010";
+      global.frs_socket = url+":3011/socket/robots";
+      await this.variableService.upsertVariable('mqtt_url',global.mqtt_url);
       await this.variableService.upsertVariable('frs_url',global.frs_url);
       await this.variableService.upsertVariable('frs_api',global.frs_api);
       await this.variableService.upsertVariable('frs_socket',global.frs_socket);
@@ -108,13 +113,14 @@ export class SocketsController{
   })
   async getFrsInfo(@Res() res: Response){
     try{
-      httpLogger.info(`[SOCKET] get FRS: ${JSON.stringify(global)}`)
       if(!global.frs_url)
         global.frs_url = await this.variableService.getVariable('frs_url');
       if(!global.frs_api)
         global.frs_api = await this.variableService.getVariable('frs_api');
       if(!global.frs_socket)
         global.frs_socket = await this.variableService.getVariable('frs_socket')
+      if(!global.mqtt_url)
+        global.mqtt_url = await this.variableService.getVariable('mqtt_url')
       
       res.send({
         connection:global.frsConnect, 
@@ -122,10 +128,11 @@ export class SocketsController{
         mac: global.robotMcAdrs, 
         name: global.robotNm, 
         url:global.frs_url,
+        mqtt: global.mqtt_url,
         socket:global.frs_socket,
         api:global.frs_api});
     }catch(error){
-      httpLogger.error(`[SOCKET] get FRS: ${JSON.stringify(error)}`)
+      httpLogger.error(`[SOCKET] get FRS: ${errorToJson(error)}`)
       return res.status(error.status).send(error.data);
     }
   }

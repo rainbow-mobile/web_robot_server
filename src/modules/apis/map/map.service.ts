@@ -8,6 +8,7 @@ import * as moment from 'moment';
 import * as csv from 'csv';
 import { readCsv, readJson, saveCsv, saveJson } from '@common/util/file.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class MapService {
@@ -58,8 +59,9 @@ export class MapService {
                     }
                 }
                 resolve(father);
+                
             } catch (e) {
-              httpLogger.error('parseMapList Error : ', e);
+              httpLogger.error(`[MAP] parseMapList: ${errorToJson(e)}`);
               reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}});
             }
         })

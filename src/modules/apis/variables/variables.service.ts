@@ -7,6 +7,7 @@ import { NotFoundError } from 'rxjs';
 import { resolve } from 'path';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class VariablesService {
@@ -36,7 +37,7 @@ export class VariablesService {
                 await this.variablesRepository.delete(key);
                 resolve({message:HttpStatusMessagesConstants.DB.SUCCESS_DELETE_200})
             }catch(error){
-                httpLogger.error(`deleteVariable Error : (${key}), ${error}`)
+                httpLogger.error(`[UPLOAD] deleteVariable: (${key}), ${errorToJson(error)}`)
                 reject({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500,status:HttpStatus.INTERNAL_SERVER_ERROR})
             }
 
@@ -49,7 +50,7 @@ export class VariablesService {
                 await this.variablesRepository.save({key:key,value:value});
                 resolve({data:{key:key,value:value,message:HttpStatusMessagesConstants.DB.SUCCESS_WRITE_201}});
             }catch(error){
-                httpLogger.error(`upsertVariable Error : (${key}, ${value}) ${error}`);
+                httpLogger.error(`[UPLOAD] upsertVariable : (${key}, ${value}) ${errorToJson(error)}`);
                 reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
             }
         })
@@ -64,11 +65,11 @@ export class VariablesService {
                     await this.variablesRepository.save({key:key,value:value});
                     resolve({data:{key:key,value:value,message:HttpStatusMessagesConstants.DB.SUCCESS_WRITE_201}});
                 }catch(error){
-                    httpLogger.error(`updateVariable Error : (${key}, ${value}) ${error}`);
+                    httpLogger.error(`[UPLOAD] updateVariable: (${key}, ${value}) ${errorToJson(error)}`);
                     reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}})
                 }
             }else{
-                httpLogger.error(`updateVariable Error : (${key}, ${value}) Key Not Found`);
+                httpLogger.error(`[UPLOAD] updateVariable: (${key}, ${value}) Key Not Found`);
                 reject({status:HttpStatus.NOT_FOUND,data:{message:HttpStatusMessagesConstants.DB.NOT_FOUND_404}})
             }
 

@@ -12,6 +12,7 @@ import axios from 'axios';
 import { DownloadMapDto } from './dto/download.map.dto';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { uploadMiddleware } from '@middleware/upload.middleware';
+import { errorToJson } from '@common/util/error.util';
 
 @ApiTags('파일 전송 관련 API (Upload)')
 @Controller('upload')
@@ -119,7 +120,7 @@ export class PublishController {
   async publishedMap(@Req() req: Request, @Param('mapNm') mapNm:string, @Res() res: Response){
     uploadMiddleware(req, res, async(err) => {
       if (err) {
-        httpLogger.error(`[UPLOAD] PublishMap: ${JSON.stringify(err)}`)
+        httpLogger.error(`[UPLOAD] PublishMap: ${errorToJson(err)}`)
         return res.status(400).send({ message: '파일 업로드 실패', error: err.message });
       }
 
@@ -135,12 +136,12 @@ export class PublishController {
         res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.MAP.SUCCESS_201,
           filename: req.file.filename});  
       }catch(error){
-        httpLogger.error(`PublishMap Error : ${mapNm}, ${req.file.originalname}, ${error}`)
+        httpLogger.error(`[UPLOAD] PublishMap: ${mapNm}, ${req.file.originalname}, ${errorToJson(error)}`)
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500)
       }finally{
         fs.unlink(homedir() + "/upload/" + req.file.originalname, (err) => {
           if (err) 
-            httpLogger.error(`[UPLOAD] PublishMap: Delete Zip (${homedir()+'/upload'+req.file.originalname}) ${JSON.stringify(err)}`)
+            httpLogger.error(`[UPLOAD] PublishMap: Delete Zip (${homedir()+'/upload'+req.file.originalname}) ${errorToJson(err)}`)
           // 성공적으로 업로드된 파일 정보 반환
           httpLogger.info(`[UPLOAD] PublishMap: Delete Zip (${homedir()+'/upload'+req.file.originalname})`)
         });
