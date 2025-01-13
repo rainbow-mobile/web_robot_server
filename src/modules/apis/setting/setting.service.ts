@@ -7,6 +7,8 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
+import httpLogger from '@common/logger/http.logger';
+import { errorToJson } from '@common/util/error.util';
 
 @Injectable()
 export class SettingService {
@@ -25,7 +27,7 @@ export class SettingService {
 
             return await saveJson(Path.join(homedir(),'slamnav2','config',type,'config.json'),newData);
         }catch(error){
-            console.error(error);
+            httpLogger.error(`[SETTING] saveSetting: ${errorToJson(error)}`)
         }
     }
 
@@ -78,7 +80,7 @@ export class SettingService {
                 resolve(await saveJson(Path.join(homedir(),'slamnav2','config',type,'preset_'+id+'.json'),mergeData));
                 
             }catch(error){
-                console.error(error);
+                httpLogger.error(`[SETTING] savePreset: ${errorToJson(error)}`)
                 reject(error);
             }
         });
@@ -105,7 +107,7 @@ export class SettingService {
               }
               resolve(nums);
             } catch (error) {
-              console.error(error);
+                httpLogger.error(`[SETTING] getPresetLIst: ${errorToJson(error)}`)
               if(error.code == 'ENOENT'){
                 reject({status:HttpStatus.NOT_FOUND, message:HttpStatusMessagesConstants.FILE.NOT_FOUND_404})
               }else{
@@ -208,17 +210,14 @@ export class SettingService {
                     "," +
                     (data.default.LIDAR_TF_F_RZ? data.default.LIDAR_TF_F_RZ : "0") ;
 
-                    console.log("default 1 : ", data.default);
                     const newdefault = {...data.default,
                         LIDAR_TF_B: lidar_tf_b,
                         LIDAR_TF_F: lidar_tf_f}
 
-                        console.log("default 1.5 : ", newdefault);
                     data = await {...data, default:{...data.default,
                         LIDAR_TF_B: lidar_tf_b,
                         LIDAR_TF_F: lidar_tf_f}}
 
-                    console.log("default 2 : ", data.default);
             }
 
             if(data.cam){

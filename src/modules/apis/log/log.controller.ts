@@ -152,6 +152,7 @@ export class LogController {
       res.status(error.status).send(error.data);
     }
   }
+  
   @Get(':key')
   async getLogKey(@Param('key') key:string, @Res() res: Response){
     try{

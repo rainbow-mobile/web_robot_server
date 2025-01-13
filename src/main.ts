@@ -76,7 +76,6 @@ async function bootstrap() {
 
 
   app.use('/swagger', (req, res, next) => {
-    console.log("HI");
     res.removeHeader('Content-Security-Policy');
     next();
   });

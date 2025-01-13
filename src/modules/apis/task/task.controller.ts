@@ -141,7 +141,9 @@ export class TaskController {
   async runTask(@Res() res: Response) {
     try {
       httpLogger.info(`[TASK] runTask`);
+      
       await this.taskService.runTask();
+
       return res.status(HttpStatus.ACCEPTED).send({message:'성공적으로 요청했습니다'});
     } catch (error) {
       httpLogger.error(`[TASK] runTask: ${errorToJson(error)}`);
@@ -163,7 +165,9 @@ export class TaskController {
   async stopTask(@Res() res: Response) {
     try {
       httpLogger.info(`[TASK] stopTask`);
+
       await this.taskService.stopTask();
+
       return res.status(HttpStatus.ACCEPTED).send({message:'성공적으로 요청했습니다'});
     } catch (error) {
       httpLogger.error(`[TASK] stopTask Error : ${errorToJson(error)}`);
@@ -194,10 +198,13 @@ export class TaskController {
   async readTaskList(@Param('mapName') mapName: string, @Res() res: Response) {
     try {
       httpLogger.info(`[TASK] readTaskList: ${mapName}`);
+
       const tasks = await this.taskService.getTaskList(
         os.homedir() + '/maps/' + mapName,
       );
+
       return res.send(tasks);
+
     } catch (error) {
       httpLogger.error(`[TASK] readTaskList: ${mapName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
@@ -237,7 +244,9 @@ export class TaskController {
 
       const path = os.homedir()+"/maps/"+mapName+"/"+taskName;
       const task = await this.taskService.parse(path);
+
       return res.send(task);
+
     } catch (error) {
       httpLogger.error(`[TASK] readTask: ${mapName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
