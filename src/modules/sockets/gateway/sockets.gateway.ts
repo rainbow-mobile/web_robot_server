@@ -303,8 +303,6 @@ export class SocketGateway
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
-    console.log(json
-    )
     this.server.emit('status',{...json,task:this.taskState,slam:this.slamnav?true:false});
     this.robotState = json;
   }
