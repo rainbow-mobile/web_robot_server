@@ -34,7 +34,6 @@ export class PaginationRequest {
       this.pageSize = 10;
     }
 
-    console.log(this.pageNo, this.pageSize, (Number(this.pageNo) - 1) * Number(this.pageSize))
     return (Number(this.pageNo) - 1) * Number(this.pageSize);
   }
 

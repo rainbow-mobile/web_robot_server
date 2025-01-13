@@ -1,5 +1,6 @@
 import { defaultNetwork, NetworkPayload } from '@common/interface/network/network.interface';
 import httpLogger from '@common/logger/http.logger';
+import { errorToJson } from '@common/util/error.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { exec, execSync } from 'child_process';
@@ -27,12 +28,12 @@ export class NetworkService {
           try {
             exec("nmcli dev wifi rescan", (err) => {
                 if(err){
-                    httpLogger.error(`[NETOWRK] WifiScan1: ${JSON.stringify(err)}`)
+                    httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`)
                 }
               // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
               wifi.scan((error, networks) => {
                 if (error) {
-                  httpLogger.error(`[NETOWRK] WifiScan2: ${JSON.stringify(error)}`)
+                  httpLogger.error(`[NETOWRK] WifiScan2: ${errorToJson(error)}`)
                   reject();
                 } else {
                   this.wifi_list = [];
@@ -60,7 +61,7 @@ export class NetworkService {
               });
             });
           } catch (error) {
-            httpLogger.error(`[NETOWRK] WifiScan3: ${JSON.stringify(error)}`)
+            httpLogger.error(`[NETOWRK] WifiScan3: ${errorToJson(error)}`)
             reject();
           }
         });
@@ -74,7 +75,7 @@ export class NetworkService {
         return new Promise(async (resolve, reject) => {
             exec("nmcli device show", async(err, stdout, stderr) => {
                 if (err) {
-                    httpLogger.error(`[NETOWRK] getNetwork: ${JSON.stringify(err)}`)
+                    httpLogger.error(`[NETOWRK] getNetwork: ${errorToJson(err)}`)
                     reject({status:HttpStatus.INTERNAL_SERVER_ERROR,data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500}});
                 } else {
                     try {
@@ -108,7 +109,7 @@ export class NetworkService {
                         
                         resolve({ethernet:this.curEthernet,wifi:this.curWifi,bt:this.curBluetooth});
                     } catch (error) {
-                        httpLogger.error(`[NETOWRK] getNetwork: ${JSON.stringify(error)}`)
+                        httpLogger.error(`[NETOWRK] getNetwork: ${errorToJson(error)}`)
                     reject();
                     }
                 }
@@ -161,7 +162,7 @@ export class NetworkService {
                 });
                 resolve(network);
             } catch (error) {
-                httpLogger.error(`[NETWORK] transNMCLI: ${JSON.stringify(error)}`)
+                httpLogger.error(`[NETWORK] transNMCLI: ${errorToJson(error)}`)
                 reject();
             }
         });
@@ -173,14 +174,14 @@ export class NetworkService {
             // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
             wifi.getCurrentConnections((error, networks) => {
             if (error) {
-                httpLogger.error(`[NETWORK] getCurrentConnections: ${JSON.stringify(error)}`)
+                httpLogger.error(`[NETWORK] getCurrentConnections: ${errorToJson(error)}`)
                 reject();
             } else {
                 resolve(networks);
             }
             });
         } catch (error) {
-            httpLogger.error(`[NETWORK] getCurrentConnections: ${JSON.stringify(error)}`)
+            httpLogger.error(`[NETWORK] getCurrentConnections: ${errorToJson(error)}`)
             reject();
         }
         });
@@ -210,14 +211,14 @@ export class NetworkService {
             httpLogger.info(`[NETWORK] SET IP: ${cmd}, ${JSON.stringify(info)}`);
             exec(cmd, async (err, stdout, stderr) => {
             if (err) {
-                httpLogger.error("SET IP Error : ", err);
+                httpLogger.error("[NETWORK] SET IP: ", errorToJson(err));
                 reject();
             } else {
                 exec(
                 'sudo nmcli device up "' + info.device + '"',
                 async (err, stdout, stderr) => {
                     if (err) {
-                        httpLogger.error(`[NETWORK] SET IP: ${cmd}, ${JSON.stringify(err)}`);
+                        httpLogger.error(`[NETWORK] SET IP: ${cmd}, ${errorToJson(err)}`);
                         reject();
                     } else {
                         httpLogger.debug(`[NETWORK] setIP Response: ${stdout}`)
@@ -228,7 +229,7 @@ export class NetworkService {
             }
             });
         } catch (error) {
-            httpLogger.error(`[NETWORK] SET IP: ${JSON.stringify(error)}`);
+            httpLogger.error(`[NETWORK] SET IP: ${errorToJson(error)}`);
             reject(error);
         }
         });
@@ -252,7 +253,7 @@ export class NetworkService {
             httpLogger.info(`[NETWORK] Connect Wifi : ${cmd_line}, ${JSON.stringify(info)}`);
             exec(cmd_line, async (err, stdout, stderr) => {
                 if (err) {
-                    httpLogger.error(`[NETWORK] Connect Wifi: ${JSON.stringify(err)}`);
+                    httpLogger.error(`[NETWORK] Connect Wifi: ${errorToJson(err)}`);
                     if (err.toString().includes("Secrets were required")) {
                         reject({...info,
                             data:{message: HttpStatusMessagesConstants.NETWORK.FAIL_CONNECT_PASSWORD_400},
