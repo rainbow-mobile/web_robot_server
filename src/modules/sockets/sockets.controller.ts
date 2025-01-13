@@ -62,8 +62,8 @@ export class SocketsController{
 
       global.mqtt_url = url.replace('http://','mqtt://')+":1883";
       global.frs_url = url;
-      global.frs_api = url+":3010";
-      global.frs_socket = url+":3011/socket/robots";
+      global.frs_api = url+":3000";
+      global.frs_socket = url+":3001/socket/robots";
       await this.variableService.upsertVariable('mqtt_url',global.mqtt_url);
       await this.variableService.upsertVariable('frs_url',global.frs_url);
       await this.variableService.upsertVariable('frs_api',global.frs_api);
