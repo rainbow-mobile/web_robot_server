@@ -66,7 +66,16 @@ export const create_variables = `CREATE TABLE variables(
 );`;
 export const create_status = `CREATE TABLE status(
     time timestamp(3) not null default current_timestamp(3),
-    conditions JSON
+    conditions JSON not null,
+	state JSON not null,
+	motor0 JSON not null,
+	motor1 JSON not null,
+	power JSON not null,
+	imu JSON not null,
+	slam tinyint(1) not null,
+	type varchar(32) not null,
+	task JSON,
+	pose JSON
 );`;
 export const create_status_archive = `CREATE TABLE status_archive(
 	time timestamp(3) not null default current_timestamp(3),

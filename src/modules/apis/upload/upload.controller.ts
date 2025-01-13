@@ -51,12 +51,12 @@ export class UploadController {
       httpLogger.info(`[UPLOAD] uploadMap: send FRS Response: ${JSON.stringify(response.data)}`)
       res.send({ message: "파일 저장 성공" });
     }catch(error){
-      httpLogger.error(`[UPLOAD] uploadMap: ${JSON.stringify(error)}`)
+      httpLogger.error(`[UPLOAD] uploadMap: ${errorToJson(error)}`)
       res.status(error.status).send(error.data);
     }finally{
       fs.unlink(zipFilePath, (err) => {
         if (err) 
-          httpLogger.error(`[UPLOAD] uploadMap: Delete ZipFile Failed...${JSON.stringify(err)}`)
+          httpLogger.error(`[UPLOAD] uploadMap: Delete ZipFile Failed...${errorToJson(err)}`)
       });
     }
   }
@@ -98,14 +98,14 @@ export class DownloadController {
           httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`)
           fs.unlink(homedir() + "/maps/" + data.name, (err) => {
             if (err) 
-              httpLogger.error(`[UPLOAD] DownloadMap: Zip Delete Fail ${JSON.stringify(err)}`)
+              httpLogger.error(`[UPLOAD] DownloadMap: Zip Delete Fail ${errorToJson(err)}`)
 
             httpLogger.info(`[UPLOAD] DownloadMap: Zip Delete Done`)
           });
         });
       
     } catch (error) {
-      httpLogger.error(`[UPLOAD] DownloadMap: Download Fail ${JSON.stringify(error.response.data)}`)
+      httpLogger.error(`[UPLOAD] DownloadMap: Download Fail ${errorToJson(error.response.data)}`)
       res.status(error.response.status).send();
     }
   }

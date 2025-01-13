@@ -41,7 +41,7 @@ export class SettingController {
       const response = await this.settingService.getSetting(type);
       return res.send(response);
     }catch(error){
-      httpLogger.error(`/setting/${type} Error : ${error.status} -> ${error.data}`);
+      httpLogger.error(`[SETTING] getSetting: ${type}, ${error.status} -> ${error.data}`);
       return res.status(error.status).send(error.data);
     }
   }

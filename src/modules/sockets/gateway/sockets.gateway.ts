@@ -38,7 +38,6 @@ export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {
   constructor(private readonly mqttService:MqttClientService){
-
   }
   @WebSocketServer()
   server: Server; // WebSocket server 객체
@@ -304,6 +303,8 @@ export class SocketGateway
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
+    console.log(json
+    )
     this.server.emit('status',{...json,task:this.taskState,slam:this.slamnav?true:false});
     this.robotState = json;
   }

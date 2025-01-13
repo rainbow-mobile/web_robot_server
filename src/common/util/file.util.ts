@@ -23,7 +23,6 @@ export async function readJson(dir:string){
             reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.FILE.FAIL_READ_500}});
         }
     })
-
 }
 
 export async function deleteFile(dir:string){
@@ -40,7 +39,6 @@ export async function deleteFile(dir:string){
                             reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.FILE.FAIL_DELETE_500}})
                         }
                         resolve({message:HttpStatusMessagesConstants.FILE.SUCCESS_DELETE_200});
-        
                     })
                 }
             })
@@ -85,7 +83,7 @@ export async function readCsv(dir:string){
                         reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.FILE.FAIL_READ_500}})
                     })
                       .on("end", () => {
-                        httpLogger.debug(`[FILE] readCSV: ${dir}, ${JSON.stringify(results)}`);
+                        httpLogger.debug(`[FILE] readCSV: ${dir}`);
                         resolve(results);
                       });
                 }
