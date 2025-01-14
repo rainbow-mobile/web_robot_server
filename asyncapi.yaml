@@ -1,0 +1,36 @@
+asyncapi: '2.6.0'
+info:
+  title: My WebSocket API
+  version: '1.0.0'
+  description: WebSocket API for real-time communication.
+
+servers:
+  local:
+    url: ws://localhost:11337
+    protocol: ws
+
+channels:
+  user/message:
+    description: Channel for user messages.
+    subscribe:
+      summary: Client receives messages from the server.
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            userId:
+              type: string
+            message:
+              type: string
+    publish:
+      summary: Client sends messages to the server.
+      message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            userId:
+              type: string
+            message:
+              type: string

@@ -33,7 +33,7 @@ export class LogController {
   @Get('status')
   @ApiOperation({
     summary:'Status Log 조회',
-    description:'DB에 저장된 Status 리스트 반환 (오늘 날짜) '
+    description:'DB에 저장된 Status 리스트 반환'
   })
   async getStatus(@Query() param: LogReadDto, @Res() res: Response){
     try{
@@ -82,19 +82,6 @@ export class LogController {
     }
   }
 
-  // @Get('state/:key')
-  // async getStateState(@Param('key') key:string, @Res() res: Response){
-  //   try{
-  //     httpLogger.debug(`[LOG] getStateState: ${key}`)
-  //     const response = await this.logService.getStateLog(key);
-  //     res.send(response);
-  //   }catch(error){
-  //     httpLogger.error(`[LOG] getStateState: ${key}, ${JSON.stringify(error)}`)
-  //     res.status(error.status).send(error.data);
-  //   }
-  // }
-
-
   @Get('api')
   @ApiOperation({
     summary:'API Log 조회',
@@ -131,9 +118,7 @@ export class LogController {
   @Get('slamnav')
   async getSlamnavLog(@Query() param: LogReadDto, @Res() res: Response){
     try{
-      httpLogger.debug(`[LOG] getSlamnavLog: ${JSON.stringify(param)}`)
-      // const response = await this.logService.getLogs('socket',param);
-      
+      httpLogger.debug(`[LOG] getSlamnavLog: ${JSON.stringify(param)}`)      
       res.send(new PaginationResponse(param.getOffset(), param.getLimit(), []));
     }catch(error){
       httpLogger.error(`[LOG] getSlamnavLog: ${JSON.stringify(param)}, ${errorToJson(error)}`)

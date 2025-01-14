@@ -13,6 +13,7 @@ import { loggerMiddleware } from '@common/middleware/logger.middleware';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExceptionFilterMiddleware } from '@common/middleware/exception-filter.middleware';
 import { ConfigService } from '@nestjs/config';
+import {ServeStaticModule} from '@nestjs/serve-static';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
