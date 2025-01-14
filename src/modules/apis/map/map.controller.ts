@@ -23,7 +23,7 @@ export class MapController {
       const response = await this.mapService.getMapList();
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] getList: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getList: ${error.status} -> $${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -40,10 +40,10 @@ export class MapController {
         return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
       }
       const response = await this.mapService.loadMap(mapNm);
-      httpLogger.info(`[MAP] loadMap Response: ${response}`)
+      httpLogger.info(`[MAP] loadMap Response: ${JSON.stringify(response)}`)
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] loadMap ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] loadMap ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -59,7 +59,7 @@ export class MapController {
       const response = await this.mapService.readCloud(mapNm);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] getCloud ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getCloud ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -80,7 +80,7 @@ export class MapController {
       const response = await this.mapService.saveCloud(mapNm,data);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] saveCloud ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] saveCloud ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -100,7 +100,7 @@ export class MapController {
       const response = await this.mapService.readTopology(mapNm);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] getTopology ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getTopology ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -122,7 +122,7 @@ export class MapController {
       const response = await this.mapService.saveTopology(mapNm,data);
       res.send(response);
     }catch(error){
-      httpLogger.error(`[MAP] saveTopology ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] saveTopology ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
@@ -149,7 +149,7 @@ export class MapController {
       }
       res.send(goals);
     }catch(error){
-      httpLogger.error(`[MAP] getGoals ${mapNm}: ${error.status} -> ${error.data}`);
+      httpLogger.error(`[MAP] getGoals ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
     }
   }
