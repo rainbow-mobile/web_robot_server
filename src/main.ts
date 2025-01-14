@@ -13,6 +13,8 @@ import { loggerMiddleware } from '@common/middleware/logger.middleware';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExceptionFilterMiddleware } from '@common/middleware/exception-filter.middleware';
 import { ConfigService } from '@nestjs/config';
+import * as bodyParser from 'body-parser';
+import {ServeStaticModule} from '@nestjs/serve-static';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,12 +27,15 @@ async function bootstrap() {
     origin: '*',
   });
 
-
+  
+  app.use(bodyParser.json({limit:'1mb'}))
+  app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      
     }),
   );
 
