@@ -29,6 +29,7 @@
     "@nestjs/swagger": "^8.0.7",
     "@nestjs/typeorm": "^10.0.2",
     "adm-zip": "^0.5.16",
+    "ajv": "^8.17.1",
     "axios": "^1.7.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -52,6 +53,7 @@
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.8.1",
     "swagger": "^0.7.5",
+    "systeminformation": "^5.25.11",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

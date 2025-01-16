@@ -82,3 +82,15 @@ export const create_status_archive = `CREATE TABLE status_archive(
 	status JSON,
 	date varchar(32) not null unique
 )`;
+export const create_system = `CREATE TABLE system(
+	time timestamp(3) not null default current_timestamp(3),
+	cpu float,
+	cpu_cores JSON,
+	memory_total float,
+	memory_free float,
+	network JSON,
+	server JSON,
+	webui JSON,
+	slamnav JSON,
+	taskman JSON
+);`;

@@ -28,7 +28,7 @@ import { Global, OnModuleDestroy } from '@nestjs/common';
 import * as pako from 'pako';
 import { connect } from 'http2';
 import { TransformationType } from 'class-transformer';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 
@@ -194,6 +194,10 @@ export class SocketGateway
    * @param payload 로봇 라이다 데이터
    */
   @SubscribeMessage('task_start')
+  @ApiOperation({
+    summary: 'Socket Connection',
+    description: '?'
+  })
   async handleTaskStartMessage(
     @MessageBody()
     payload: TaskPayload,
