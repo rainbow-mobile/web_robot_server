@@ -28,6 +28,12 @@ export class MapController {
     }
   }
 
+  @Get('current')
+  async getCurrentMapName(@Res() res:Response){
+    console.log(this.socketGateway.robotState.state.map)
+    res.send(this.socketGateway.robotState.state.map);
+  }
+
   @Post('load/:mapNm')
   @ApiOperation({
     summary: '맵 로드 요청',
