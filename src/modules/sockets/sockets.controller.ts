@@ -14,7 +14,7 @@ import { errorToJson } from '@common/util/error.util';
 @Controller('sockets')
 export class SocketsController{
   constructor(private readonly socketGateway: SocketGateway, private readonly variableService: VariablesService) {
-  //  this.conSocket();
+    this.conSocket();
   }
 
   async conSocket(){
