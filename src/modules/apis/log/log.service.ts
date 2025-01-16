@@ -49,6 +49,10 @@ export class LogService {
     ){
       this.checkTables('status',Query.create_status);  
       this.checkTables('system',Query.create_system);
+
+      setInterval(()=>{
+        this.readMemoryUsage();
+      },1000)
     }
 
     private systemUsage = null;
@@ -1033,8 +1037,8 @@ export class LogService {
             const txDrops = parseInt(stats[11]);
             const rxErrors = parseInt(stats[2]);
             const txErrors = parseInt(stats[10]);
-            const rxKBytes = parseInt(stats[0], 10)/1000;
-            const txKBytes = parseInt(stats[8], 10)/1000;
+            const rxKBytes = parseInt(stats[0], 10)*8/1000;
+            const txKBytes = parseInt(stats[8], 10)*8/1000;
     
             interfaces[interfaceName] = { rxKBytes, txKBytes, rxPackets, txPackets, rxDrops, txDrops, rxErrors, txErrors };
           }
@@ -1050,6 +1054,8 @@ export class LogService {
             const timeDiff = (new Date().getTime() - this.previousTime.getTime())/1000;
             const rxKbps = rxDiff / timeDiff;  // 1초 간격으로 계산
             const txKbps = txDiff / timeDiff;
+            // console.log(`${interfaceName} rxKbps: ${rxKbps}, ${timeDiff}`)
+            // console.log(`${interfaceName} txKbps: ${txKbps}, ${timeDiff}`)
             interfaces[interfaceName] = {...interfaces[interfaceName], rxKbps, txKbps};
           }else{
             interfaces[interfaceName] = {...interfaces[interfaceName], rxKbps:0, txKbps:0};
@@ -1068,16 +1074,8 @@ export class LogService {
 
     }
 
-    async getSystemCurrent(){
-      return { system:this.systemUsage, process:this.processUsage, network:this.networkUsage};
-    }
-    
-    async readMemoryUsage(){
+    async emitSystem(){
       try{
-        this.systemUsage = await this.getCpuUsage();
-        this.processUsage = await this.getProcessUsage();
-        this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
-
         const newLog:SystemLogEntity = {
           time:new Date(),
           cpu:this.systemUsage.cpu,
@@ -1091,6 +1089,19 @@ export class LogService {
           taskman:this.processUsage.get("TaskMan")          
         }
         await this.systemRepository.save(newLog);
+      }catch(error){
+        httpLogger.error(`[LOG] emitSystem: ${JSON.stringify(error)}`)
+      }
+    }
+    async getSystemCurrent(){
+      return { system:this.systemUsage, process:this.processUsage, network:this.networkUsage};
+    }
+    
+    async readMemoryUsage(){
+      try{
+        this.systemUsage = await this.getCpuUsage();
+        this.processUsage = await this.getProcessUsage();
+        this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
       }catch(error){
         httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`)
       }
