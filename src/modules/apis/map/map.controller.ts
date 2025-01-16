@@ -4,6 +4,7 @@ import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
+import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -34,8 +35,13 @@ export class MapController {
     description:'로봇의 맵 이름을 요청합니다.'
   })
   async getCurrentMapName(@Res() res:Response){
-    console.log(this.socketGateway.robotState.state.map)
-    res.send(this.socketGateway.robotState.state.map);
+    try{
+      httpLogger.debug(`[MAP] getCurrentMapName: ${this.socketGateway.robotState.state.map}`);
+      res.send(JSON.stringify(this.socketGateway.robotState.state.map));
+    }catch(error){
+      httpLogger.error(`[MAP] getCurrentMapName: ${JSON.stringify(error)}`);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500);
+    }
   }
 
   @Post('load/:mapNm')
