@@ -11,6 +11,7 @@ export class SocketService {
           this.logService.emitState(this.socketGateway.robotState);
           this.logService.emitPower(this.socketGateway.robotState);
           this.logService.emitStatus(this.socketGateway.robotState, this.socketGateway.slamnav?true:false, this.socketGateway.taskState);
+          this.logService.readMemoryUsage();
         }
     }, 10000);
 

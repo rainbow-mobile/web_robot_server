@@ -34,7 +34,7 @@ import { UploadModule } from './modules/apis/upload/upload.module';
         password: 'rainbow',
         database: 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false,
+        // synchronize: false,
         logging: false
       }),
     }),

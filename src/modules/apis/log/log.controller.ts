@@ -38,7 +38,7 @@ export class LogController {
   async getStatus(@Query() param: LogReadDto, @Res() res: Response){
     try{
       httpLogger.debug(`[LOG] getStatus Log`);
-      const data = await this.logService.getStatus(param);
+      const data = await this.logService.getStatus('status',param);
       res.send(data);
     }catch(error){
       httpLogger.error(`[LOG] getStatus Log : ${errorToJson(error)}`);
@@ -126,6 +126,64 @@ export class LogController {
     }
   }
 
+  @Get('system')
+  async getSystemLog(@Query() param: LogReadDto, @Res() res:Response){
+    try{
+      httpLogger.debug(`[LOG] getSystemLog Log`);
+      const data = await this.logService.getStatus('system',param);
+      res.send(data);
+    }catch(error){
+      httpLogger.error(`[LOG] getSystemLog Log : ${errorToJson(error)}`);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
+    }
+  }
+
+  @Get('system/cpu')
+  async getSystemCpuLog(@Query() param: LogReadDto, @Res() res:Response){
+    try{
+      httpLogger.debug(`[LOG] getSystemCpuLog Log`);
+      const data = await this.logService.getSystemCpu(param);
+      res.send(data);
+    }catch(error){
+      httpLogger.error(`[LOG] getSystemCpuLog Log : ${errorToJson(error)}`);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
+    }
+  }
+
+  @Get('system/process')
+  async getSystemProcessLog(@Query() param: LogReadDto, @Res() res:Response){
+    try{
+      httpLogger.debug(`[LOG] getSystemProcessLog Log`);
+      const data = await this.logService.getSystemProcess(param);
+      res.send(data);
+    }catch(error){
+      httpLogger.error(`[LOG] getSystemProcessLog Log : ${errorToJson(error)}`);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
+    }
+  }
+
+  @Get('system/current')
+  async getSystemCurrent(@Res() res:Response){
+    try{
+      const data = await this.logService.getSystemCurrent();
+      res.send(data);
+    }catch(error){
+      httpLogger.error(`[LOG] getSystemCurrent : ${errorToJson(error)}`);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
+    }
+  }
+
+  @Get('test/memory')
+  async getMemoryUsage(@Res() res:Response){
+    try{
+      this.logService.readMemoryUsage();
+      res.send();
+    }catch(error){
+      httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`)
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500})
+    }
+  }
+
   @Get(':key/:value')
   async getLogValueKey(@Param('key') key:string, @Param('value') value:string, @Res() res: Response){
     try{
@@ -149,4 +207,5 @@ export class LogController {
       res.status(error.status).send(error.data);
     }
   }
+
 }
