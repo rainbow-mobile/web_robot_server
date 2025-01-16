@@ -29,6 +29,10 @@ export class MapController {
   }
 
   @Get('current')
+  @ApiOperation({
+    summary:'현재 로드된 맵 이름 요청',
+    description:'로봇의 맵 이름을 요청합니다.'
+  })
   async getCurrentMapName(@Res() res:Response){
     console.log(this.socketGateway.robotState.state.map)
     res.send(this.socketGateway.robotState.state.map);
