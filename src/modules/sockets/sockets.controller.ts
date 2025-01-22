@@ -124,9 +124,9 @@ export class SocketsController{
       
       res.send({
         connection:global.frsConnect, 
-        uuid: global.robotUuid, 
-        mac: global.robotMcAdrs, 
-        name: global.robotNm, 
+        robotUuid: global.robotUuid, 
+        macAdrs: global.robotMcAdrs, 
+        robotNm: global.robotNm, 
         url:global.frs_url,
         mqtt: global.mqtt_url,
         socket:global.frs_socket,

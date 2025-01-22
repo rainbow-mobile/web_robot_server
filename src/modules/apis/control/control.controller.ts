@@ -26,6 +26,7 @@ import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { LocalizationDto } from 'src/modules/apis/control/dto/localization.command.dto';
+import { errorToJson } from '@common/util/error.util';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -49,7 +50,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"start",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`[COMMAND] mapping start: ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping start: ${error.status} -> ${errorToJson(error.data)}`);
         res.status(error.status).send(error.data);
       }
     }
@@ -67,7 +68,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"stop",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`[COMMAND] mapping stop: ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping stop: ${error.status} ->${errorToJson(error.data)}`);
         res.status(error.status).send(error.data);
       }
     }
@@ -90,7 +91,7 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"save",name:name, time:Date.now().toString()});
         return res.send(response);
       }catch(error){
-        httpLogger.error(`[COMMAND] mapping save: ${name}, ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping save: ${name}, ${error.status} -> ${errorToJson(error.data)}`);
         return res.status(error.status).send(error.data);
       }
     }
@@ -109,11 +110,48 @@ export class ControlController {
         const response = await this.controlService.mappingCommand({command:"reload",time:Date.now().toString()});
         res.send(response);
       }catch(error){
-        httpLogger.error(`[COMMAND] mapping reload: ${error.status} -> ${error.data}`);
+        httpLogger.error(`[COMMAND] mapping reload: ${error.status} -> ${errorToJson(error.data)}`);
         res.status(error.status).send(error.data);
       }
     }
 
+    @Get('dock')
+    @ApiOperation({
+      summary: '도킹 시작',
+      description: '도킹을 시작합니다(도킹 가능위치에서 실행해야함)'
+    })
+    @ApiResponse({
+      status: 200,
+      description: HttpStatusMessagesConstants.MAPPING.MAPPING_ACCEPT_200
+    })
+    async dockStart(@Res() res: Response){
+      try{
+        const response = await this.controlService.dockCommand({command:"dock",time:Date.now().toString()});
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] dock start: ${error.status} -> ${errorToJson(error.data)}`);
+        res.status(error.status).send(error.data);
+      }
+    }
+
+    @Get('undock')
+    @ApiOperation({
+      summary: '도킹 해체',
+      description: '도킹을 해체합니다(도킹중인 상태에서 실행해야함)'
+    })
+    @ApiResponse({
+      status: 200,
+      description: HttpStatusMessagesConstants.MAPPING.MAPPING_ACCEPT_200
+    })
+    async dockStop(@Res() res: Response){
+      try{
+        const response = await this.controlService.dockCommand({command:"undock",time:Date.now().toString()});
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] undock start: ${error.status} -> ${errorToJson(error.data)}`);
+        res.status(error.status).send(error.data);
+      }
+    }
 
     @Post('localization')
     @ApiOperation({
@@ -143,7 +181,7 @@ export class ControlController {
         return res.send(response);
 
       }catch(error){
-        httpLogger.error(`[COMMAND] localization: ${error.status} -> ${error.data}, ${JSON.stringify(data)}`);
+        httpLogger.error(`[COMMAND] localization: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
         return res.status(error.status).send(error.data);
       }
     }
