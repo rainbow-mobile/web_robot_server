@@ -194,10 +194,6 @@ export class SocketGateway
    * @param payload 로봇 라이다 데이터
    */
   @SubscribeMessage('task_start')
-  @ApiOperation({
-    summary: 'Socket Connection',
-    description: '?'
-  })
   async handleTaskStartMessage(
     @MessageBody()
     payload: TaskPayload,
@@ -308,7 +304,16 @@ export class SocketGateway
   async handleStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
     this.server.emit('status',{...json,task:this.taskState,slam:this.slamnav?true:false});
-    this.robotState = json;
+    this.robotState = {...this.robotState,...json};
+    //  console.debug('status in ',this.robotState )
+  }
+
+  @SubscribeMessage('working_status')
+  async handleWorkingStatusMessage(@MessageBody() payload: string){
+    const json = JSON.parse(payload);
+    this.server.emit('working_status',json);
+    this.robotState = {...this.robotState,...json};
+    // console.log('working status in ',this.robotState)
   }
 
   /**
