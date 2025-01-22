@@ -17,6 +17,7 @@ import { NetworkModule } from './modules/apis/network/network.module';
 import { LogModule } from './modules/apis/log/log.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
+import { SoundModule } from './modules/apis/sound/sound.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,7 +50,8 @@ import { UploadModule } from './modules/apis/upload/upload.module';
     VariablesModule,
     NetworkModule,
     LogModule,
-    UploadModule
+    UploadModule,
+    SoundModule
   ],
   providers: [],
   controllers: [],

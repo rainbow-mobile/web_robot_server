@@ -3,7 +3,7 @@ export interface ProcessUsagePayload {
     mem:number;
     vsz:number;
     rss:number;
-    time:string;
+    // time:string;
 }
 
 export interface SystemUsagePayload {

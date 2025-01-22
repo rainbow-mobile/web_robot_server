@@ -52,7 +52,7 @@ export class LogService {
 
       setInterval(()=>{
         this.readMemoryUsage();
-      },1000)
+      },500)
     }
 
     private systemUsage = null;
@@ -983,26 +983,58 @@ export class LogService {
           };
         });
 
+        let serverInfo={cpu:0,mem:0,vsz:0,rss:0};
+        let uiInfo={cpu:0,mem:0,vsz:0,rss:0};
+        let slamnavInfo={cpu:0,mem:0,vsz:0,rss:0};
+        let taskmanInfo={cpu:0,mem:0,vsz:0,rss:0};
 
         try{
           processes.map((process) => {
-            if(process.command.includes('nest start') && process.command.includes('web_robot_server')){
-              // console.log("server : ", process);
-              processUsages.set('web_robot_server',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            }else if(process.command.includes('next start') || process.command.includes('web_robot_ui')){
+            if(process.command.includes('web_robot_server') || process.command.includes('nest')){
+            //  console.log("server : ", process);
+             serverInfo = {
+              cpu:serverInfo.cpu + process.cpu/8,
+              mem:serverInfo.mem + process.mem,
+              vsz:serverInfo.vsz + process.vsz,
+              rss:serverInfo.rss + process.rss
+            };
+            }else if(process.command.includes('web_robot_ui') || process.command.includes('next')){
               // console.log("ui : ", process);
-              processUsages.set('web_robot_ui',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+             uiInfo = {
+              cpu:uiInfo.cpu + process.cpu/8,
+              mem:uiInfo.mem + process.mem,
+              vsz:uiInfo.vsz + process.vsz,
+              rss:uiInfo.rss + process.rss
+            };
+              // processUsages.set('web_robot_ui',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
             }else if(process.command.includes('TaskMan')){
               // console.log("TaskMan : ", process);
-              processUsages.set('TaskMan',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+              taskmanInfo = {
+                cpu:taskmanInfo.cpu + process.cpu/8,
+                mem:taskmanInfo.mem + process.mem,
+                vsz:taskmanInfo.vsz + process.vsz,
+                rss:taskmanInfo.rss + process.rss
+              };
+              // processUsages.set('TaskMan',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
             }else if(process.command.includes('SLAMNAV2')){
               // console.log("SLAMNAV : ", process)
-              processUsages.set('SLAMNAV2',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+              slamnavInfo = {
+                cpu:slamnavInfo.cpu + process.cpu/8,
+                mem:slamnavInfo.mem + process.mem,
+                vsz:slamnavInfo.vsz + process.vsz,
+                rss:slamnavInfo.rss + process.rss
+              };
+              // processUsages.set('SLAMNAV2',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
             }else if(process.command.includes('mediamtx')){
               // console.log("mediamtx : ", process)
-              processUsages.set('mediamtx',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+              // processUsages.set('mediamtx',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
             }
           })
+
+        processUsages.set('web_robot_server',serverInfo);
+        processUsages.set('web_robot_ui',uiInfo);
+        processUsages.set('SLAMNAV2',slamnavInfo);
+        processUsages.set('TaskMan',taskmanInfo);
         }catch(error){
           console.error(error);
         }
@@ -1100,7 +1132,7 @@ export class LogService {
     async readMemoryUsage(){
       try{
         this.systemUsage = await this.getCpuUsage();
-        this.processUsage = await this.getProcessUsage();
+        this.processUsage = Object.fromEntries(await this.getProcessUsage());
         this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
       }catch(error){
         httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`)
