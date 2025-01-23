@@ -31,13 +31,14 @@ import { TransformationType } from 'class-transformer';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
+import { KafkaClientService } from '@sockets/kafka/kafka.service';
 
 @Global()
 @WebSocketGateway(11337)
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {
-  constructor(private readonly mqttService:MqttClientService){
+  constructor(private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
   }
   @WebSocketServer()
   server: Server; // WebSocket server 객체
@@ -123,6 +124,7 @@ export class SocketGateway
             global.robotMcAdrs = json.robotMcAdrs;
           }
           this.mqttService.connect();
+          this.kafakService.connect();
         }catch(error){
           socketLogger.error(`[INIT] FrsSocket robots-init Error : ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }

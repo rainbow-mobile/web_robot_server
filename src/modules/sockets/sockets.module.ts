@@ -9,11 +9,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { StateLogEntity } from '../apis/log/entity/state.entity';
 import { PowerLogEntity } from '../apis/log/entity/power.entity';
 import { MqttClientService } from './mqtt/mqtt.service';
+import { KafkaClientService } from './kafka/kafka.service';
 
 @Module({
   imports:[VariablesModule, LogModule],
   controllers: [SocketsController],
-  providers: [SocketGateway,SocketService,MqttClientService],
+  providers: [SocketGateway,SocketService,MqttClientService,KafkaClientService],
   exports: [SocketGateway],
 })
 
