@@ -18,6 +18,7 @@ export class SocketsController{
   }
 
   async conSocket(){
+    global.kafka_url = await this.variableService.getVariable('kafka_url');
     global.mqtt_url = await this.variableService.getVariable('mqtt_url');
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
@@ -60,10 +61,12 @@ export class SocketsController{
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
 
+      global.kafka_url = url.replace('http://','kafka://')+":9092";
       global.mqtt_url = url.replace('http://','mqtt://')+":1883";
       global.frs_url = url;
       global.frs_api = url+":3000";
       global.frs_socket = url+":3001/socket/robots";
+      await this.variableService.upsertVariable('kafka_url',global.kafka_url);
       await this.variableService.upsertVariable('mqtt_url',global.mqtt_url);
       await this.variableService.upsertVariable('frs_url',global.frs_url);
       await this.variableService.upsertVariable('frs_api',global.frs_api);
@@ -121,6 +124,8 @@ export class SocketsController{
         global.frs_socket = await this.variableService.getVariable('frs_socket')
       if(!global.mqtt_url)
         global.mqtt_url = await this.variableService.getVariable('mqtt_url')
+      if(!global.kafka_url)
+        global.kafka_url = await this.variableService.getVariable('kafka_url')
       
       res.send({
         connection:global.frsConnect, 
@@ -129,6 +134,7 @@ export class SocketsController{
         robotNm: global.robotNm, 
         url:global.frs_url,
         mqtt: global.mqtt_url,
+        kafka: global.kafka_url,
         socket:global.frs_socket,
         api:global.frs_api});
     }catch(error){
