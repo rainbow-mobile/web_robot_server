@@ -81,7 +81,7 @@ export class SocketGateway
         };
 
         socketLogger.debug(`[CONNECT] FRS robots-init : ${JSON.stringify(sendData)}`);
-        this.frsSocket.emit('robots-init', pako.gzip(JSON.stringify(sendData)));
+        this.frsSocket.emit('init', pako.gzip(JSON.stringify(sendData)));
 
         this.interval_frs = setInterval(() => {
           if(this.frsSocket.connected && global.robotUuid != ""){
@@ -93,12 +93,16 @@ export class SocketGateway
               // socketLogger.debug(`[CONNECT] FRS emit Lidar : ${global.robotUuid}`);
               // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
             }
+            // const statusData = {
+            //   robotUuid: global.robotUuid,
+            //   status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
+            // };
             const statusData = {
               robotUuid: global.robotUuid,
-              status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
+              status: {slam:this.slamnav?true:false, task:this.taskState},
             };
             socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${this.robotState.time}`);
-            this.frsSocket.emit("robots-status", pako.gzip(JSON.stringify(statusData)));
+            this.frsSocket.emit("program-status", pako.gzip(JSON.stringify(statusData)));
           }
         }, 5000);
       });
@@ -113,7 +117,7 @@ export class SocketGateway
         socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
       })
 
-      this.frsSocket.on('robots-init', (data) => {
+      this.frsSocket.on('init', (data) => {
         try{
           const json = JSON.parse(pako.ungzip(data, {to:'string'}));
           socketLogger.debug(`[INIT] FRS Get robots-init: ${JSON.stringify(json)}`)
@@ -290,7 +294,7 @@ export class SocketGateway
   @SubscribeMessage('moveCommand')
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
-      const json = JSON.parse(payload);
+      const json = JSON.parse(JSON.stringify(payload));
       this.server.to('slamnav').emit('move', json);
 
       socketLogger.debug(
@@ -306,6 +310,9 @@ export class SocketGateway
   async handleStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
     this.server.emit('status',{...json,task:this.taskState,slam:this.slamnav?true:false});
+    if(this.frsSocket.connected){
+      this.frsSocket.emit('status',json);
+    }
     this.robotState = {...this.robotState,...json};
     //  console.debug('status in ',this.robotState )
   }
@@ -314,6 +321,9 @@ export class SocketGateway
   async handleWorkingStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
     this.server.emit('working_status',json);
+    if(this.frsSocket.connected){
+      this.frsSocket.emit('working_status',json);
+    }
     this.robotState = {...this.robotState,...json};
     // console.log('working status in ',this.robotState)
   }
