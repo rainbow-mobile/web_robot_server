@@ -83,28 +83,6 @@ export class SocketGateway
         socketLogger.debug(`[CONNECT] FRS robots-init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('robots-init', pako.gzip(JSON.stringify(sendData)));
 
-        this.interval_frs = setInterval(() => {
-          if(this.frsSocket.connected && global.robotUuid != ""){
-            if(this.slamnav){
-              const lidarData = {
-                robotUuid: global.robotUuid,
-                data: this.lidarCloud
-              };
-              // socketLogger.debug(`[CONNECT] FRS emit Lidar : ${global.robotUuid}`);
-              // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
-            }
-            // const statusData = {
-            //   robotUuid: global.robotUuid,
-            //   status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
-            // };
-            const statusData = {
-              robotUuid: global.robotUuid,
-              status: {slam:this.slamnav?true:false, task:this.taskState},
-            };
-            socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${this.robotState.time}`);
-            this.frsSocket.emit("program-status", pako.gzip(JSON.stringify(statusData)));
-          }
-        }, 5000);
       });
 
       this.frsSocket.on('disconnect', (data) => {
@@ -126,6 +104,29 @@ export class SocketGateway
             global.robotNm = json.robotNm;
             global.robotUuid = json.robotUuid;
             global.robotMcAdrs = json.robotMcAdrs;
+            
+            this.interval_frs = setInterval(() => {
+              if(this.frsSocket.connected && global.robotUuid != ""){
+                if(this.slamnav){
+                  const lidarData = {
+                    robotUuid: global.robotUuid,
+                    data: this.lidarCloud
+                  };
+                  // socketLogger.debug(`[CONNECT] FRS emit Lidar : ${global.robotUuid}`);
+                  // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
+                }
+                // const statusData = {
+                //   robotUuid: global.robotUuid,
+                //   status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
+                // };
+                const statusData = {
+                  robotUuid: global.robotUuid,
+                  status: {slam:this.slamnav?true:false, task:this.taskState},
+                };
+                socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${this.robotState.time}`);
+                this.frsSocket.emit("program-status", pako.gzip(JSON.stringify(statusData)));
+              }
+            }, 5000);
           }
           this.mqttService.connect();
           this.kafakService.connect();
