@@ -81,7 +81,7 @@ export class SocketGateway
         };
 
         socketLogger.debug(`[CONNECT] FRS robots-init : ${JSON.stringify(sendData)}`);
-        this.frsSocket.emit('init', pako.gzip(JSON.stringify(sendData)));
+        this.frsSocket.emit('robots-init', pako.gzip(JSON.stringify(sendData)));
 
         this.interval_frs = setInterval(() => {
           if(this.frsSocket.connected && global.robotUuid != ""){
@@ -117,7 +117,7 @@ export class SocketGateway
         socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
       })
 
-      this.frsSocket.on('init', (data) => {
+      this.frsSocket.on('robots-init', (data) => {
         try{
           const json = JSON.parse(pako.ungzip(data, {to:'string'}));
           socketLogger.debug(`[INIT] FRS Get robots-init: ${JSON.stringify(json)}`)
