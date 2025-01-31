@@ -8,6 +8,7 @@ export class MqttClientService {
   private client = null;
 
   connect(){
+    global.mqttConnect = false;
     socketLogger.info(`[MQTT] Try to connect Mqtt : ${global.mqtt_url}`)
     this.client = mqtt.connect(global.mqtt_url, {
       username: 'rainbow',
@@ -16,11 +17,13 @@ export class MqttClientService {
 
     this.client.on('connect', () => {
         socketLogger.info(`[MQTT] Connected Mqtt `);
+        global.mqttConnect = true;
         this.subscribe('test/'+global.robotUuid);
     });
 
     this.client.on('disconnect',() => {
-        socketLogger.warn(`[MQTT] Disconnected Mqtt`);
+      global.mqttConnect = false;
+      socketLogger.warn(`[MQTT] Disconnected Mqtt`);
     })
 
     this.client.on('error', (error) => {
