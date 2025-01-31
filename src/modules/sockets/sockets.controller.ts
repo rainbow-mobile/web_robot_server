@@ -135,8 +135,11 @@ export class SocketsController{
         url:global.frs_url,
         mqtt: global.mqtt_url,
         kafka: global.kafka_url,
+        kafka_connection: global.kafkaConnect,
+        mqtt_connection: global.mqttConnect,
         socket:global.frs_socket,
         api:global.frs_api});
+        
     }catch(error){
       httpLogger.error(`[SOCKET] get FRS: ${errorToJson(error)}`)
       return res.status(error.status).send(error.data);

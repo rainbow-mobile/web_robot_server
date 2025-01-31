@@ -11,6 +11,7 @@ export class KafkaClientService {
   private client:Consumer = null;
 
   async connect(){
+    global.kafkaConnect = false;
     global.kafka_url = "192.168.1.195:9092"
     socketLogger.info(`[KAFKA] Try to connect KAFKA : ${global.kafka_url}`)
     this.kafka = new Kafka({
@@ -21,6 +22,7 @@ export class KafkaClientService {
 
     try{
       await this.client.connect();
+      global.kafkaConnect = true;
       await this.client.subscribe({topic:'kafka-emit1', fromBeginning:true})
   
       await this.client.run({
