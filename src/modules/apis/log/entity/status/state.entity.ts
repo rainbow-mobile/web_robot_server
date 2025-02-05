@@ -15,9 +15,6 @@ export class StatusStateEntity{
     @Column({name:'localization', type: 'varchar', length: 32})
     localization: string;
 
-    @Column({name:'map', type: 'varchar', length: 32})
-    map: string;
-
     @Column({name:'power', type: 'boolean'})
     power: boolean;
 }

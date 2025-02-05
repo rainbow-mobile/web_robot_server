@@ -27,6 +27,18 @@ export class ControlService {
         });
     }
 
+    async ledControl(data:{command:string, led:string}){
+        return new Promise((resolve, reject) => {
+            if (this.socketGateway.slamnav != null) {
+                this.socketGateway.server.to('slamnav').emit("led",{...data,time:Date.now().toString()});
+                httpLogger.info(`[CONTROL] led: ${JSON.stringify(data)}`);
+                resolve({});        
+            } else {
+                reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
+            }
+        })
+    }
+
     async dockCommand(data:{command:string, time:string}) {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {

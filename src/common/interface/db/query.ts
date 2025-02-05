@@ -67,7 +67,9 @@ export const create_variables = `CREATE TABLE variables(
 export const create_status = `CREATE TABLE status(
     time timestamp(3) not null default current_timestamp(3),
     conditions JSON not null,
-	state JSON not null,
+	move_state JSON not null,
+	robot_state JSON not null,
+	map varchar(32),
 	motor0 JSON not null,
 	motor1 JSON not null,
 	power JSON not null,

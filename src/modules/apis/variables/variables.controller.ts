@@ -66,9 +66,7 @@ export class VariablesController {
   async deleteVariable(@Param('key') key:string, @Res() res: Response){
     try{
       const response = await this.variablesService.deleteVariable(key);
-
       res.send(response);
-
     }catch(error){
       res.status(error.status).send(error.data)
     }
