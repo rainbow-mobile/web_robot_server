@@ -29,6 +29,7 @@ import { LocalizationDto } from 'src/modules/apis/control/dto/localization.comma
 import { errorToJson } from '@common/util/error.util';
 import { LedControlDto } from './dto/led.control.dto';
 import { LidarControlDto } from './dto/lidar.control.dto';
+import { MotorControlDto } from './dto/motor.control.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -219,6 +220,7 @@ export class ControlController {
         return res.status(error.status).send(error.data);
       }
     }
+
     @Post('path')
     @ApiOperation({
       summary: 'Lidar 전송 주기 제어',
@@ -235,6 +237,21 @@ export class ControlController {
       }
     }
 
+    @Post('motor')
+    @ApiOperation({
+      summary: 'MOTOR on/off',
+      description: 'MOTOR 전원을 켜거나 끕니다'
+    })
+    async motorControl(@Body() data:MotorControlDto, @Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] Motor Control : ${data.command}`)
+        const response = await this.controlService.sendCommand("motor",data);
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] Motor Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
 
 
 }
