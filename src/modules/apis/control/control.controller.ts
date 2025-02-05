@@ -27,6 +27,7 @@ import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { LocalizationDto } from 'src/modules/apis/control/dto/localization.command.dto';
 import { errorToJson } from '@common/util/error.util';
+import { LedControlDto } from './dto/led.control.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -185,5 +186,22 @@ export class ControlController {
         return res.status(error.status).send(error.data);
       }
     }
+
+    @Post('led')
+    @ApiOperation({
+      summary: 'LED 제어',
+      description: 'LED 색을 변경합니다'
+    })
+    async ledControl(@Body() data:LedControlDto, @Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] LED Control : ${data.command}, ${data.led}`)
+        const response = await this.controlService.ledControl(data);
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] localization: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
 
 }

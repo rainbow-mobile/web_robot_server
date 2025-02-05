@@ -18,7 +18,7 @@ export class MqttClientService {
     this.client.on('connect', () => {
         socketLogger.info(`[MQTT] Connected Mqtt `);
         global.mqttConnect = true;
-        this.subscribe('test/'+global.robotUuid);
+        this.subscribe('test/'+global.robotSerial);
     });
 
     this.client.on('disconnect',() => {

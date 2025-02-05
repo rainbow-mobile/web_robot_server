@@ -22,8 +22,11 @@ export class StatusLogEntity{
     @Column({name:'conditions', type: 'json'})
     conditions: StatusConditionEntity;
 
-    @Column({name:'state', type: 'json'})
-    state: StatusStateEntity;
+    @Column({name:'robot_state', type: 'json'})
+    robot_state: StatusStateEntity;
+
+    @Column({name:'move_state', type: 'json'})
+    move_state: StatusStateEntity;
 
     @Column({name:'motor0', type:'json'})
     motor0: StatusMotorEntity;

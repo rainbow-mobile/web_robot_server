@@ -48,6 +48,7 @@ export class LogService {
         private readonly dataSource: DataSource
     ){
       this.checkTables('status',Query.create_status);  
+      this.checkTables('power',Query.create_power);  
       this.checkTables('system',Query.create_system);
 
       setInterval(()=>{
@@ -134,6 +135,7 @@ export class LogService {
     async getStatusParam(key: string){
       return new Promise(async(resolve, reject) => {
           try{
+            httpLogger.debug(`[LOG] getStatusParam : ${key}`)
             const today = new Date();
             const midnightUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0));
             
@@ -164,6 +166,7 @@ export class LogService {
     async getStateLog(key: string){
         return new Promise(async(resolve, reject) => {
             try{
+              httpLogger.debug(`[LOG] getStateLog : ${key}`)
                 const data = await this.stateRepository.find();
                 const addDisconForGaps = (filteredArray:{time:Date, value:any}[]) => {
                     var result = [];
@@ -517,31 +520,31 @@ export class LogService {
 
 
     async readState(state:StatusPayload) {
-      if (state.state.charge == undefined) {
+      if (state.robot_state.charge == undefined) {
         httpLogger.debug(`[LOG] readState undefined: ${JSON.stringify(state)}`)
       }
-      if (state.state.charge != "none" && state.state.dock == "true") {
+      if (state.robot_state.charge != "none" && state.robot_state.dock == "true") {
         return "Charging";
       } else {
-        if (state.state.power == "false") {
+        if (state.robot_state.power == "false") {
           return "Power Off";
         } else if (parseFloat(state.condition.mapping_ratio) > 1) {
           return "Mapping";
         } else {
           if (
-            state.state.map == "" ||
-            state.state.localization != "good" ||
+            state.map.map_name == "" ||
+            state.robot_state.localization != "good" ||
             state.motor[0].status != "1" ||
             state.motor[1].status != "1"
           ) {
             return "Not Ready";
-          } else if (state.condition.obs_state != "none") {
+          } else if (state.move_state.obs != "none") {
             return "Obstacle";
-          } else if (state.condition.auto_state == "move") {
+          } else if (state.move_state.auto_move == "move") {
             return "Moving";
-          } else if (state.condition.auto_state == "pause") {
+          } else if (state.move_state.auto_move == "pause") {
             return "Paused";
-          } else if (state.condition.auto_state == "stop") {
+          } else if (state.move_state.auto_move == "stop") {
             return "Ready";
           } else {
             return "?";
@@ -572,13 +575,13 @@ export class LogService {
           const newLog:StateLogEntity = {
             time:new Date(),
             state:await this.readState(state),
-            auto_state: state.condition.auto_state,
-            localization: state.state.localization,
-            obs_state: state.condition.obs_state,
-            charging: state.state.charge,
-            power: state.state.power=="true"?true:false,
-            emo: state.state.emo=="true"?true:false,
-            dock: state.state.dock=="true"?true:false,
+            auto_state: state.move_state.auto_move,
+            localization: state.robot_state.localization,
+            obs_state: state.move_state.obs,
+            charging: state.robot_state.charge,
+            power: state.robot_state.power=="true"?true:false,
+            emo: state.robot_state.emo=="true"?true:false,
+            dock: state.robot_state.dock=="true"?true:false,
             inlier_error: parseFloat(state.condition.inlier_error),
             inlier_ratio: parseFloat(state.condition.inlier_ratio)
           }
@@ -629,18 +632,22 @@ export class LogService {
             slam:false,
             type:state.setting.platform_type,
             conditions:{
-              state:await this.readState(state),
-              auto_state:state.condition.auto_state,
-              obs_state:state.condition.obs_state,
               inlier_ratio:parseFloat(state.condition.inlier_ratio),
               inlier_error:parseFloat(state.condition.inlier_error)
             },
-            state:{
-              charge:state.state.charge,
-              dock:state.state.dock,
-              localization:state.state.localization,
-              map:state.state.map,
-              power:state.state.power=="true"?true:false
+            move_state:{
+              state:await this.readState(state),
+              auto_move:state.move_state.auto_move,
+              dock_move:state.move_state.dock_move,
+              jog_move:state.move_state.jog_move,
+              obs:state.move_state.obs,
+              path:state.move_state.path
+            },
+            robot_state:{
+              charge:state.robot_state.charge,
+              dock:state.robot_state.dock,
+              localization:state.robot_state.localization,
+              power:state.robot_state.power=="true"?true:false
             },
             task:{
               connection:false,
@@ -648,6 +655,7 @@ export class LogService {
               id:0,
               running:false
             },
+            map:state.map.map_name,
             imu:{
               acc_x:parseFloat(state.imu.acc_x),
               acc_y:parseFloat(state.imu.acc_y),
@@ -706,19 +714,24 @@ export class LogService {
             slam:slam,
             type:state.setting.platform_type,
             conditions:{
-              state:await this.readState(state),
-              auto_state:state.condition.auto_state,
-              obs_state:state.condition.obs_state,
               inlier_ratio:parseFloat(state.condition.inlier_ratio),
               inlier_error:parseFloat(state.condition.inlier_error)
             },
-            state:{
-              charge:state.state.charge,
-              dock:state.state.dock,
-              localization:state.state.localization,
-              map:state.state.map,
-              power:state.state.power=="true"?true:false
+            move_state:{
+              state:await this.readState(state),
+              auto_move:state.move_state.auto_move,
+              dock_move:state.move_state.dock_move,
+              jog_move:state.move_state.jog_move,
+              obs:state.move_state.obs,
+              path:state.move_state.path
             },
+            robot_state:{
+              charge:state.robot_state.charge,
+              dock:state.robot_state.dock,
+              localization:state.robot_state.localization,
+              power:state.robot_state.power=="true"?true:false
+            },
+            map:state.map.map_name,
             task:{
               connection:task.connection,
               file:task.file,

@@ -32,9 +32,18 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 import { KafkaClientService } from '@sockets/kafka/kafka.service';
+import { Payload } from '@nestjs/microservices';
 
 @Global()
-@WebSocketGateway(11337)
+@WebSocketGateway(11337,{
+  transports:['websocket'],
+  cors:{
+    origin:"*",
+    methods:["GET","POST"],
+    credentials:true
+  },
+  host:"0.0.0.0"
+})
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {
@@ -73,16 +82,14 @@ export class SocketGateway
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
         global.frsConnect = true;
-        global.robotMcAdrs = getMacAddresses()[0].mac;
   
-        const sendData = {
-          robotMcAdrs: global.robotMcAdrs,
-          robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
-        };
-
-        socketLogger.debug(`[CONNECT] FRS robots-init : ${JSON.stringify(sendData)}`);
-        this.frsSocket.emit('robots-init', pako.gzip(JSON.stringify(sendData)));
-
+          const sendData = {
+            robotSerial: global.robotSerial,
+            robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
+          };
+  
+          socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
+          this.frsSocket.emit('init', sendData);
       });
 
       this.frsSocket.on('disconnect', (data) => {
@@ -95,55 +102,181 @@ export class SocketGateway
         socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
       })
 
-      this.frsSocket.on('robots-init', (data) => {
+      this.frsSocket.on('init', (data) => {
         try{
-          const json = JSON.parse(pako.ungzip(data, {to:'string'}));
-          socketLogger.debug(`[INIT] FRS Get robots-init: ${JSON.stringify(json)}`)
-          if (json.robotMcAdrs == global.robotMcAdrs) {
-            socketLogger.info(`[INIT] Get Robot UUID from FRS: uuid(${json.robotUuid}), ip(${json.robotIpAdrs}), mc(${json.robotMcAdrs}), name(${json.robotNm})`);
+          const json = JSON.parse(data);
+          socketLogger.debug(`[INIT] FRS Get init: ${JSON.stringify(json)}`)
+          console.log(json.robotSerial, global.robotSerial)
+          if (json.robotSerial == global.robotSerial) {
+            socketLogger.info(`[INIT] Get Robot Info from FRS: SerialNumber(${json.robotSerial}), ip(${json.robotIpAdrs}), name(${json.robotNm})`);
             global.robotNm = json.robotNm;
-            global.robotUuid = json.robotUuid;
-            global.robotMcAdrs = json.robotMcAdrs;
+
+            console.log(global.robotNm)
             
             this.interval_frs = setInterval(() => {
-              if(this.frsSocket.connected && global.robotUuid != ""){
+              if(this.frsSocket.connected && global.robotSerial != ""){
                 if(this.slamnav){
-                  const lidarData = {
-                    robotUuid: global.robotUuid,
-                    data: this.lidarCloud
-                  };
-                  // socketLogger.debug(`[CONNECT] FRS emit Lidar : ${global.robotUuid}`);
-                  // frsSocket.emit("rrs-lidar",pako.gzip(JSON.stringify(lidarData)));
-                }
-                // const statusData = {
-                //   robotUuid: global.robotUuid,
-                //   status: {...this.robotState, slam:this.slamnav?true:false, task:this.taskState},
-                // };
-                const statusData = {
-                  robotUuid: global.robotUuid,
-                  status: {slam:this.slamnav?true:false, task:this.taskState},
+                  const statusData = {
+                    robotSerial: global.robotSerial,
+                    data: {
+                      slam:{connection:this.slamnav?true:false}, 
+                      task:this.taskState
+                    },
                 };
-                socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotUuid}, ${this.robotState.time}`);
-                this.frsSocket.emit("program-status", pako.gzip(JSON.stringify(statusData)));
+                socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`);
+                this.server.emit("programStatus", statusData.data);
+                this.frsSocket.emit("programStatus", statusData);
               }
-            }, 5000);
+            }
+            }, 1000);
           }
-          this.mqttService.connect();
-          this.kafakService.connect();
+          // to be continue...
+          // this.mqttService.connect();
+          // this.kafakService.connect();
         }catch(error){
-          socketLogger.error(`[INIT] FrsSocket robots-init Error : ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       });
 
       this.frsSocket.on('move',(data) => {
         try{
-          const json = JSON.parse(pako.ungzip(data, {to:'string'}));
+          const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
           if(this.slamnav){
-              this.slamnav.emit("move",stringifyAllValues(json))
+            this.slamnav.emit("move",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("moveResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
           }
         }catch(error){
           socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('load',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("load",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("loadResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS MapLoad: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('localization',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS Localization: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("localization",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("localizationResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS Localization: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('randomseq',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS randomseq: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("randomseq",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("randomseqResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS randomseq: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('mapping',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("mapping",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("mappingResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS mapping: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('dock',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("dock",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("dockResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS dock: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('lidarOnOff',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("lidarOnOff",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('pathOnOff',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS pathOnOff: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("pathOnOff",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS pathOnOff: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('path',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("path",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+      this.frsSocket.on('vobsRobots',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("vobsRobots",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+      this.frsSocket.on('vobsClosures',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("vobsClosures",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
     }catch(error){
@@ -164,7 +297,7 @@ export class SocketGateway
     }else if (client.handshake.query.name == 'taskman') {
       this.taskman = client;
       this.taskState.connection = true;
-      this.taskman.emit('file')
+      // this.taskman.emit('file')
     }
     client.join(client.handshake.query.name);
   }
@@ -176,9 +309,12 @@ export class SocketGateway
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
         this.server.emit('moveResponse', {
-          ...this.moveState,
-          result: 'fail',
-          message: 'disconnected',
+          robotSerial:global.robotSerial,
+          data:{
+            ...this.moveState,
+            result: 'fail',
+            message: 'disconnected',
+          }
         });
       }
       this.slamnav = null;
@@ -200,7 +336,7 @@ export class SocketGateway
    * @param socket
    * @param payload 로봇 라이다 데이터
    */
-  @SubscribeMessage('task_start')
+  @SubscribeMessage('taskStart')
   async handleTaskStartMessage(
     @MessageBody()
     payload: TaskPayload,
@@ -212,12 +348,12 @@ export class SocketGateway
       socketLogger.debug(
         `[RESPONSE] Task Start: ${JSON.stringify(payload)}`
       );
-      this.server.emit('task_start', payload);
+      this.server.emit('taskStart', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Start: ${errorToJson(error)}`);
     }
   }
-  @SubscribeMessage('task_done')
+  @SubscribeMessage('taskDone')
   async handleTaskDoneMessage(
     @MessageBody()
     payload: TaskPayload,
@@ -229,13 +365,12 @@ export class SocketGateway
       socketLogger.debug(
         `[RESPONSE] Task Done : ${JSON.stringify(payload)}`
       );
-      this.server.emit('task_done', payload);
+      this.server.emit('taskDone', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
-
-  @SubscribeMessage('task_load')
+  @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload:TaskPayload){
     try {
       this.taskState.file = payload.file;
@@ -244,14 +379,13 @@ export class SocketGateway
       socketLogger.debug(
         `[RESPONSE] Task Load : ${JSON.stringify(payload)}`
       );
-      this.server.emit('task_load', payload);
+      this.server.emit('taskLoad', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Load: ${errorToJson(error)}`);
-
     }
   }
   
-  @SubscribeMessage('task_error')
+  @SubscribeMessage('taskError')
   async handleTaskErrorMessage(
     @MessageBody()
     payload: TaskPayload,
@@ -263,7 +397,7 @@ export class SocketGateway
       socketLogger.debug(
         `[RESPONSE] Task Error : ${JSON.stringify(payload)}`
       );
-      this.server.emit('task_error', payload);
+      this.server.emit('taskError', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Error: ${errorToJson(error)}`);
       throw error();
@@ -275,12 +409,12 @@ export class SocketGateway
    * @param socket
    * @param payload 태스크 아이디
    */
-  @SubscribeMessage('task_id')
+  @SubscribeMessage('taskId')
   async handleTaskIdMessage(@MessageBody() payload: number) {
     try {
       socketLogger.debug(`[RESPONSE] Task Id Change : ${JSON.stringify(payload)}`);
       this.taskState.id = payload;
-      this.server.emit('task_id', payload);
+      this.server.emit('taskId', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Id Change: ${errorToJson(error)}`);
       throw error();
@@ -292,17 +426,17 @@ export class SocketGateway
    * @param socket
    * @param payload 로봇 이동 변수
    */
-  @SubscribeMessage('moveCommand')
+  @SubscribeMessage('move')
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
       const json = JSON.parse(JSON.stringify(payload));
       this.server.to('slamnav').emit('move', json);
 
       socketLogger.debug(
-        `[COMMAND] Task Move: ${JSON.stringify(json)}`,
+        `[COMMAND] Move: ${JSON.stringify(json)}`,
       );
     } catch (error) {
-      socketLogger.error(`[COMMAND] Task Move: ${errorToJson(error)}`);
+      socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -310,23 +444,23 @@ export class SocketGateway
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
-    this.server.emit('status',{...json,task:this.taskState,slam:this.slamnav?true:false});
+    this.server.emit('status',json);
+
     if(this.frsSocket.connected){
-      this.frsSocket.emit('status',json);
+        this.frsSocket.emit('status',{robotSerial:global.robotSerial,data:json});
     }
+
     this.robotState = {...this.robotState,...json};
-    //  console.debug('status in ',this.robotState )
   }
 
-  @SubscribeMessage('working_status')
+  @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
-    this.server.emit('working_status',json);
+    this.server.emit('moveStatus',json);
     if(this.frsSocket.connected){
-      this.frsSocket.emit('working_status',json);
+      this.frsSocket.emit('moveStatus',{robotSerial:global.robotSerial,data:json});
     }
     this.robotState = {...this.robotState,...json};
-    // console.log('working status in ',this.robotState)
   }
 
   /**
@@ -339,6 +473,10 @@ export class SocketGateway
     try {
       const json = JSON.parse(payload);
       this.server.emit('moveResponse', json);
+
+      if(this.frsSocket.connected){
+        this.frsSocket.emit('moveResponse',{robotSerial:global.robotSerial,data:json})
+      }
       this.moveState = json;
 
       socketLogger.debug(
@@ -350,33 +488,13 @@ export class SocketGateway
     }
   }
 
-  /**
-   * @description SLAMNAV의 이동 응답 메시지를 처리하는 함수
-   * @param socket
-   * @param payload 로봇 이동 변수
-   */
-  @SubscribeMessage('move')
-  async handleMoveMessage(@MessageBody() payload: string) {
-    try {
-      const json = JSON.parse(payload);
-      if(json.result){
-        this.server.emit('moveResponse', json);
-        this.moveState = json;
-  
-        socketLogger.debug(
-          `[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`,
-        );
-      }
-    } catch (error) {
-      socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('lidar_cloud')
+  @SubscribeMessage('lidarCloud')
   async handleLidarCloudMessage(@MessageBody() payload:any[]){
     try{
-      this.server.emit("lidar",payload);
+      this.server.emit("lidarCloud",payload);
+      if(this.frsSocket.connected){
+        this.frsSocket.emit('lidarCloud',{robotSerial:global.robotSerial,data:Payload})
+      }
       this.lidarCloud = payload;
     }catch(error){
       socketLogger.error(`[STATUS] Lidar: ${errorToJson(error)}`);
@@ -384,46 +502,46 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('mapping_cloud')
+  @SubscribeMessage('mappingCloud')
   async handleMappingCloudMessage(@MessageBody() payload:any[]){
     try{
-      this.server.emit("mapping",payload);
+      this.server.emit("mappingCloud",payload);
     }catch(error){
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
     }
   }
 
-  @SubscribeMessage('local_path')
+  @SubscribeMessage('localPath')
   async handleLocalPathdMessage(@MessageBody() payload:any[]){
     try{
-      this.server.emit("local_path",payload);
-      if(this.frsSocket.connected && global.robotUuid != ""){
+      this.server.emit("localPath",payload);
+      if(this.frsSocket.connected && global.robotSerial != ""){
         const sendData = {
-          robotUuid: global.robotUuid,
+          robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.emit("local-path", pako.gzip(JSON.stringify(sendData)));
+        this.frsSocket.emit("localPath", sendData);
       }
     }catch(error){
-      socketLogger.error(`[STATUS] LocalPath: ${errorToJson(error)}`);
+      socketLogger.error(`[STATUS] localPath: ${errorToJson(error)}`);
       throw error();
     }
   }
-  @SubscribeMessage('global_path')
+  @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload:any[]){
     try{
-      this.server.emit("global_path",payload);
-      socketLogger.debug(`[STATUS] GlobalPath: ${JSON.stringify(payload)}`)
-      if(this.frsSocket.connected && global.robotUuid != ""){
+      this.server.emit("globalPath",payload);
+      socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`)
+      if(this.frsSocket.connected && global.robotSerial != ""){
         const sendData = {
-          robotUuid: global.robotUuid,
+          robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.emit("global-path", pako.gzip(JSON.stringify(sendData)));
+        this.frsSocket.emit("globalPath", sendData);
       }
     }catch(error){
-      socketLogger.error(`[STATUS] GlobalPath: ${errorToJson(error)}`);
+      socketLogger.error(`[STATUS] globalPath: ${errorToJson(error)}`);
       throw error();
     }
   }
@@ -433,35 +551,62 @@ export class SocketGateway
    * @param socket
    * @param payload 로봇 태스크 데이터
    */
-  @SubscribeMessage('task_init')
+  @SubscribeMessage('taskInit')
   async handleTaskInitMessage(
-    @MessageBody() payload: { file: string; id: number; running: boolean; variables: any[]},
+    @MessageBody() payload: { file: string; id: number; running: boolean},
   ) {
     try {
       this.taskState.file = payload.file;
       this.taskState.id = payload.id;
-      this.taskState.running = payload.running;
+      this.taskState.running = payload.running;  
       socketLogger.debug(`[INIT] Task Init: ${JSON.stringify(payload)}`);
-      this.server.emit('task_init', this.taskState);
+      this.server.emit('taskInit', this.taskState);
     } catch (error) {
       socketLogger.error(`[INIT] Task Init: ${errorToJson(error)}`);
       throw error();
     }
   }
 
-  @SubscribeMessage('task_variables')
+  @SubscribeMessage('taskVariables')
   async handleTaskVariablesMessage(
     @MessageBody() payload:any[]
   ){
     try {
       this.taskState.variables = payload;
       socketLogger.debug(`[INIT] Task Variables: ${JSON.stringify(payload)}`);
-      this.server.emit('task_variables',this.taskState);
+      this.server.emit('taskVariables',payload);
     } catch (error) {
       socketLogger.error(`[INIT] Task Variables:  ${errorToJson(error)}`);
       throw error();
     }
   }
+
+  @SubscribeMessage('taskDock')
+  async handleTaskDockMessage(
+    @MessageBody() payload:any[]
+  ){
+    try {
+      socketLogger.debug(`[COMMAND] Task Dock`);
+      this.slamnav.emit("dock",{command:"dock",time:Date.now().toString()})
+    } catch (error) {
+      socketLogger.error(`[INIT] Task Dock:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('taskUndock')
+  async handleTaskUnDockMessage(
+    @MessageBody() payload:any[]
+  ){
+    try {
+      socketLogger.debug(`[COMMAND] Task UnDock`);
+      this.slamnav.emit("dock",{command:"undock",time:Date.now().toString()})
+    } catch (error) {
+      socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
   /**
    * @description 웹 변수 초기화를 처리하는 함수
    * @param socket
