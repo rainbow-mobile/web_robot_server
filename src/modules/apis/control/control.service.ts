@@ -12,7 +12,7 @@ export class ControlService {
             this.socketGateway.server.to('slamnav').emit("mapping",data);
             httpLogger.info(`[CONTROL] mapping: ${JSON.stringify(data)}`);
     
-            this.socketGateway.slamnav.once("mapping", (data2) => {
+            this.socketGateway.slamnav.once("mappingResponse", (data2) => {
                 httpLogger.info(`[CONTROL] mapping Response: ${JSON.stringify(data2)}`);
                 resolve(data2);
                 clearTimeout(timeoutId);
