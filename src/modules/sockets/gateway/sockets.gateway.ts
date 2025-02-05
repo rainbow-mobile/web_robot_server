@@ -171,6 +171,20 @@ export class SocketGateway
         }
       })
 
+      this.frsSocket.on('motor',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("motor",stringifyAllValues(json))
+          }else{
+            this.frsSocket.emit("motorResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS motor: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
       this.frsSocket.on('localization',(data) => {
         try{
           const json = JSON.parse(data);
@@ -236,6 +250,18 @@ export class SocketGateway
           }
         }catch(error){
           socketLogger.error(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+        }
+      })
+
+      this.frsSocket.on('led',(data) => {
+        try{
+          const json = JSON.parse(data);
+          socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
+          if(this.slamnav){
+              this.slamnav.emit("led",stringifyAllValues(json))
+          }
+        }catch(error){
+          socketLogger.error(`[COMMAND] FRS led: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
 
@@ -492,6 +518,92 @@ export class SocketGateway
       throw error();
     }
   }
+  @SubscribeMessage('loadResponse')
+  async handleLoadReponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('loadResponse', json);
+
+      if(this.frsSocket?.connected){
+        this.frsSocket.emit('loadResponse',{robotSerial:global.robotSerial,data:json})
+      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV loadResponse: ${JSON.stringify(json)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV loadResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('mappingResponse')
+  async handleMappingReponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('mappingResponse', json);
+
+      if(this.frsSocket?.connected){
+        this.frsSocket.emit('mappingResponse',{robotSerial:global.robotSerial,data:json})
+      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV mappingResponse: ${JSON.stringify(json)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV mappingResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('localizationResponse')
+  async handleLocalizationReponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('localizationResponse', json);
+
+      if(this.frsSocket?.connected){
+        this.frsSocket.emit('localizationResponse',{robotSerial:global.robotSerial,data:json})
+      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV localizationResponse: ${JSON.stringify(json)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV localizationResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('randomseqResponse')
+  async handleRandomseqReponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('randomseqResponse', json);
+
+      if(this.frsSocket?.connected){
+        this.frsSocket.emit('randomseqResponse',{robotSerial:global.robotSerial,data:json})
+      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV randomseqResponse: ${JSON.stringify(json)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV randomseqResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('dockResponse')
+  async handleDockReponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('dockResponse', json);
+
+      if(this.frsSocket?.connected){
+        this.frsSocket.emit('dockResponse',{robotSerial:global.robotSerial,data:json})
+      }
+      socketLogger.debug(
+        `[RESPONSE] SLAMNAV dockResponse: ${JSON.stringify(json)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV dockResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
 
   @SubscribeMessage('lidarCloud')
   async handleLidarCloudMessage(@MessageBody() payload:any[]){
