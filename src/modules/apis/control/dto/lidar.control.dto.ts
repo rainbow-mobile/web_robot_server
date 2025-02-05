@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString, Length, ValidateIf } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, Length, ValidateIf } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import {Expose} from 'class-transformer'
 
@@ -13,8 +13,7 @@ export class LidarControlDto {
   @Expose()
   command: string;
 
-  @IsString()
-  @Length(1,50)
+  @IsNumber()
   @ApiProperty({
     description: '전송 주기(Hz)',
     example: 1,
