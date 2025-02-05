@@ -55,23 +55,44 @@ export interface StatusPayload {
     charge_current: string;
     contact_voltage: string;
   };
-  state: {
+  robot_state: {
     power: string;
     emo: string;
     charge: string;
     localization: string;
     dock: string;
-    map: string;
+  };
+  move_state:{
+    auto_move:string;
+    dock_move:string;
+    jog_move:string;
+    obs:string;
+    path:string;
+  };
+  goal_node:{
+    id: string;
+    name:string;
+    state:string;
+    x:string;
+    y:string;
+    rz:string;
+  };
+  cur_node:{
+    id: string;
+    name:string;
+    state:string;
+    x:string;
+    y:string;
+    rz:string;
+  };
+  map:{
+    map_name:string;
   };
   condition: {
-    auto_state: string;
-    obs_state: string;
     inlier_error: string;
     inlier_ratio: string;
     mapping_error: string;
     mapping_ratio: string;
-    contact_voltage: string;
-    charge_current: string;
   };
   setting: {
     platform_type: string;
@@ -85,11 +106,15 @@ export const defaultStatusPayload: StatusPayload = {
     y: '0',
     rz: '0',
   },
+  map:{
+    map_name:""
+  },
   vel: {
     vx: '0',
     vy: '0',
     wz: '0',
   },
+
   imu: {
     acc_x: '0',
     acc_y: '0',
@@ -100,6 +125,22 @@ export const defaultStatusPayload: StatusPayload = {
     imu_rx: '0',
     imu_ry: '0',
     imu_rz: '0',
+  },
+  goal_node:{
+    id: "",
+    name:"",
+    state:"",
+    x:"0",
+    y:"0",
+    rz:"0",
+  },
+  cur_node:{
+    id: "",
+    name:"",
+    state:"",
+    x:"0",
+    y:"0",
+    rz:"0",
   },
   motor: [
     {
@@ -136,23 +177,25 @@ export const defaultStatusPayload: StatusPayload = {
     charge_current: '0',
     contact_voltage: '0'
   },
-  state: {
+  move_state:{
+    auto_move:"stop",
+    dock_move:"stop",
+    jog_move:"stop",
+    obs:"none",
+    path:"none",
+  },
+  robot_state: {
     power: 'false',
     dock: 'false',
     emo: 'false',
     charge: 'false',
-    localization: 'none', // "none", "busy", "good", "fail"
-    map: '',
+    localization: 'none' // "none", "busy", "good", "fail"
   },
   condition: {
-    auto_state: 'stop',
-    obs_state: 'none',
     inlier_error: '0',
     inlier_ratio: '0',
     mapping_error: '0',
     mapping_ratio: '0',
-    contact_voltage: '0',
-    charge_current: '0'
   },
   setting: {
     platform_type: '',

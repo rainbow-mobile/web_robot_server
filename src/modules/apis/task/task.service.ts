@@ -8,6 +8,7 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import { DateUtil } from '@common/util/date.util';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { errorToJson } from '@common/util/error.util';
+import { TaskPayload } from '@common/interface/robot/task.interface';
 
 @Injectable()
 export class TaskService {
@@ -33,17 +34,15 @@ export class TaskService {
   }
 
   async getTaskInfo() {
-    return new Promise<{id:number,file:string,running:boolean,variables:[]}>((resolve, reject) => {
+    return new Promise<TaskPayload>((resolve, reject) => {
       if(this.socketGateway.taskman != null){
         this.socketGateway.server.to('taskman').emit("file");
   
-        this.socketGateway.taskman.once("task_init", (data) => {
+        this.socketGateway.taskman.once("taskInit", (data) => {
           this.socketGateway.taskState.file = data.file;
           this.socketGateway.taskState.id = data.id;
           this.socketGateway.taskState.running = data.running;
-          this.socketGateway.taskState.variables = data.variables;
-          data.variables = JSON.parse(data.variables);
-          resolve(data);
+          resolve(this.socketGateway.taskState);
           clearTimeout(timeoutId);
         });
   
@@ -62,9 +61,9 @@ export class TaskService {
     return new Promise((resolve, reject) => {
       if(this.socketGateway.taskman != null){
         httpLogger.info(`[TASK] loadTask: ${path}`);
-        this.socketGateway.server.to('taskman').emit("load", path);
+        this.socketGateway.server.to('taskman').emit("taskLoad", path);
   
-        this.socketGateway.taskman.once("task_load", (data) => {
+        this.socketGateway.taskman.once("taskLoad", (data) => {
           httpLogger.info(`[TASK] loadTask Response: ${JSON.stringify(data)}`)
           if (data.result == "success") {
             this.socketGateway.taskState.file = data.file;
@@ -90,9 +89,9 @@ export class TaskService {
   return new Promise((resolve, reject) => {
     if (this.socketGateway.taskman != null) {
       httpLogger.info(`[TASK] runTask`);
-      this.socketGateway.server.to('taskman').emit("run");
+      this.socketGateway.server.to('taskman').emit("taskRun");
 
-      this.socketGateway.taskman.once("run", (data) => {
+      this.socketGateway.taskman.once("taskRun", (data) => {
         httpLogger.info(`[TASK] runTask Response: ${JSON.stringify(data)}`);
         resolve(data);
         clearTimeout(timeoutId);
@@ -113,9 +112,9 @@ async stopTask() {
   return new Promise((resolve, reject) => {
     if (this.socketGateway.taskman != null) {
       httpLogger.info(`[TASK] stopTask`);
-      this.socketGateway.server.to('taskman').emit("stop");
+      this.socketGateway.server.to('taskman').emit("taskStop");
 
-      this.socketGateway.taskman.once("stop", (data) => {
+      this.socketGateway.taskman.once("taskStop", (data) => {
         httpLogger.info(`[TASK] stopTask Response: ${JSON.stringify(data)}`);
         resolve(data);
         clearTimeout(timeoutId);

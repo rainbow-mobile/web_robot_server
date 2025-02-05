@@ -36,8 +36,8 @@ export class MapController {
   })
   async getCurrentMapName(@Res() res:Response){
     try{
-      httpLogger.debug(`[MAP] getCurrentMapName: ${this.socketGateway.robotState.state.map}`);
-      res.send(JSON.stringify(this.socketGateway.robotState.state.map));
+      httpLogger.debug(`[MAP] getCurrentMapName: ${this.socketGateway.robotState.map.map_name}`);
+      res.send(JSON.stringify(this.socketGateway.robotState.map.map_name));
     }catch(error){
       httpLogger.error(`[MAP] getCurrentMapName: ${JSON.stringify(error)}`);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500);

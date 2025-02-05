@@ -7,6 +7,7 @@ import { StatusImuEntity } from "./status/imu.entity";
 import { StatusPowerEntity } from "./status/power.entity";
 import { StatusPosEntity } from "./status/pos.entity";
 import { StatusTaskEntity } from "./status/task.entity";
+import { MoveStatusStateEntity } from "./status/movestate.entity";
 
 @Entity('status')
 export class StatusLogEntity{
@@ -29,6 +30,12 @@ export class StatusLogEntity{
     type:string;
 
     @ApiProperty({
+        example:''
+    })
+    @Column({name:'map', type:'varchar', length:32})
+    map:string;
+
+    @ApiProperty({
         example:{
             
         }
@@ -39,8 +46,14 @@ export class StatusLogEntity{
     @ApiProperty({
         example:{}
     })
-    @Column({name:'state', type: 'json'})
-    state: StatusStateEntity;
+    @Column({name:'move_state', type: 'json'})
+    move_state: MoveStatusStateEntity;
+
+    @ApiProperty({
+        example:{}
+    })
+    @Column({name:'robot_state', type: 'json'})
+    robot_state: StatusStateEntity;
 
     @ApiProperty({
         example:{}

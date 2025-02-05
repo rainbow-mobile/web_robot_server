@@ -63,7 +63,7 @@ export class MoveController {
       httpLogger.info(`[MOVE] moveControl: ${JSON.stringify(data)}`);
 
       if(data.command == "goal"){
-        if(data.id == "" || data.method == "" || data.preset == ""){
+        if(data.goal_id == "" || data.method == "" || data.preset == ""){
           httpLogger.warn(`[MOVE] moveControl: move Goal parameter missing`);
           return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (id, method, preset)"});
         }

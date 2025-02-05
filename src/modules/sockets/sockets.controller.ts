@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Put, Body, HttpStatus, OnModuleInit } from '@nestjs/common';
+import { Controller, Get, Res, Put, Body, HttpStatus, OnModuleInit, Post } from '@nestjs/common';
 import httpLogger from '@common/logger/http.logger';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
@@ -9,6 +9,8 @@ import socketLogger from '@common/logger/socket.logger';
 import { FrsUrlDto } from './dto/frs.url.dto';
 import { MqttClientService } from './mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
+import { EmitOnOffDto } from './dto/lidar.onoff.dto';
+import { VariableDto } from '../apis/variables/dto/variables.dto';
 
 @ApiTags('소켓 관련 API (Sockets)')
 @Controller('sockets')
@@ -18,12 +20,13 @@ export class SocketsController{
   }
 
   async conSocket(){
+    global.robotSerial = await this.variableService.getVariable('robotSerial');
     global.kafka_url = await this.variableService.getVariable('kafka_url');
     global.mqtt_url = await this.variableService.getVariable('mqtt_url');
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
-    socketLogger.info(`[CONNECT] ConnectSocket : ${global.frs_socket}`)
+    socketLogger.info(`[CONNECT] ConnectSocket : ${global.robotSn}, ${global.frs_socket}`)
     this.socketGateway.connectFrsSocket(global.frs_socket);
   }
 
@@ -112,7 +115,7 @@ export class SocketsController{
   @Get('frs')
   @ApiOperation({
     summary:'FRS 소켓 정보 요청',
-    description:'connection(FRS연결상태), uuid(로봇UUID), mac(로봇맥주소), name(로봇이름), url(URL), socket(SOCKETURL), api(APIURL)'
+    description:'connection(FRS연결상태), robotSerial(로봇시리얼넘버), name(로봇이름), url(URL), socket(SOCKETURL), api(APIURL)'
   })
   async getFrsInfo(@Res() res: Response){
     try{
@@ -129,8 +132,7 @@ export class SocketsController{
       
       res.send({
         connection:global.frsConnect, 
-        robotUuid: global.robotUuid, 
-        macAdrs: global.robotMcAdrs, 
+        robotSerial: global.robotSerial, 
         robotNm: global.robotNm, 
         url:global.frs_url,
         mqtt: global.mqtt_url,
@@ -139,7 +141,7 @@ export class SocketsController{
         mqtt_connection: global.mqttConnect,
         socket:global.frs_socket,
         api:global.frs_api});
-        
+
     }catch(error){
       httpLogger.error(`[SOCKET] get FRS: ${errorToJson(error)}`)
       return res.status(error.status).send(error.data);
@@ -153,5 +155,51 @@ export class SocketsController{
   })
   async getStatus(@Res() res: Response){
     res.send({...this.socketGateway.robotState,slam:this.socketGateway.slamnav?true:false, task:this.socketGateway.taskState});
+  }
+
+  @Post('lidar')
+  @ApiOperation({
+    summary:'라이다 통신 ON/Off',
+    description:'라이다 소켓 통신 열기, frequency(통신주기)'
+  })
+  async lidarOn(@Body() data: EmitOnOffDto, @Res() res: Response){
+    try{
+      httpLogger.info(`[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`)
+      this.socketGateway.slamnav.emit('lidarOnOff',JSON.stringify({...data,time:Date.now().toString()}));
+    }catch(error){
+      httpLogger.error(`[SOCKET] lidar OnOff: ${errorToJson(error)}`)
+    }
+  }
+
+  @Post('path')
+  @ApiOperation({
+    summary:'경로 통신 ON/Off',
+    description:'경로 소켓 통신 열기, frequency(통신주기)'
+  })
+  async pathOn(@Body() data: EmitOnOffDto, @Res() res: Response){
+    try{
+      httpLogger.info(`[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`)
+      this.socketGateway.slamnav.emit('pathOnOff',JSON.stringify({...data,time:Date.now().toString()}));
+    }catch(error){
+      httpLogger.error(`[SOCKET] path OnOff: ${errorToJson(error)}`)
+    }
+  }
+
+  @Post('serial')
+  async setRobotSerial(@Body() data: VariableDto, @Res() res: Response){
+    try{
+      httpLogger.info(`[SOCKET] setRobotSerial : ${data.key}, ${data.value}`)
+      if(data.key == "robotSerial"){
+        await this.variableService.upsertVariable(data.key, data.value);
+        global.robotSerial = data.value;
+        this.conSocket();
+        res.send({robotSerial:data.value})
+      }else{
+        res.status(HttpStatus.BAD_REQUEST).send(HttpStatusMessagesConstants.INVALID_DATA_400);
+      }
+    }catch(error){
+      httpLogger.error(`[SOCKET] setRobotSerial : ${data.key}, ${data.value}, ${errorToJson(error)}`)
+      return res.status(error.status).send(error.data);
+    }
   }
 }

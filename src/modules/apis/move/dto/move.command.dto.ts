@@ -21,7 +21,7 @@ export class MoveCommandDto {
     example: ''
   })
   @Expose()
-  id: string;
+  goal_id: string;
 
   @IsOptional()
   @IsString()
