@@ -119,7 +119,7 @@ export class SocketGateway
             console.log(global.robotNm)
             
             this.interval_frs = setInterval(() => {
-              if(this.frsSocket.connected && global.robotSerial != ""){
+              if(this.frsSocket?.connected && global.robotSerial != ""){
                 if(this.slamnav){
                   const statusData = {
                     robotSerial: global.robotSerial,
@@ -451,7 +451,7 @@ export class SocketGateway
     const json = JSON.parse(payload);
     this.server.emit('status',json);
 
-    if(this.frsSocket.connected){
+    if(this.frsSocket?.connected){
         this.frsSocket.emit('status',{robotSerial:global.robotSerial,data:json});
     }
 
@@ -462,7 +462,7 @@ export class SocketGateway
   async handleWorkingStatusMessage(@MessageBody() payload: string){
     const json = JSON.parse(payload);
     this.server.emit('moveStatus',json);
-    if(this.frsSocket.connected){
+    if(this.frsSocket?.connected){
       this.frsSocket.emit('moveStatus',{robotSerial:global.robotSerial,data:json});
     }
     this.robotState = {...this.robotState,...json};
@@ -479,7 +479,7 @@ export class SocketGateway
       const json = JSON.parse(payload);
       this.server.emit('moveResponse', json);
 
-      if(this.frsSocket.connected){
+      if(this.frsSocket?.connected){
         this.frsSocket.emit('moveResponse',{robotSerial:global.robotSerial,data:json})
       }
       this.moveState = json;
@@ -497,7 +497,7 @@ export class SocketGateway
   async handleLidarCloudMessage(@MessageBody() payload:any[]){
     try{
       this.server.emit("lidarCloud",payload);
-      if(this.frsSocket.connected){
+      if(this.frsSocket?.connected){
         this.frsSocket.emit('lidarCloud',{robotSerial:global.robotSerial,data:Payload})
       }
       this.lidarCloud = payload;
@@ -521,7 +521,7 @@ export class SocketGateway
   async handleLocalPathdMessage(@MessageBody() payload:any[]){
     try{
       this.server.emit("localPath",payload);
-      if(this.frsSocket.connected && global.robotSerial != ""){
+      if(this.frsSocket?.connected && global.robotSerial != ""){
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
@@ -538,7 +538,7 @@ export class SocketGateway
     try{
       this.server.emit("globalPath",payload);
       socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`)
-      if(this.frsSocket.connected && global.robotSerial != ""){
+      if(this.frsSocket?.connected && global.robotSerial != ""){
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
