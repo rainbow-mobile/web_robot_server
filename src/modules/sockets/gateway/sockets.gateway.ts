@@ -66,6 +66,11 @@ export class SocketGateway
 
   async connectFrsSocket(url:string){
     try{
+
+      if(global.robotSerial == undefined || global.robotSerial == ""){
+        socketLogger.warn(`[CONNECT] FRS Socket pass : robotSerial missing`);
+        return;
+      }
       if(this.frsSocket?.connected){
         this.frsSocket.disconnect();
         socketLogger.info(`[CONNECT] FRS Socket disconnect`);
@@ -77,7 +82,7 @@ export class SocketGateway
 
       this.frsSocket = io(url,{transports:["websocket"]});
       this.frsSocket.off();
-      socketLogger.debug(`[CONNECT] FRS Socket URL: ${url}`);
+      socketLogger.debug(`[CONNECT] FRS Socket URL: ${url}, ${global.robotSerial}`);
   
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
