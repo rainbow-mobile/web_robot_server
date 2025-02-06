@@ -87,7 +87,6 @@ export class SocketGateway
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
         global.frsConnect = true;
-  
           const sendData = {
             robotSerial: global.robotSerial,
             robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
@@ -125,7 +124,8 @@ export class SocketGateway
                     robotSerial: global.robotSerial,
                     data: {
                       slam:{connection:this.slamnav?true:false}, 
-                      task:this.taskState
+                      task:this.taskState,
+                      time:Date.now().toString()
                     },
                 };
                 socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`);

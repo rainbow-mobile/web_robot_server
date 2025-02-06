@@ -80,7 +80,7 @@ export class ControlService {
             if(data.command == "start" || data.command == "stop"){
                 resolve({command : data.command, result: 'accept'})
             }else{
-                this.socketGateway.slamnav.once("localization", (data2) => {
+                this.socketGateway.slamnav.once("localizationResponse", (data2) => {
                     httpLogger.info(`[CONTROL] localization Response: ${JSON.stringify(data2)}`);
                     resolve(data2);
                     clearTimeout(timeoutId);
