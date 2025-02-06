@@ -204,7 +204,7 @@ export class SocketsController{
   }
 
   @Post('debug/:onoff')
-  async setDebugMode(@Param() onoff:string, @Res() res: Response){
+  async setDebugMode(@Param('onoff') onoff:string, @Res() res: Response){
     try{
       if(onoff == "on"){
         this.socketGateway.setDebugMode(true);
