@@ -61,9 +61,14 @@ export class SocketGateway
   robotState: StatusPayload = defaultStatusPayload;
   frsSocket: ioClient.Socket = null;
   lidarCloud: any[] = [];
+  debugMode: boolean = false;
 
   interval_frs = null;
 
+  setDebugMode(onoff:boolean){
+    socketLogger.info(`[COMMAND] setDebugMode : ${onoff}`)
+    this.debugMode = onoff;
+  }
   async connectFrsSocket(url:string){
     try{
 
@@ -86,6 +91,10 @@ export class SocketGateway
   
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
+
+        if(this.debugMode){
+          this.server.emit('frs-connect');
+        }
         global.frsConnect = true;
           const sendData = {
             robotSerial: global.robotSerial,
@@ -98,18 +107,27 @@ export class SocketGateway
 
       this.frsSocket.on('disconnect', (data) => {
         socketLogger.error(`[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`);
+        if(this.debugMode){
+          this.server.emit('frs-disconnect',data);
+        }
         global.frsConnect = false;
         clearInterval(this.interval_frs);
       });
 
       this.frsSocket.on('error', (error) => {
         socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
+        if(this.debugMode){
+          this.server.emit('frs-error',error);
+        }
       })
 
       this.frsSocket.on('init', (data) => {
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[INIT] FRS Get init: ${JSON.stringify(json)}`)
+          if(this.debugMode){
+            this.server.emit('frs-init',data);
+          }
           console.log(json.robotSerial, global.robotSerial)
           if (json.robotSerial == global.robotSerial) {
             socketLogger.info(`[INIT] Get Robot Info from FRS: SerialNumber(${json.robotSerial}), ip(${json.robotIpAdrs}), name(${json.robotNm})`);
@@ -147,6 +165,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-move',data);
+          }
           if(this.slamnav){
             this.slamnav.emit("move",stringifyAllValues(json))
           }else{
@@ -161,6 +182,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-load',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("load",stringifyAllValues(json))
           }else{
@@ -175,6 +199,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-motor',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("motor",stringifyAllValues(json))
           }else{
@@ -189,6 +216,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Localization: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-localization',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("localization",stringifyAllValues(json))
           }else{
@@ -203,6 +233,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS randomseq: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-randomseq',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("randomseq",stringifyAllValues(json))
           }else{
@@ -217,6 +250,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-mapping',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("mapping",stringifyAllValues(json))
           }else{
@@ -231,6 +267,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-dock',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("dock",stringifyAllValues(json))
           }else{
@@ -245,6 +284,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-lidarOnOff',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("lidarOnOff",stringifyAllValues(json))
           }
@@ -257,6 +299,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-led',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("led",stringifyAllValues(json))
           }
@@ -269,6 +314,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS pathOnOff: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-pathOnOff',data);
+          }
           if(this.slamnav){
               this.slamnav.emit("pathOnOff",stringifyAllValues(json))
           }
@@ -281,6 +329,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-path',data);
+          }
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -290,6 +341,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-vobsRobots',data);
+          }
           this.server.emit("vobsRobots",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -299,6 +353,9 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
+          if(this.debugMode){
+            this.server.emit('frs-vobsClosures',data);
+          }
           this.server.emit("vobsClosures",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -311,12 +368,18 @@ export class SocketGateway
 
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`)
+    if(this.debugMode){
+      this.server.emit('frs-destroy');
+    }
     this.frsSocket.disconnect();
   }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
   handleConnection(client: Socket) {
     socketLogger.info(`[CONNECT] New Client: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
+    if(this.debugMode){
+      this.server.emit('rrs-connect',client);
+    }
     if (client.handshake.query.name == 'slamnav') {
       this.slamnav = client;
     }else if (client.handshake.query.name == 'taskman') {
@@ -331,6 +394,9 @@ export class SocketGateway
   handleDisconnect(client: Socket) {
     socketLogger.info(`[CONNECT] Client disconnected: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
 
+    if(this.debugMode){
+      this.server.emit('rrs-disconnect',client);
+    }
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
         this.server.emit('moveResponse', {
@@ -455,7 +521,7 @@ export class SocketGateway
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
       const json = JSON.parse(JSON.stringify(payload));
-      this.server.to('slamnav').emit('move', json);
+      this.server.emit('move', json);
 
       socketLogger.debug(
         `[COMMAND] Move: ${JSON.stringify(json)}`,
@@ -703,7 +769,7 @@ export class SocketGateway
   ){
     try {
       socketLogger.debug(`[COMMAND] Task Dock`);
-      this.slamnav.emit("dock",{command:"dock",time:Date.now().toString()})
+      this.server.emit("dock",{command:"dock",time:Date.now().toString()})
     } catch (error) {
       socketLogger.error(`[INIT] Task Dock:  ${errorToJson(error)}`);
       throw error();
@@ -716,7 +782,7 @@ export class SocketGateway
   ){
     try {
       socketLogger.debug(`[COMMAND] Task UnDock`);
-      this.slamnav.emit("dock",{command:"undock",time:Date.now().toString()})
+      this.server.emit("dock",{command:"undock",time:Date.now().toString()})
     } catch (error) {
       socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
       throw error();

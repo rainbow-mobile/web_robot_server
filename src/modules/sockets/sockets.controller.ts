@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Put, Body, HttpStatus, OnModuleInit, Post } from '@nestjs/common';
+import { Controller, Get, Res, Put, Body, HttpStatus, OnModuleInit, Post, Param } from '@nestjs/common';
 import httpLogger from '@common/logger/http.logger';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
@@ -199,6 +199,21 @@ export class SocketsController{
       }
     }catch(error){
       httpLogger.error(`[SOCKET] setRobotSerial : ${data.key}, ${data.value}, ${errorToJson(error)}`)
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Post('debug/:onoff')
+  async setDebugMode(@Param() onoff:string, @Res() res: Response){
+    try{
+      if(onoff == "on"){
+        this.socketGateway.setDebugMode(true);
+      }else{
+        this.socketGateway.setDebugMode(false);
+      }
+      res.send({onoff:onoff})
+    }catch(error){
+      httpLogger.error(`[SOCKET] setDebugMode : ${onoff}, ${errorToJson(error)}`)
       return res.status(error.status).send(error.data);
     }
   }
