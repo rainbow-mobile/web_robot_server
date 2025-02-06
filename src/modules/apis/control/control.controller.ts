@@ -28,6 +28,8 @@ import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { LocalizationDto } from 'src/modules/apis/control/dto/localization.command.dto';
 import { errorToJson } from '@common/util/error.util';
 import { LedControlDto } from './dto/led.control.dto';
+import { LidarControlDto } from './dto/lidar.control.dto';
+import { MotorControlDto } from './dto/motor.control.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -198,10 +200,75 @@ export class ControlController {
         const response = await this.controlService.ledControl(data);
         res.send(response);
       }catch(error){
-        httpLogger.error(`[COMMAND] localization: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        httpLogger.error(`[COMMAND] LED Control : ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
         return res.status(error.status).send(error.data);
       }
     }
+
+    @Post('lidar')
+    @ApiOperation({
+      summary: 'Lidar 전송 주기 제어',
+      description: 'Lidar 전송 주기를 변경합니다'
+    })
+    async lidarControl(@Body() data:LidarControlDto, @Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] Lidar Control : ${data.command}, ${data.frequency}`)
+        const response = await this.controlService.sendCommand("lidarOnOff",data);
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] Lidar Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
+    @Post('path')
+    @ApiOperation({
+      summary: 'Lidar 전송 주기 제어',
+      description: 'Lidar 전송 주기를 변경합니다'
+    })
+    async pathControl(@Body() data:LidarControlDto, @Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] Path Control : ${data.command}, ${data.frequency}`)
+        const response = await this.controlService.sendCommand("pathOnOff",data);
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] Path Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
+    @Post('motor')
+    @ApiOperation({
+      summary: 'MOTOR on/off',
+      description: 'MOTOR 전원을 켜거나 끕니다'
+    })
+    async motorControl(@Body() data:MotorControlDto, @Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] Motor Control : ${data.command}`)
+        const response = await this.controlService.sendCommand("motor",data);
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] Motor Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
+    @Post('randomseq')
+    @ApiOperation({
+      summary: 'Random Sequence Start',
+      description: '랜덤한 노드를 반복순회합니다 (초기화 필수)'
+    })
+    async randomSeqStart(@Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] RandomSeq Control `)
+        const response = await this.controlService.sendCommand("randomseq",{command:"randomseq"});
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] RandomSeq Control: ${error.status} -> ${errorToJson(error.data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
 
 
 }

@@ -87,13 +87,14 @@ export class MapService {
         return new Promise((resolve, reject) => {
         if (this.socketGateway.slamnav != null) {
             httpLogger.info(`[MAP] loadMap: ${mapNm}`)
-            this.socketGateway.server.to('slamnav').emit("mapload",
+            this.socketGateway.server.to('slamnav').emit("load",
                 {
+                  command:"mapload",
                   name: mapNm,
                   time: Date.now().toString(),
                 });
     
-            this.socketGateway.slamnav.once("mapload", (data) => {
+            this.socketGateway.slamnav.once("loadResponse", (data) => {
                 httpLogger.info(`[MAP] Slamnav Mapload Response: ${JSON.stringify(data)}`);
                 resolve(data);
                 clearTimeout(timeoutId);

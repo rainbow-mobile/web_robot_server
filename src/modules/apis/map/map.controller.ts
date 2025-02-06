@@ -95,6 +95,10 @@ export class MapController {
       }
       const response = await this.mapService.saveCloud(mapNm,data);
       res.send(response);
+
+      httpLogger.info(`[MAP] saveCloud -> auto map load ${mapNm}`)
+      this.socketGateway.slamnav.emit('load',{command:"mapload",name:mapNm,time:Date.now().toString()})
+      
     }catch(error){
       httpLogger.error(`[MAP] saveCloud ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);
@@ -137,6 +141,10 @@ export class MapController {
       }
       const response = await this.mapService.saveTopology(mapNm,data);
       res.send(response);
+
+      httpLogger.info(`[MAP] saveTopology -> auto map load ${mapNm}`)
+      this.socketGateway.slamnav.emit('load',{command:"mapload",name:mapNm,time:Date.now().toString()})
+      
     }catch(error){
       httpLogger.error(`[MAP] saveTopology ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);
       return res.status(error.status).send(error.data);

@@ -12,7 +12,7 @@ export class ControlService {
             this.socketGateway.server.to('slamnav').emit("mapping",data);
             httpLogger.info(`[CONTROL] mapping: ${JSON.stringify(data)}`);
     
-            this.socketGateway.slamnav.once("mapping", (data2) => {
+            this.socketGateway.slamnav.once("mappingResponse", (data2) => {
                 httpLogger.info(`[CONTROL] mapping Response: ${JSON.stringify(data2)}`);
                 resolve(data2);
                 clearTimeout(timeoutId);
@@ -32,6 +32,17 @@ export class ControlService {
             if (this.socketGateway.slamnav != null) {
                 this.socketGateway.server.to('slamnav').emit("led",{...data,time:Date.now().toString()});
                 httpLogger.info(`[CONTROL] led: ${JSON.stringify(data)}`);
+                resolve({});        
+            } else {
+                reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
+            }
+        })
+    }
+    async sendCommand(topic,data){
+        return new Promise((resolve, reject) => {
+            if (this.socketGateway.slamnav != null) {
+                this.socketGateway.server.to('slamnav').emit(topic,{...data,time:Date.now().toString()});
+                httpLogger.info(`[CONTROL] sendCommand: ${JSON.stringify(data)}`);
                 resolve({});        
             } else {
                 reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 연결되지 않았습니다"}})
@@ -69,7 +80,7 @@ export class ControlService {
             if(data.command == "start" || data.command == "stop"){
                 resolve({command : data.command, result: 'accept'})
             }else{
-                this.socketGateway.slamnav.once("localization", (data2) => {
+                this.socketGateway.slamnav.once("localizationResponse", (data2) => {
                     httpLogger.info(`[CONTROL] localization Response: ${JSON.stringify(data2)}`);
                     resolve(data2);
                     clearTimeout(timeoutId);
