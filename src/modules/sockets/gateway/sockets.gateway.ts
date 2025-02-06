@@ -329,9 +329,6 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
-          if(this.debugMode){
-            this.server.emit('frs-path',data);
-          }
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -341,9 +338,6 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
-          if(this.debugMode){
-            this.server.emit('frs-vobsRobots',data);
-          }
           this.server.emit("vobsRobots",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -353,9 +347,6 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
-          if(this.debugMode){
-            this.server.emit('frs-vobsClosures',data);
-          }
           this.server.emit("vobsClosures",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
@@ -368,18 +359,12 @@ export class SocketGateway
 
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`)
-    if(this.debugMode){
-      this.server.emit('frs-destroy');
-    }
     this.frsSocket.disconnect();
   }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
   handleConnection(client: Socket) {
     socketLogger.info(`[CONNECT] New Client: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
-    if(this.debugMode){
-      this.server.emit('rrs-connect',client);
-    }
     if (client.handshake.query.name == 'slamnav') {
       this.slamnav = client;
     }else if (client.handshake.query.name == 'taskman') {
@@ -394,9 +379,6 @@ export class SocketGateway
   handleDisconnect(client: Socket) {
     socketLogger.info(`[CONNECT] Client disconnected: Name(${client.handshake.query.name}), IP(${client.handshake.address}), ID(${client.id})`)
 
-    if(this.debugMode){
-      this.server.emit('rrs-disconnect',client);
-    }
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
         this.server.emit('moveResponse', {
@@ -521,7 +503,7 @@ export class SocketGateway
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
       const json = JSON.parse(JSON.stringify(payload));
-      this.server.emit('move', json);
+      this.server.to('slamnav').emit('move', json);
 
       socketLogger.debug(
         `[COMMAND] Move: ${JSON.stringify(json)}`,
@@ -769,7 +751,7 @@ export class SocketGateway
   ){
     try {
       socketLogger.debug(`[COMMAND] Task Dock`);
-      this.server.emit("dock",{command:"dock",time:Date.now().toString()})
+      this.slamnav.emit("dock",{command:"dock",time:Date.now().toString()})
     } catch (error) {
       socketLogger.error(`[INIT] Task Dock:  ${errorToJson(error)}`);
       throw error();
@@ -782,7 +764,7 @@ export class SocketGateway
   ){
     try {
       socketLogger.debug(`[COMMAND] Task UnDock`);
-      this.server.emit("dock",{command:"undock",time:Date.now().toString()})
+      this.slamnav.emit("dock",{command:"undock",time:Date.now().toString()})
     } catch (error) {
       socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
       throw error();
