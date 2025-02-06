@@ -281,9 +281,7 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
-          if(this.slamnav){
-              this.slamnav.emit("path",stringifyAllValues(json))
-          }
+          this.server.emit("path",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
@@ -292,9 +290,7 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
-          if(this.slamnav){
-              this.slamnav.emit("vobsRobots",stringifyAllValues(json))
-          }
+          this.server.emit("vobsRobots",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
@@ -303,9 +299,7 @@ export class SocketGateway
         try{
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
-          if(this.slamnav){
-              this.slamnav.emit("vobsClosures",stringifyAllValues(json))
-          }
+          this.server.emit("vobsClosures",stringifyAllValues(json))
         }catch(error){
           socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
