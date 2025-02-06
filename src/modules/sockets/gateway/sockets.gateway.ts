@@ -547,6 +547,11 @@ export class SocketGateway
       socketLogger.debug(
         `[RESPONSE] SLAMNAV mappingResponse: ${JSON.stringify(json)}`,
       );
+
+      if(json.command == "save" && json.result == "success"){
+        socketLogger.info(`[RESPONSE] SLAMNAV mappingResponse -> auto map load ${json.name}`)
+        this.slamnav.emit('load',{command:"mapload",name:json.name,time:Date.now().toString()})
+      }
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV mappingResponse: ${errorToJson(error)}`);
       throw error();
