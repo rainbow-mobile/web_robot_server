@@ -253,5 +253,22 @@ export class ControlController {
       }
     }
 
+    @Post('randomseq')
+    @ApiOperation({
+      summary: 'Random Sequence Start',
+      description: '랜덤한 노드를 반복순회합니다 (초기화 필수)'
+    })
+    async randomSeqStart(@Res() res: Response){
+      try{
+        httpLogger.info(`[COMMAND] RandomSeq Control `)
+        const response = await this.controlService.sendCommand("randomseq",{command:"randomseq"});
+        res.send(response);
+      }catch(error){
+        httpLogger.error(`[COMMAND] RandomSeq Control: ${error.status} -> ${errorToJson(error.data)}`);
+        return res.status(error.status).send(error.data);
+      }
+    }
+
+
 
 }
