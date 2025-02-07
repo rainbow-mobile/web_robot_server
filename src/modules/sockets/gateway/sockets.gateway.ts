@@ -78,7 +78,6 @@ export class SocketGateway
       if(this.frsSocket?.connected){
         this.frsSocket.disconnect();
         socketLogger.info(`[CONNECT] FRS Socket disconnect`);
-        clearInterval(this.interval_frs);
         this.frsSocket.close();
         global.frsConnect = false;
         this.frsSocket = null;
@@ -110,7 +109,6 @@ export class SocketGateway
           this.server.emit('frs-disconnect',data);
         }
         global.frsConnect = false;
-        clearInterval(this.interval_frs);
       });
 
       this.frsSocket.on('error', (error) => {
@@ -311,6 +309,7 @@ export class SocketGateway
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
+          console.error(error);
           socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })

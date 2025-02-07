@@ -3,7 +3,7 @@ export function errorToJson(error){
         if(error instanceof Error){
             const errorJson = {
                 name: error.name,
-                message: error.message,
+                message: JSON.stringify(error.message),
                 stack: error.stack
             }
             return JSON.stringify(errorJson);
