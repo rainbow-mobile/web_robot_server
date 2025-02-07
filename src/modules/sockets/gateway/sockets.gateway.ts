@@ -343,6 +343,7 @@ export class SocketGateway
       data: {
         slam:{connection:this.slamnav?true:false}, 
         task:this.taskState,
+        frs:this.frsSocket?.connected,
         time:Date.now().toString()
       }
     }
