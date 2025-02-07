@@ -63,12 +63,11 @@ export class SocketGateway
   lidarCloud: any[] = [];
   debugMode: boolean = false;
 
-  interval_frs = null;
-
   setDebugMode(onoff:boolean){
     socketLogger.info(`[COMMAND] setDebugMode : ${onoff}`)
     this.debugMode = onoff;
   }
+  
   async connectFrsSocket(url:string){
     try{
 
@@ -132,26 +131,7 @@ export class SocketGateway
           if (json.robotSerial == global.robotSerial) {
             socketLogger.info(`[INIT] Get Robot Info from FRS: SerialNumber(${json.robotSerial}), ip(${json.robotIpAdrs}), name(${json.robotNm})`);
             global.robotNm = json.robotNm;
-
             console.log(global.robotNm)
-            
-            this.interval_frs = setInterval(() => {
-              if(this.frsSocket?.connected && global.robotSerial != ""){
-                if(this.slamnav){
-                  const statusData = {
-                    robotSerial: global.robotSerial,
-                    data: {
-                      slam:{connection:this.slamnav?true:false}, 
-                      task:this.taskState,
-                      time:Date.now().toString()
-                    },
-                };
-                socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`);
-                this.server.emit("programStatus", statusData.data);
-                this.frsSocket.emit("programStatus", statusData);
-              }
-            }
-            }, 1000);
           }
           // to be continue...
           // this.mqttService.connect();
@@ -357,9 +337,26 @@ export class SocketGateway
     }
   }
 
+  interval_frs = setInterval(() => {
+    const statusData = {
+      robotSerial: global.robotSerial,
+      data: {
+        slam:{connection:this.slamnav?true:false}, 
+        task:this.taskState,
+        time:Date.now().toString()
+      }
+    }
+    this.server.emit("programStatus", statusData.data);
+    if(this.frsSocket?.connected && global.robotSerial != ""){
+      socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`);
+      this.frsSocket.emit("programStatus", statusData);
+    }
+  }, 1000);
+
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`)
     this.frsSocket.disconnect();
+    clearInterval(this.interval_frs);
   }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
