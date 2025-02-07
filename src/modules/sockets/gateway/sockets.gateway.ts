@@ -307,9 +307,7 @@ export class SocketGateway
 
       this.frsSocket.on('path',(data) => {
         try{
-          console.log(data);
           const json = JSON.parse(data);
-          console.log("?",json);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
@@ -318,7 +316,6 @@ export class SocketGateway
       })
       this.frsSocket.on('vobsRobots',(data) => {
         try{
-          console.log(data);
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
           this.server.emit("vobsRobots",stringifyAllValues(json))
@@ -328,7 +325,6 @@ export class SocketGateway
       })
       this.frsSocket.on('vobsClosures',(data) => {
         try{
-          console.log(data);
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
           this.server.emit("vobsClosures",stringifyAllValues(json))
