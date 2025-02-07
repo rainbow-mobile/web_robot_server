@@ -309,6 +309,7 @@ export class SocketGateway
         try{
           console.log(data);
           const json = JSON.parse(data);
+          console.log("?",json);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
