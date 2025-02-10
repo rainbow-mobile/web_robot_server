@@ -1,11 +1,15 @@
-import { Controller, Post, Get, Query, Res, Body, HttpStatus, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Get, Query, Res, Body, HttpStatus, Delete, Param, Req } from '@nestjs/common';
 import { SoundService } from './sound.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SoundPlayDto } from './dto/sound.play.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import * as fs from 'fs';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
+import { soundMiddleware, uploadMiddleware } from '@middleware/upload.middleware';
+import { errorToJson } from '@common/util/error.util';
+import * as path from 'path';
+import { homedir } from 'os';
 
 @ApiTags('사운드 관련 API (sound)')
 @Controller('sound')
@@ -75,4 +79,31 @@ export class SoundController {
   }
   }
 
+  @Post('add')
+  @ApiOperation({
+    summary:'사운드 파일 추가',
+    description:'경로 내 사운드 파일 추가 (form-data file에 파일(mp3)넣어서 POST)'
+  })
+  async addSoundFile(@Req() req: Request, @Res() res: Response){
+    soundMiddleware(req, res, async(err) => {
+      if (err) {
+        httpLogger.error(`[SOUND] addSoundFile: ${errorToJson(err)}`)
+        return res.status(400).send({ message: '파일 업로드 실패', error: err.message });
+      }
+
+      try{
+        httpLogger.info(`[SOUND] addSoundFile: Download Done ${req.file.originalname}`)
+        res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.SUCCESS_201,
+          filename: req.file.filename});  
+      }catch(error){
+        httpLogger.error(`[SOUND] addSoundFile: ${errorToJson(error)}`)
+        if(!req.file){
+          res.status(HttpStatus.BAD_REQUEST).send(HttpStatusMessagesConstants.INVALID_DATA_400)
+        }else{
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500)
+
+        }
+      }
+    });
+  }
 }
