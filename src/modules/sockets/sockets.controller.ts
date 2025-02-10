@@ -16,19 +16,22 @@ import { VariableDto } from '../apis/variables/dto/variables.dto';
 @Controller('sockets')
 export class SocketsController{
   constructor(private readonly socketGateway: SocketGateway, private readonly variableService: VariablesService) {
+    this.getVariable();
     setTimeout(()=>{
       this.conSocket();
     },5000);
   }
 
 
-  async conSocket(){
+  async getVariable(){
     global.robotSerial = await this.variableService.getVariable('robotSerial');
     global.kafka_url = await this.variableService.getVariable('kafka_url');
     global.mqtt_url = await this.variableService.getVariable('mqtt_url');
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
+  }
+  async conSocket(){
     socketLogger.info(`[CONNECT] ConnectSocket : ${global.robotSn}, ${global.frs_socket}`)
     this.socketGateway.connectFrsSocket(global.frs_socket);
   }
