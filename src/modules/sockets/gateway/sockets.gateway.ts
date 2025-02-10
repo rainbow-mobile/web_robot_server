@@ -33,6 +33,7 @@ import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 import { KafkaClientService } from '@sockets/kafka/kafka.service';
 import { Payload } from '@nestjs/microservices';
+import { NetworkService } from 'src/modules/apis/network/network.service';
 
 @Global()
 @WebSocketGateway(11337,{
@@ -47,7 +48,7 @@ import { Payload } from '@nestjs/microservices';
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {
-  constructor(private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
+  constructor(private readonly networkService:NetworkService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
   }
   @WebSocketServer()
   server: Server; // WebSocket server 객체
@@ -70,7 +71,6 @@ export class SocketGateway
   
   async connectFrsSocket(url:string){
     try{
-
       if(global.robotSerial == undefined || global.robotSerial == ""){
         socketLogger.warn(`[CONNECT] FRS Socket pass : robotSerial missing`);
         return;
@@ -82,6 +82,8 @@ export class SocketGateway
         global.frsConnect = false;
         this.frsSocket = null;
       }
+
+      await this.networkService.getNetwork();
 
       this.frsSocket = io(url,{transports:["websocket"]});
       this.frsSocket.off();
@@ -313,6 +315,7 @@ export class SocketGateway
           socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
+
       this.frsSocket.on('vobsRobots',(data) => {
         try{
           const json = JSON.parse(data);
@@ -322,6 +325,7 @@ export class SocketGateway
           socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
+
       this.frsSocket.on('vobsClosures',(data) => {
         try{
           const json = JSON.parse(data);
@@ -331,6 +335,7 @@ export class SocketGateway
           socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
         }
       })
+      
     }catch(error){
       socketLogger.error(`[CONNECT] FRS Socket connect`);
     }

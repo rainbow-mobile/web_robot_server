@@ -16,8 +16,11 @@ import { VariableDto } from '../apis/variables/dto/variables.dto';
 @Controller('sockets')
 export class SocketsController{
   constructor(private readonly socketGateway: SocketGateway, private readonly variableService: VariablesService) {
-    this.conSocket();
+    setTimeout(()=>{
+      this.conSocket();
+    },5000);
   }
+
 
   async conSocket(){
     global.robotSerial = await this.variableService.getVariable('robotSerial');
