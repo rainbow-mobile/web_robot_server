@@ -17,12 +17,6 @@ export class MoveService {
                 resolve(data2);
                 clearTimeout(timeoutId);
             });
-            
-            this.socketGateway.slamnav.once("move", (data2) => {
-                httpLogger.info(`[MOVE] moveCommand Response: ${JSON.stringify(data2)}`);
-                resolve(data2);
-                clearTimeout(timeoutId);
-            });
     
             const timeoutId = setTimeout(() => {
             reject({status:HttpStatus.GATEWAY_TIMEOUT,data:{message:"프로그램이 응답하지 않습니다"}});

@@ -10,11 +10,13 @@ import { StateLogEntity } from '../apis/log/entity/state.entity';
 import { PowerLogEntity } from '../apis/log/entity/power.entity';
 import { MqttClientService } from './mqtt/mqtt.service';
 import { KafkaClientService } from './kafka/kafka.service';
+import { NetworkModule } from '../apis/network/network.module';
+import { NetworkService } from '../apis/network/network.service';
 
 @Module({
   imports:[VariablesModule, LogModule],
   controllers: [SocketsController],
-  providers: [SocketGateway,SocketService,MqttClientService,KafkaClientService],
+  providers: [SocketGateway,SocketService,MqttClientService,NetworkService,KafkaClientService],
   exports: [SocketGateway],
 })
 
