@@ -7,11 +7,11 @@ export interface TaskPayload {
   result?: string | undefined;
 }
 
-export const defaultTaskPayload: TaskPayload = {
-  connection: false,
-  file: '',
-  id: 0,
-  running: false,
-  variables: [],
-  result: undefined,
-};
+// export const defaultTaskPayload: TaskPayload = {
+//   connection: false,
+//   file: '',
+//   id: 0,
+//   running: false,
+//   variables: [],
+//   result: undefined,
+// };
