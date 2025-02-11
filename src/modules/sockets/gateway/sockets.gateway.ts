@@ -12,15 +12,12 @@ import * as ioClient from 'socket.io-client';
 import { io } from 'socket.io-client';
 import socketLogger from '@common/logger/socket.logger';
 import {
-  defaultTaskPayload,
   TaskPayload,
 } from '@common/interface/robot/task.interface';
 import {
   MovePayload,
-  defaultMovePayload,
 } from '@common/interface/robot/move.interface';
 import {
-  defaultStatusPayload,
   StatusPayload,
 } from '@common/interface/robot/status.interface';
 import { getMacAddresses, stringifyAllValues } from '@common/util/network.util';
@@ -57,9 +54,126 @@ export class SocketGateway
   slamnav: Socket;
   taskman: Socket;
 
-  taskState: TaskPayload = defaultTaskPayload;
-  moveState: MovePayload = defaultMovePayload;
-  robotState: StatusPayload = defaultStatusPayload;
+  taskState: TaskPayload = {
+    connection: false,
+    file: '',
+    id: 0,
+    running: false,
+    variables: [],
+    result: undefined,
+  };
+  moveState: MovePayload = {
+      command: '',
+      id: undefined,
+      x: undefined,
+      y: undefined,
+      z: undefined,
+      rz: undefined,
+      preset: undefined,
+      method: undefined,
+      result: undefined,
+    };
+  robotState: StatusPayload = {
+      pose: {
+        x: '0',
+        y: '0',
+        rz: '0',
+      },
+      map:{
+        map_name:""
+      },
+      vel: {
+        vx: '0',
+        vy: '0',
+        wz: '0',
+      },
+      imu: {
+        acc_x: '0',
+        acc_y: '0',
+        acc_z: '0',
+        gyr_x: '0',
+        gyr_y: '0',
+        gyr_z: '0',
+        imu_rx: '0',
+        imu_ry: '0',
+        imu_rz: '0',
+      },
+      goal_node:{
+        id: "",
+        name:"",
+        state:"",
+        x:"0",
+        y:"0",
+        rz:"0",
+      },
+      cur_node:{
+        id: "",
+        name:"",
+        state:"",
+        x:"0",
+        y:"0",
+        rz:"0",
+      },
+      motor: [
+        {
+          connection: 'false',
+          status: '0',
+          temp: '0',
+          current: '0'
+        },
+        {
+          connection: 'false',
+          status: '0',
+          temp: '0',
+          current: '0'
+        },
+      ],
+      lidar: [
+        {
+          connection: 'false',
+          port: '',
+          serialnumber: '',
+        },
+        {
+          connection: 'false',
+          serialnumber: '',
+          port: '',
+        },
+      ],
+      power: {
+        bat_in: '0',
+        bat_out: '0',
+        bat_current: '0',
+        power: '0',
+        total_power: '0',
+        charge_current: '0',
+        contact_voltage: '0'
+      },
+      move_state:{
+        auto_move:"stop",
+        dock_move:"stop",
+        jog_move:"stop",
+        obs:"none",
+        path:"none",
+      },
+      robot_state: {
+        power: 'false',
+        dock: 'false',
+        emo: 'false',
+        charge: 'false',
+        localization: 'none' // "none", "busy", "good", "fail"
+      },
+      condition: {
+        inlier_error: '0',
+        inlier_ratio: '0',
+        mapping_error: '0',
+        mapping_ratio: '0',
+      },
+      setting: {
+        platform_type: '',
+      },
+      time: '',
+    };
   frsSocket: ioClient.Socket = null;
   lidarCloud: any[] = [];
   debugMode: boolean = false;
@@ -393,14 +507,30 @@ export class SocketGateway
         });
       }
       this.slamnav = null;
-      this.moveState = defaultMovePayload;
-
+      this.moveState = {
+          command: '',
+          id: undefined,
+          x: undefined,
+          y: undefined,
+          z: undefined,
+          rz: undefined,
+          preset: undefined,
+          method: undefined,
+          result: undefined,
+        };
       //TaskStop
       if (this.taskState.running) {
         this.server.emit('taskStop', 'disconnected');
       }
     } else if (client.handshake.query.name == 'taskman') {
-      this.taskState = defaultTaskPayload;
+      this.taskState = {
+        connection: false,
+        file: '',
+        id: 0,
+        running: false,
+        variables: [],
+        result: undefined,
+      };
       this.taskman = null;
     }
     client.leave(client.handshake.query.name as string);
