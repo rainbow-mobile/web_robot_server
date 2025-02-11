@@ -8,7 +8,7 @@ import { PowerLogEntity } from './entity/power.entity';
 import * as moment from 'moment';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
-import { defaultStatusPayload, StatusPayload } from '@common/interface/robot/status.interface';
+import { StatusPayload } from '@common/interface/robot/status.interface';
 import { Http } from 'winston/lib/winston/transports';
 import { DataSource } from 'typeorm';
 import { StatusLogEntity } from './entity/status.entity';
@@ -625,7 +625,108 @@ export class LogService {
     async emitStatusTest(time:string){
       return new Promise(async(resolve, reject) => {
         try{
-          const state = defaultStatusPayload;
+          const state = {
+            pose: {
+              x: '0',
+              y: '0',
+              rz: '0',
+            },
+            map:{
+              map_name:""
+            },
+            vel: {
+              vx: '0',
+              vy: '0',
+              wz: '0',
+            },
+          
+            imu: {
+              acc_x: '0',
+              acc_y: '0',
+              acc_z: '0',
+              gyr_x: '0',
+              gyr_y: '0',
+              gyr_z: '0',
+              imu_rx: '0',
+              imu_ry: '0',
+              imu_rz: '0',
+            },
+            goal_node:{
+              id: "",
+              name:"",
+              state:"",
+              x:"0",
+              y:"0",
+              rz:"0",
+            },
+            cur_node:{
+              id: "",
+              name:"",
+              state:"",
+              x:"0",
+              y:"0",
+              rz:"0",
+            },
+            motor: [
+              {
+                connection: 'false',
+                status: '0',
+                temp: '0',
+                current: '0'
+              },
+              {
+                connection: 'false',
+                status: '0',
+                temp: '0',
+                current: '0'
+              },
+            ],
+            lidar: [
+              {
+                connection: 'false',
+                port: '',
+                serialnumber: '',
+              },
+              {
+                connection: 'false',
+                serialnumber: '',
+                port: '',
+              },
+            ],
+            power: {
+              bat_in: '0',
+              bat_out: '0',
+              bat_current: '0',
+              power: '0',
+              total_power: '0',
+              charge_current: '0',
+              contact_voltage: '0'
+            },
+            move_state:{
+              auto_move:"stop",
+              dock_move:"stop",
+              jog_move:"stop",
+              obs:"none",
+              path:"none",
+            },
+            robot_state: {
+              power: 'false',
+              dock: 'false',
+              emo: 'false',
+              charge: 'false',
+              localization: 'none' // "none", "busy", "good", "fail"
+            },
+            condition: {
+              inlier_error: '0',
+              inlier_ratio: '0',
+              mapping_error: '0',
+              mapping_ratio: '0',
+            },
+            setting: {
+              platform_type: '',
+            },
+            time: '',
+          };
           httpLogger.debug(`[LOG] emitStatusTest: ${new Date(time)}, ${time}`)
           const newLog:StatusLogEntity = {
             time:new Date(time),
@@ -636,7 +737,7 @@ export class LogService {
               inlier_error:parseFloat(state.condition.inlier_error)
             },
             move_state:{
-              state:await this.readState(state),
+              state:await this.readState(state as StatusPayload),
               auto_move:state.move_state.auto_move,
               dock_move:state.move_state.dock_move,
               jog_move:state.move_state.jog_move,

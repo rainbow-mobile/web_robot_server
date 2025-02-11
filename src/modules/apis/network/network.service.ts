@@ -1,4 +1,4 @@
-import { defaultNetwork, NetworkPayload } from '@common/interface/network/network.interface';
+import { NetworkPayload } from '@common/interface/network/network.interface';
 import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
@@ -120,8 +120,20 @@ export class NetworkService {
     async transNMCLI(inputString:string){
         return new Promise<NetworkPayload>(async (resolve, reject) => {
             try {
-                let network:NetworkPayload = defaultNetwork;
+                const network:NetworkPayload = {
+                    device:"",
+                    type: "",
+                    hwAddr: "",
+                    name: "",
+                    state: "",
+                    ip: "",
+                    mask: "",
+                    gateway: "",
+                    dns: []
+                
+                  };
                 // 입력 문자열을 줄 단위로 분할하여 처리
+                // network.dns = [];
                 inputString.split("\n").forEach((line) => {
                     // 각 줄을 ':'을 기준으로 키(key)와 값(value)으로 분리
                     const split_str = line.split(":");

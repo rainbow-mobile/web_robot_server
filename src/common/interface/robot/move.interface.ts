@@ -10,14 +10,14 @@ export interface MovePayload {
   result: string | undefined;
 }
 
-export const defaultMovePayload: MovePayload = {
-  command: '',
-  id: undefined,
-  x: undefined,
-  y: undefined,
-  z: undefined,
-  rz: undefined,
-  preset: undefined,
-  method: undefined,
-  result: undefined,
-};
+// export const defaultMovePayload: MovePayload = {
+//   command: '',
+//   id: undefined,
+//   x: undefined,
+//   y: undefined,
+//   z: undefined,
+//   rz: undefined,
+//   preset: undefined,
+//   method: undefined,
+//   result: undefined,
+// };

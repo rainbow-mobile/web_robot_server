@@ -13,15 +13,3 @@ export interface NetworkPayload {
     security?:string;
   }
   
-  export const defaultNetwork:NetworkPayload={
-    device:"",
-    type: "",
-    hwAddr: "",
-    name: "",
-    state: "",
-    ip: "",
-    mask: "",
-    gateway: "",
-    dns: []
-
-  }
