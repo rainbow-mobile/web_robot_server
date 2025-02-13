@@ -1,4 +1,3 @@
-import { SettingFilePayload, SettingJSONPayload } from '@common/interface/robot/setting.interface';
 import { deleteFile, readJson, saveJson } from '@common/util/file.util';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
@@ -22,7 +21,9 @@ export class SettingService {
     async saveSetting(type:string, data:JSON){
         try{
             const fileData = await this.transformSettingToJson(await readJson(Path.join(homedir(),'slamnav2','config',type,'config.json')));
-            const mergeData = await this.deepMerge(fileData, data);
+            const stringData = await this.convertNumbersToStrings(data);
+            console.log("!!!!!!!!!!!!!!!!!!!!",stringData);
+            const mergeData = await this.deepMerge(fileData, stringData);
             const newData = await this.transformSettingToFile(mergeData);
 
             return await saveJson(Path.join(homedir(),'slamnav2','config',type,'config.json'),newData);
@@ -30,6 +31,21 @@ export class SettingService {
             httpLogger.error(`[SETTING] saveSetting: ${errorToJson(error)}`)
         }
     }
+    
+    async convertNumbersToStrings(obj: Record<string, any>): Promise<Record<string, any>> {
+        const entries = await Promise.all(
+            Object.entries(obj).map(async ([key, value]) => [
+                key,
+                typeof value === "number"
+                    ? value.toString() 
+                    : typeof value === "object" && value !== null
+                        ? await this.convertNumbersToStrings(value) // 재귀 호출
+                        : value
+            ])
+        );
+        return Object.fromEntries(entries);
+    }
+    
 
     async getPreset(type: string, id: string){
         return await readJson(Path.join(homedir(),'slamnav2','config',type,'preset_'+id+'.json'));
@@ -217,7 +233,6 @@ export class SettingService {
                     data = await {...data, default:{...data.default,
                         LIDAR_TF_B: lidar_tf_b,
                         LIDAR_TF_F: lidar_tf_f}}
-
             }
 
             if(data.cam){

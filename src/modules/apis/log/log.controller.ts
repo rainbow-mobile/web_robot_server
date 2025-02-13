@@ -1,7 +1,7 @@
 import { LogService } from './log.service';
 import { Response } from 'express';
 import { Body, Controller, Get, Param, Res, Patch, Put, Delete, Post, HttpStatus, Query } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { StatusLogEntity } from './entity/status.entity';
@@ -11,6 +11,7 @@ import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { errorToJson } from '@common/util/error.util';
 
+@ApiTags('로그 관련 API (log)')
 @Controller('log')
 export class LogController {
   constructor(private readonly logService: LogService) {}
