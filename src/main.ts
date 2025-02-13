@@ -15,6 +15,7 @@ import { ExceptionFilterMiddleware } from '@common/middleware/exception-filter.m
 import { ConfigService } from '@nestjs/config';
 import * as bodyParser from 'body-parser';
 import {ServeStaticModule} from '@nestjs/serve-static';
+import { instrument } from '@socket.io/admin-ui';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

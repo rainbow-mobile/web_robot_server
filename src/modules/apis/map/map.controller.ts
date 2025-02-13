@@ -171,6 +171,11 @@ export class MapController {
           }
         })
       }
+
+      //sort
+      goals.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
+
+      console.log("goals",goals);
       res.send(goals);
     }catch(error){
       httpLogger.error(`[MAP] getGoals ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`);

@@ -28,6 +28,7 @@
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/swagger": "^8.0.7",
     "@nestjs/typeorm": "^10.0.2",
+    "@socket.io/admin-ui": "^0.5.1",
     "adm-zip": "^0.5.16",
     "ajv": "^8.17.1",
     "axios": "^1.7.9",

@@ -31,6 +31,24 @@ export class NetworkController {
     }
   }
 
+  @Get('current/wifi')
+  @ApiOperation({
+    summary:'현재 와이파이 상태 조회',
+    description:'연결된 와이파이 상태 반환'
+  })
+  async getCurrentNetworkWifi(@Res() res: Response){
+    try{
+      httpLogger.debug(`[NETWORK] getCurrentNetworkWifi`);
+      const response = await this.networkService.getCurrentWifi();
+      httpLogger.debug(`[NETWORK] getCurrentNetworkWifi: ${JSON.stringify(response)}`);
+      res.send(response);
+    }catch(error){
+      httpLogger.error(`[NETWORK] getCurrentNetworkWifi: ${error.status} -> ${error.data}`)
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+
   @Get('wifi')
   @ApiOperation({
     summary:'주변 와이파이 리스트 조회',
