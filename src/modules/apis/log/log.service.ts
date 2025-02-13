@@ -57,7 +57,7 @@ export class LogService {
     }
 
     private systemUsage = null;
-    private processUsage = null;
+    private processUsage:Map<string,any>;
     private networkUsage = null;
 
     async getState():Promise<StateLogEntity[]>{
@@ -553,13 +553,14 @@ export class LogService {
       }
     }
 
-    // 12시간 지난 데이터를 삭제
-    @Cron('0 * * * * *') // 매 분마다 실행
-    async deleteOldData(): Promise<void> {
-      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-      await this.stateRepository.delete({ time: LessThan(twelveHoursAgo) });
-      await this.powerRepository.delete({ time: LessThan(twelveHoursAgo) });
-    }
+    // // 12시간 지난 데이터를 삭제
+    // @Cron('0 * * * * *') // 매 분마다 실행
+    // async deleteOldData(): Promise<void> {
+    //   const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    //   await this.stateRepository.delete({ time: LessThan(twelveHoursAgo) });
+    //   await this.powerRepository.delete({ time: LessThan(twelveHoursAgo) });
+    //   await this.systemRepository.delete({ time: LessThan(twelveHoursAgo) });
+    // }
       
     @Cron('0 0 */12 * * *') // 매 12시간마다 실행
     async handleArchiving() {
@@ -1006,12 +1007,24 @@ export class LogService {
           }
         });
 
-        // Original 테이블에서 데이터 삭제
-        await this.statusRepository
-          .createQueryBuilder()
-          .delete()
-          .where('time >= :dateStart && time <= :dateEnd', { dateStart,dateEnd })
-          .execute();
+
+        if(type == "status"){
+          // Original 테이블에서 데이터 삭제
+          await this.statusRepository
+            .createQueryBuilder()
+            .delete()
+            .where('time >= :dateStart && time <= :dateEnd', { dateStart,dateEnd })
+            .execute();
+    
+        }else if(type == "system"){
+          // Original 테이블에서 데이터 삭제
+          await this.systemRepository
+            .createQueryBuilder()
+            .delete()
+            .where('time >= :dateStart && time <= :dateEnd', { dateStart,dateEnd })
+            .execute();
+    
+        }
   
         httpLogger.info(`[LOG] ArchiveOldDBData: Archived data saved to ${filePath}`);
       } else {
@@ -1236,9 +1249,10 @@ export class LogService {
         }
         await this.systemRepository.save(newLog);
       }catch(error){
-        httpLogger.error(`[LOG] emitSystem: ${JSON.stringify(error)}`)
+        httpLogger.error(`[LOG] emitSystem: ${errorToJson(error)}`)
       }
     }
+
     async getSystemCurrent(){
       return { system:this.systemUsage, process:this.processUsage, network:this.networkUsage};
     }
@@ -1246,7 +1260,7 @@ export class LogService {
     async readMemoryUsage(){
       try{
         this.systemUsage = await this.getCpuUsage();
-        this.processUsage = Object.fromEntries(await this.getProcessUsage());
+        this.processUsage = await this.getProcessUsage();
         this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
       }catch(error){
         httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`)

@@ -186,14 +186,15 @@ export class NetworkService {
             // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
             wifi.getCurrentConnections((error, networks) => {
             if (error) {
-                httpLogger.error(`[NETWORK] getCurrentConnections: ${errorToJson(error)}`)
+                httpLogger.error(`[NETWORK] getCurrentWifi: ${errorToJson(error)}`)
                 reject();
             } else {
+                httpLogger.info(`[NETWORK] getCurrentWifi: ${JSON.stringify(networks)}`)
                 resolve(networks);
             }
             });
         } catch (error) {
-            httpLogger.error(`[NETWORK] getCurrentConnections: ${errorToJson(error)}`)
+            httpLogger.error(`[NETWORK] getCurrentWifi: ${errorToJson(error)}`)
             reject();
         }
         });

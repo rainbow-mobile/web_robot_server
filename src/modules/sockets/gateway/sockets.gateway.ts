@@ -21,7 +21,7 @@ import {
   StatusPayload,
 } from '@common/interface/robot/status.interface';
 import { getMacAddresses, stringifyAllValues } from '@common/util/network.util';
-import { Global, OnModuleDestroy } from '@nestjs/common';
+import { Global, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as pako from 'pako';
 import { connect } from 'http2';
 import { TransformationType } from 'class-transformer';
@@ -31,22 +31,30 @@ import { errorToJson } from '@common/util/error.util';
 import { KafkaClientService } from '@sockets/kafka/kafka.service';
 import { Payload } from '@nestjs/microservices';
 import { NetworkService } from 'src/modules/apis/network/network.service';
+import { instrument } from '@socket.io/admin-ui';
 
 @Global()
 @WebSocketGateway(11337,{
-  transports:['websocket'],
+  transports:['websocket','polling'],
   cors:{
-    origin:"*",
-    methods:["GET","POST"],
+    origin:["*","https://admin.socket.io"],
     credentials:true
   },
   host:"0.0.0.0"
 })
 export class SocketGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy, OnGatewayInit
 {
   constructor(private readonly networkService:NetworkService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
+
   }
+  afterInit(){
+    instrument(this.server, {
+      auth: false,
+      mode: "development",
+    });
+  }
+
   @WebSocketServer()
   server: Server; // WebSocket server 객체
   socket: Socket;
@@ -63,16 +71,16 @@ export class SocketGateway
     result: undefined,
   };
   moveState: MovePayload = {
-      command: '',
-      id: undefined,
-      x: undefined,
-      y: undefined,
-      z: undefined,
-      rz: undefined,
-      preset: undefined,
-      method: undefined,
-      result: undefined,
-    };
+    command: '',
+    id: undefined,
+    x: undefined,
+    y: undefined,
+    z: undefined,
+    rz: undefined,
+    preset: undefined,
+    method: undefined,
+    result: undefined,
+  };
   robotState: StatusPayload = {
       pose: {
         x: '0',
@@ -198,7 +206,7 @@ export class SocketGateway
       }
 
       await this.networkService.getNetwork();
-
+      
       this.frsSocket = io(url,{transports:["websocket"]});
       this.frsSocket.off();
       socketLogger.debug(`[CONNECT] FRS Socket URL: ${url}, ${global.robotSerial}`);
@@ -209,14 +217,15 @@ export class SocketGateway
         if(this.debugMode){
           this.server.emit('frs-connect');
         }
+
         global.frsConnect = true;
-          const sendData = {
-            robotSerial: global.robotSerial,
-            robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
-          };
-  
-          socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
-          this.frsSocket.emit('init', sendData);
+        const sendData = {
+          robotSerial: global.robotSerial,
+          robotIpAdrs: (global.ip_wifi=="" || global.ip_wifi == undefined)?global.ip_ethernet:global.ip_wifi
+        };
+
+        socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
+        this.frsSocket.emit('init', sendData);
       });
 
       this.frsSocket.on('disconnect', (data) => {

@@ -17,17 +17,19 @@ export interface SettingFilePayload {
         DRIVE_W_DEADZONE: string;
     },
     debug: {
-        SIM_MODE: string;
+        USE_SIM: string;
         USE_ARUCO: string;
-        USE_ARUCO_FILTER: string;
         USE_BEEP: string;
         USE_BLIDAR: string;
         USE_BQR: string;
         USE_CAM: string;
         USE_EARLYSTOP: string;
         USE_FMS: string;
+        USE_RRS: string;
+        USE_MULTI: string;
+        USE_LVX: string;
         USE_IMU: string;
-        USE_QT_UI: string;
+        USE_QTUI: string;
         USE_RTSP: string;
         USE_WEB_UI: string;
     },
@@ -52,7 +54,6 @@ export interface SettingFilePayload {
         SERVER_PW: string;
     },
     loc: {
-        LOC_ARUCO_MEDIAN_NUM: string;
         LOC_ARUCO_ODO_FUSION_DIST: string;
         LOC_ARUCO_ODO_FUSION_RATIO: string;
         LOC_CHECK_DIST: string;
@@ -110,6 +111,20 @@ export interface SettingFilePayload {
     robot: {
         PLATFORM_NAME: string;
         PLATFORM_TYPE: string;
+    },
+    lvx: {
+      LVX_TF: string;
+      LVX_FRM_DT: string;
+      LVX_MIN_RANGE: string;
+      LVX_MAX_RANGE: string;
+      LVX_MAX_FEATURE_NUM: string;
+      LVX_SURFEL_NN_NUM: string;
+      LVX_SURFEL_RANGE: string;
+      LVX_COST_THRESHOLD: string;
+      LVX_INLIER_CHECK_DIST: string;
+    },
+    path: {
+      MAP_PATH: string;
     }
 }
 
