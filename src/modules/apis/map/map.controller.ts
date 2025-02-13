@@ -171,7 +171,6 @@ export class MapController {
           }
         })
       }
-
       //sort
       goals.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
 
@@ -182,5 +181,4 @@ export class MapController {
       return res.status(error.status).send(error.data);
     }
   }
-
 }
