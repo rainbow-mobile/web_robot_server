@@ -70,7 +70,7 @@ export class NetworkService {
     async getWifiList() {
         return this.wifi_list;
       }
-
+      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
     async getNetwork(){
         return new Promise(async (resolve, reject) => {
             exec("nmcli device show", async(err, stdout, stderr) => {
