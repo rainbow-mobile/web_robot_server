@@ -16,21 +16,6 @@ import { errorToJson } from '@common/util/error.util';
 export class LogController {
   constructor(private readonly logService: LogService) {}
 
-  // @Get('state')
-  // @ApiOperation({
-  //   summary:'State Log 조회',
-  //   description:'DB에 저장된 State 리스트 반환 (오늘 날짜)'
-  // })
-  // async getState(@Res() res: Response){
-  //   const result =  await this.logService.getState();
-  //   res.send(result);
-  // }
-
-  // @Get('power')
-  // async getPower(@Res() res: Response){
-  //   res.send(await this.logService.getPower());
-  // }
-
   @Get('status')
   @ApiOperation({
     summary:'Status Log 조회',

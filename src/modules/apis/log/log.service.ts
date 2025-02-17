@@ -33,12 +33,6 @@ import { SystemLogEntity } from './entity/system.entity';
 @Injectable()
 export class LogService {
     constructor(
-        @InjectRepository(StateLogEntity)
-        private readonly stateRepository: Repository<StateLogEntity>,
-
-        @InjectRepository(PowerLogEntity)
-        private readonly powerRepository: Repository<PowerLogEntity>,
-
         @InjectRepository(StatusLogEntity)
         private readonly statusRepository: Repository<StatusLogEntity>,
 
@@ -48,7 +42,6 @@ export class LogService {
         private readonly dataSource: DataSource
     ){
       this.checkTables('status',Query.create_status);  
-      this.checkTables('power',Query.create_power);  
       this.checkTables('system',Query.create_system);
 
       setInterval(()=>{
@@ -59,14 +52,6 @@ export class LogService {
     private systemUsage = null;
     private processUsage:Map<string,any>;
     private networkUsage = null;
-
-    async getState():Promise<StateLogEntity[]>{
-        return this.stateRepository.find();
-    }
-
-    async getPower():Promise<PowerLogEntity[]>{
-        return this.powerRepository.find();
-    }
 
     async addDisconForGaps(filteredArray:{time:Date, value:any}[]){
       var result = [];
@@ -163,93 +148,6 @@ export class LogService {
           }
       })
     }
-    async getStateLog(key: string){
-        return new Promise(async(resolve, reject) => {
-            try{
-              httpLogger.debug(`[LOG] getStateLog : ${key}`)
-                const data = await this.stateRepository.find();
-                const addDisconForGaps = (filteredArray:{time:Date, value:any}[]) => {
-                    var result = [];
-                    for (let i = 0; i < filteredArray.length; i++) {
-                      result.push({
-                        time: filteredArray[i].time,
-                        value: filteredArray[i].value,
-                      });
-
-                      if (i < filteredArray.length) {
-                        const currentEndTime = filteredArray[i].time.valueOf();
-                        const nextStartTime = (i==filteredArray.length - 1)?new Date().valueOf():filteredArray[i + 1].time.valueOf();
-                        const gap = (nextStartTime - currentEndTime) / 1000; // 간격을 분 단위로 계산
-              
-                        if (gap > 20) {
-                          // 20초 이상 공백이 있을 때
-                            if(typeof filteredArray[i].value == "string"){
-                                const disconEntry = {
-                                  time: new Date(currentEndTime/1000 + 10),
-                                  value: "Discon",
-                                };
-                                result.push(disconEntry);
-                            }else if(typeof filteredArray[i].value == "boolean"){
-                                const disconEntry = {
-                                  time: new Date(currentEndTime/1000 + 10),
-                                  value: false,
-                                };
-                                result.push(disconEntry);
-                            }else{
-                                const disconEntry = {
-                                  time: new Date(currentEndTime/1000 + 10),
-                                  value: 0,
-                                };
-                                result.push(disconEntry);
-                            }
-                        }
-                      }
-                    }
-    
-                    
-                    if (result.length > 0) {
-                        if(typeof result[0].value == "string"){
-                            const finalEntry = {
-                            //   time: moment.unix(result[result.length - 1].time.unix() + 10000),
-                                time: new Date(),
-                              value: "Final",
-                            };
-                            result.push(finalEntry);
-                        }else if(typeof result[0].value == "boolean"){
-                            const finalEntry = {
-                                //   time: moment.unix(result[result.length - 1].time.unix() + 10000),
-                                    time: new Date(),
-                              value: false,
-                            };
-                            result.push(finalEntry);
-                        }else{
-                            const finalEntry = {
-                                //   time: moment.unix(result[result.length - 1].time.unix() + 10000),
-                                    time: new Date(),
-                              value: 0,
-                            };
-                            result.push(finalEntry);
-                        }
-                    }
-                    return result.map((data) => ({time:data.time.format('YYYY-MM-DD hh:mm:ss'),value:data.value}));
-                  };
-              
-                  const newDataMap = data.map((data) => ({ time:data.time, value:data[key] }));
-                  const finalArray = addDisconForGaps(newDataMap);
-                  // 1. 상태가 변경되는 순간만 남기기
-                  const filteredChanges = finalArray.filter((item, index, arr) => {
-                    if (index === 0) return true; // 첫 번째 항목은 항상 포함
-                    return item.value !== arr[index - 1].value;
-                  });
-              
-                  resolve(filteredChanges);
-            }catch(error){
-                httpLogger.error(`[LOG] getStateState Error : ${errorToJson(error)}`);
-                reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR})
-            }
-        })
-    }
-
     async getStatusLog(key:string){
         return new Promise(async(resolve, reject) => {
             try{
@@ -553,74 +451,12 @@ export class LogService {
       }
     }
 
-    // // 12시간 지난 데이터를 삭제
-    // @Cron('0 * * * * *') // 매 분마다 실행
-    // async deleteOldData(): Promise<void> {
-    //   const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-    //   await this.stateRepository.delete({ time: LessThan(twelveHoursAgo) });
-    //   await this.powerRepository.delete({ time: LessThan(twelveHoursAgo) });
-    //   await this.systemRepository.delete({ time: LessThan(twelveHoursAgo) });
-    // }
-      
     @Cron('0 0 */12 * * *') // 매 12시간마다 실행
     async handleArchiving() {
       httpLogger.info('[LOG] Starting data archiving process...');
       await this.archiveOldDataDay();
       await this.optimizeTable('status');
       httpLogger.info('[LOG] Data archiving and optimization completed.');
-    }
-
-    async emitState(state:StatusPayload){
-      return new Promise(async(resolve, reject) => {
-        try {      
-          const newLog:StateLogEntity = {
-            time:new Date(),
-            state:await this.readState(state),
-            auto_state: state.move_state.auto_move,
-            localization: state.robot_state.localization,
-            obs_state: state.move_state.obs,
-            charging: state.robot_state.charge,
-            power: state.robot_state.power=="true"?true:false,
-            emo: state.robot_state.emo=="true"?true:false,
-            dock: state.robot_state.dock=="true"?true:false,
-            inlier_error: parseFloat(state.condition.inlier_error),
-            inlier_ratio: parseFloat(state.condition.inlier_ratio)
-          }
-          await this.stateRepository.save(newLog);
-          resolve(newLog);
-        } catch (error) {
-          httpLogger.error(`[LOG] emitState: ${errorToJson(error)}`)
-          reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
-        }
-      });
-    }
-
-    async emitPower(state:StatusPayload){
-      return new Promise(async(resolve, reject) => {
-        try {      
-          const newLog:PowerLogEntity = {
-            time:new Date(),
-            battery_in:parseFloat(state.power.bat_in),
-            battery_out:parseFloat(state.power.bat_out),
-            battery_current:parseFloat(state.power.bat_current),
-            power:parseFloat(state.power.power),
-            total_power:parseFloat(state.power.total_power),
-            motor0_status:parseInt(state.motor[0].status),
-            motor0_temp:parseFloat(state.motor[0].temp),
-            motor0_current:parseFloat(state.motor[0].current),
-            motor1_status:parseInt(state.motor[1].status),
-            motor1_temp:parseFloat(state.motor[1].temp),
-            motor1_current:parseFloat(state.motor[1].current),
-            charge_current: parseFloat(state.power.charge_current?state.power.charge_current:'0'),
-            contact_voltage: parseFloat(state.power.contact_voltage?state.power.contact_voltage:'0')
-          }
-          await this.powerRepository.save(newLog);
-          resolve(newLog);
-        } catch (error) {
-          httpLogger.error(`[LOG] emitPower: ${errorToJson(error)}`)
-          reject({data:{message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500},status:HttpStatus.INTERNAL_SERVER_ERROR});
-        }
-      });
     }
 
     async emitStatusTest(time:string){
@@ -1230,7 +1066,6 @@ export class LogService {
       }catch(error){
 
       }
-
     }
 
     async emitSystem(){
