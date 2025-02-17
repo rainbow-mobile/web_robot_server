@@ -32,6 +32,7 @@ import { KafkaClientService } from '@sockets/kafka/kafka.service';
 import { Payload } from '@nestjs/microservices';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
+import * as msgpack from 'msgpack-lite';
 
 @Global()
 @WebSocketGateway(11337,{
@@ -193,6 +194,7 @@ export class SocketGateway
   
   async connectFrsSocket(url:string){
     try{
+
       if(global.robotSerial == undefined || global.robotSerial == ""){
         socketLogger.warn(`[CONNECT] FRS Socket pass : robotSerial missing`);
         return;
@@ -211,6 +213,10 @@ export class SocketGateway
       this.frsSocket.off();
       socketLogger.debug(`[CONNECT] FRS Socket URL: ${url}, ${global.robotSerial}`);
   
+
+
+
+
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
 
@@ -225,8 +231,15 @@ export class SocketGateway
         };
 
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
-        this.frsSocket.emit('init', sendData);
+        this.frsSocket.emit('init', msgpack.encode(sendData));
       });
+
+
+
+
+
+
+
 
       this.frsSocket.on('disconnect', (data) => {
         socketLogger.error(`[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`);
@@ -243,8 +256,9 @@ export class SocketGateway
         }
       })
 
-      this.frsSocket.on('init', (data) => {
+      this.frsSocket.on('init', (_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[INIT] FRS Get init: ${JSON.stringify(json)}`)
           if(this.debugMode){
@@ -260,12 +274,13 @@ export class SocketGateway
           // this.mqttService.connect();
           // this.kafakService.connect();
         }catch(error){
-          socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       });
 
-      this.frsSocket.on('move',(data) => {
+      this.frsSocket.on('move',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -274,15 +289,16 @@ export class SocketGateway
           if(this.slamnav){
             this.slamnav.emit("move",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("moveResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("moveResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS Move: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('load',(data) => {
+      this.frsSocket.on('load',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -291,15 +307,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("load",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("loadResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("loadResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS MapLoad: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS MapLoad: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('motor',(data) => {
+      this.frsSocket.on('motor',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -308,15 +325,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("motor",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("motorResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("motorResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS motor: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS motor: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('localization',(data) => {
+      this.frsSocket.on('localization',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Localization: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -325,15 +343,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("localization",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("localizationResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("localizationResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS Localization: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS Localization: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('randomseq',(data) => {
+      this.frsSocket.on('randomseq',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS randomseq: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -342,15 +361,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("randomseq",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("randomseqResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("randomseqResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS randomseq: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS randomseq: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('mapping',(data) => {
+      this.frsSocket.on('mapping',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -359,15 +379,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("mapping",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("mappingResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("mappingResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS mapping: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS mapping: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('dock',(data) => {
+      this.frsSocket.on('dock',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -376,15 +397,16 @@ export class SocketGateway
           if(this.slamnav){
               this.slamnav.emit("dock",stringifyAllValues(json))
           }else{
-            this.frsSocket.emit("dockResponse",{robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}});
+            this.frsSocket.emit("dockResponse",msgpack.encode({robotSerial:global.robotSerial,data:{...data,result:'fail',message:'SLAMNAV2 disconnected'}}));
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS dock: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS dock: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('lidarOnOff',(data) => {
+      this.frsSocket.on('lidarOnOff',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -394,12 +416,13 @@ export class SocketGateway
               this.slamnav.emit("lidarOnOff",stringifyAllValues(json))
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('led',(data) => {
+      this.frsSocket.on('led',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -409,12 +432,13 @@ export class SocketGateway
               this.slamnav.emit("led",stringifyAllValues(json))
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS led: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS led: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('pathOnOff',(data) => {
+      this.frsSocket.on('pathOnOff',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS pathOnOff: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -424,38 +448,41 @@ export class SocketGateway
               this.slamnav.emit("pathOnOff",stringifyAllValues(json))
           }
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS pathOnOff: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS pathOnOff: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('path',(data) => {
+      this.frsSocket.on('path',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.server.emit("path",stringifyAllValues(json))
         }catch(error){
           console.error(error);
-          socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS path: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('vobsRobots',(data) => {
+      this.frsSocket.on('vobsRobots',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
           this.server.emit("vobsRobots",stringifyAllValues(json))
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
 
-      this.frsSocket.on('vobsClosures',(data) => {
+      this.frsSocket.on('vobsClosures',(_data) => {
         try{
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
           this.server.emit("vobsClosures",stringifyAllValues(json))
         }catch(error){
-          socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(data)}, ${errorToJson(error)}`)
+          socketLogger.error(`[COMMAND] FRS vobsClosures: ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
       })
       
@@ -477,7 +504,7 @@ export class SocketGateway
     this.server.emit("programStatus", statusData.data);
     if(this.frsSocket?.connected && global.robotSerial != ""){
       socketLogger.debug(`[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`);
-      this.frsSocket.emit("programStatus", statusData);
+      this.frsSocket.emit("programStatus", msgpack.encode(statusData));
     }
   }, 1000);
 
@@ -661,7 +688,7 @@ export class SocketGateway
     this.server.emit('status',json);
 
     if(this.frsSocket?.connected){
-        this.frsSocket.emit('status',{robotSerial:global.robotSerial,data:json});
+        this.frsSocket.emit('status',msgpack.encode({robotSerial:global.robotSerial,data:json}));
     }
 
     this.robotState = {...this.robotState,...json};
@@ -672,8 +699,10 @@ export class SocketGateway
     const json = JSON.parse(payload);
     this.server.emit('moveStatus',json);
     if(this.frsSocket?.connected){
-      this.frsSocket.emit('moveStatus',{robotSerial:global.robotSerial,data:json});
+      this.frsSocket.emit('moveStatus',msgpack.encode({robotSerial:global.robotSerial,data:json}));
     }
+
+    // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
     this.robotState = {...this.robotState,...json};
   }
 
@@ -689,7 +718,7 @@ export class SocketGateway
       this.server.emit('moveResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('moveResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('moveResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       this.moveState = json;
 
@@ -708,7 +737,7 @@ export class SocketGateway
       this.server.emit('loadResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('loadResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('loadResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV loadResponse: ${JSON.stringify(json)}`,
@@ -725,7 +754,7 @@ export class SocketGateway
       this.server.emit('mappingResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('mappingResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('mappingResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV mappingResponse: ${JSON.stringify(json)}`,
@@ -747,7 +776,7 @@ export class SocketGateway
       this.server.emit('localizationResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('localizationResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('localizationResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV localizationResponse: ${JSON.stringify(json)}`,
@@ -764,7 +793,7 @@ export class SocketGateway
       this.server.emit('randomseqResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('randomseqResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('randomseqResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV randomseqResponse: ${JSON.stringify(json)}`,
@@ -781,7 +810,7 @@ export class SocketGateway
       this.server.emit('dockResponse', json);
 
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('dockResponse',{robotSerial:global.robotSerial,data:json})
+        this.frsSocket.emit('dockResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV dockResponse: ${JSON.stringify(json)}`,
@@ -798,7 +827,7 @@ export class SocketGateway
     try{
       this.server.emit("lidarCloud",payload);
       if(this.frsSocket?.connected){
-        this.frsSocket.emit('lidarCloud',{robotSerial:global.robotSerial,data:Payload})
+        this.frsSocket.emit('lidarCloud',msgpack.encode({robotSerial:global.robotSerial,data:Payload}))
       }
       this.lidarCloud = payload;
     }catch(error){
@@ -826,7 +855,7 @@ export class SocketGateway
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.emit("localPath", sendData);
+        this.frsSocket.emit("localPath", msgpack.encode(sendData));
       }
     }catch(error){
       socketLogger.error(`[STATUS] localPath: ${errorToJson(error)}`);
@@ -843,7 +872,7 @@ export class SocketGateway
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.emit("globalPath", sendData);
+        this.frsSocket.emit("globalPath", msgpack.encode(sendData));
       }
     }catch(error){
       socketLogger.error(`[STATUS] globalPath: ${errorToJson(error)}`);
