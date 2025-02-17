@@ -101,7 +101,7 @@ async function bootstrap() {
   const port = 11334;
   await app.listen(port);
   // HTTPS 서버를 생성
-  const httpsServer = https.createServer(httpsOptions, app.getHttpAdapter().getInstance());
+  // const httpsServer = https.createServer(httpsOptions, app.getHttpAdapter().getInstance());
 
   // Socket.io 어댑터와 함께 WebSocket 연결 처리
   // const socketGateway = app.get(SocketGateway);
