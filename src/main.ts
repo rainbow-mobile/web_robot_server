@@ -34,10 +34,10 @@ async function bootstrap() {
   });
 
   // HTTPS를 위한 SSL 인증서
-  const httpsOptions = {
-    key: fs.readFileSync(os.homedir() + '/key.pem'),
-    cert: fs.readFileSync(os.homedir() + '/cert.pem'),
-  };
+  // const httpsOptions = {
+  //   key: fs.readFileSync(os.homedir() + '/key.pem'),
+  //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
+  // };
 
   
   app.use(bodyParser.json({limit:'1mb'}))
