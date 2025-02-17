@@ -258,7 +258,7 @@ export class SocketGateway
 
       this.frsSocket.on('init', (_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[INIT] FRS Get init: ${JSON.stringify(json)}`)
           if(this.debugMode){
@@ -280,7 +280,7 @@ export class SocketGateway
 
       this.frsSocket.on('move',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -298,7 +298,7 @@ export class SocketGateway
 
       this.frsSocket.on('load',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -316,7 +316,7 @@ export class SocketGateway
 
       this.frsSocket.on('motor',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -334,7 +334,7 @@ export class SocketGateway
 
       this.frsSocket.on('localization',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Localization: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -352,7 +352,7 @@ export class SocketGateway
 
       this.frsSocket.on('randomseq',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS randomseq: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -370,7 +370,7 @@ export class SocketGateway
 
       this.frsSocket.on('mapping',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -388,7 +388,7 @@ export class SocketGateway
 
       this.frsSocket.on('dock',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -406,7 +406,7 @@ export class SocketGateway
 
       this.frsSocket.on('lidarOnOff',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS lidarOnOff: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -422,7 +422,7 @@ export class SocketGateway
 
       this.frsSocket.on('led',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -438,7 +438,7 @@ export class SocketGateway
 
       this.frsSocket.on('pathOnOff',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS pathOnOff: ${JSON.stringify(json)}`);
           if(this.debugMode){
@@ -454,7 +454,7 @@ export class SocketGateway
 
       this.frsSocket.on('path',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.server.emit("path",stringifyAllValues(json))
@@ -466,7 +466,7 @@ export class SocketGateway
 
       this.frsSocket.on('vobsRobots',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
           this.server.emit("vobsRobots",stringifyAllValues(json))
@@ -477,7 +477,7 @@ export class SocketGateway
 
       this.frsSocket.on('vobsClosures',(_data) => {
         try{
-          const data = msgpack.decode(_data);
+          const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
           this.server.emit("vobsClosures",stringifyAllValues(json))
