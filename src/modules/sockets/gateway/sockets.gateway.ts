@@ -194,7 +194,7 @@ export class SocketGateway
   
   async connectFrsSocket(url:string){
     try{
-      url="http://10.108.1.5:3001/socket/robots"
+      // url="http://10.108.1.5:3001/socket/robots"
       if(global.robotSerial == undefined || global.robotSerial == ""){
         socketLogger.warn(`[CONNECT] FRS Socket pass : robotSerial missing`);
         return;
