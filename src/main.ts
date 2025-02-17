@@ -16,6 +16,11 @@ import { ConfigService } from '@nestjs/config';
 import * as bodyParser from 'body-parser';
 import {ServeStaticModule} from '@nestjs/serve-static';
 import { instrument } from '@socket.io/admin-ui';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as https from 'https';
+import { osInfo } from 'systeminformation';
+import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +32,12 @@ async function bootstrap() {
     credentials: false,
     origin: '*',
   });
+
+  // HTTPS를 위한 SSL 인증서
+  // const httpsOptions = {
+  //   key: fs.readFileSync(os.homedir() + '/key.pem'),
+  //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
+  // };
 
   
   app.use(bodyParser.json({limit:'1mb'}))
@@ -89,6 +100,14 @@ async function bootstrap() {
 
   const port = 11334;
   await app.listen(port);
+  // HTTPS 서버를 생성
+  // const httpsServer = https.createServer(httpsOptions, app.getHttpAdapter().getInstance());
+
+  // Socket.io 어댑터와 함께 WebSocket 연결 처리
+  // const socketGateway = app.get(SocketGateway);
+  // httpsServer.listen(443, () => {
+  //   console.log('HTTPS server running on wss://localhost:11337');
+  // });
 }
 
 bootstrap();
