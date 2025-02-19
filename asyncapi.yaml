@@ -1,372 +1,1037 @@
-asyncapi: 2.0.0
-
+asyncapi: '3.0.0'
 info:
-  title: Kraken Websockets API
-  version: '1.8.0'
-  description: |
-    WebSockets API offers real-time market data updates. WebSockets is a bidirectional protocol offering fastest real-time data, helping you build real-time applications. The public message types presented below do not require authentication. Private-data messages can be subscribed on a separate authenticated endpoint. 
-
-    ### General Considerations
-
-    - TLS with SNI (Server Name Indication) is required in order to establish a Kraken WebSockets API connection. See Cloudflare's [What is SNI?](https://www.cloudflare.com/learning/ssl/what-is-sni/) guide for more details.
-    - All messages sent and received via WebSockets are encoded in JSON format
-    - All decimal fields (including timestamps) are quoted to preserve precision.
-    - Timestamps should not be considered unique and not be considered as aliases for transaction IDs. Also, the granularity of timestamps is not representative of transaction rates.
-    - At least one private message should be subscribed to keep the authenticated client connection open.
-    - Please use REST API endpoint [AssetPairs](https://www.kraken.com/features/api#get-tradable-pairs) to fetch the list of pairs which can be subscribed via WebSockets API. For example, field 'wsname' gives the supported pairs name which can be used to subscribe.
-    - Cloudflare imposes a connection/re-connection rate limit (per IP address) of approximately 150 attempts per rolling 10 minutes. If this is exceeded, the IP is banned for 10 minutes.
-    - Recommended reconnection behaviour is to (1) attempt reconnection instantly up to a handful of times if the websocket is dropped randomly during normal operation but (2) after maintenance or extended downtime, attempt to reconnect no more quickly than once every 5 seconds. There is no advantage to reconnecting more rapidly after maintenance during cancel_only mode.
-
+  title: RRS socket
+  version: '1.0.0'
+  description:  |
+    RRS에서 주고받는 socket.io 프로토콜 형식
 servers:
-  public:
-    url: ws.kraken.com
-    protocol: wss
-    description: |
-      Public server available without authorization.
-      Once the socket is open you can subscribe to a public channel by sending a subscribe request message.
-  private:
-    url: ws-auth.kraken.com
-    protocol: wss
-    description: |
-      Private server that requires authorization.
-      Once the socket is open you can subscribe to private-data channels by sending an authenticated subscribe request message.
-
-      The API client must request an authentication "token" via the following REST API endpoint "GetWebSocketsToken" to connect to WebSockets Private endpoints. For more details read https://support.kraken.com/hc/en-us/articles/360034437672-How-to-retrieve-a-WebSocket-authentication-token-Example-code-in-Python-3
-
-      The resulting token must be provided in the "token" field of any new private WebSocket feed subscription: 
-      ```
-      {
-        "event": "subscribe",
-        "subscription":
-        {
-          "name": "ownTrades",
-          "token": "WW91ciBhdXRoZW50aWNhdGlvbiB0b2tlbiBnb2VzIGhlcmUu"
-        }
-      }
-      ```
+  production:
+    host: localhost.com:11337
+    pathname: /
+    protocol: ws
 
 channels:
-  /:
-    publish:
-      description: Send messages to the API
-      operationId: processReceivedMessage
-      message:
-        oneOf:
-          - $ref: '#/components/messages/ping'
-          - $ref: '#/components/messages/subscribe'
-          - $ref: '#/components/messages/unsubscribe'
+  root:
+    # address: '/'
+    messages:
+      $ref: '#/components/messages'
 
-    subscribe:
-      description: Messages that you receive from the API
-      operationId: sendMessage
-      message:
-        oneOf:
-          - $ref: '#/components/messages/pong'
-          - $ref: '#/components/messages/heartbeat'
-          - $ref: '#/components/messages/systemStatus'
-          - $ref: '#/components/messages/subscriptionStatus'
 
+operations:
+  moveCommand:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/moveCommand'
+  moveResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/moveResponse'
+  localization:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/localization'
+  localizationResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/localizationResponse'
+  load:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/load'
+  loadResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/loadResponse'
+  dock:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/dock'
+  dockResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/dockResponse'
+  mapping:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/mapping'
+  mappingResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/mappingResponse'
+  randomseq:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/randomseq'
+  randomseqResponse:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/randomseqResponse'
+  motor:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/motor'
+  led:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/led'
+  lidarOnOff:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/lidarOnOff'
+  pathOnOff:
+    action: send
+    channel:
+      $ref: '#/channels/root'
+    messages: 
+      - $ref: '#/channels/root/messages/pathOnOff'
+
+
+
+
+  statusListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/status'
+  moveStatusListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/moveStatus'
+  programStatusListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/programStatus'
+  localPathListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/localPath'
+  globalPathListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/globalPath'
+  lidarCloudListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/lidarCloud'
+  mappingCloudListener:
+    action: receive
+    channel:
+      $ref: '#/channels/root'
+    messages:
+      - $ref: '#/channels/root/messages/mappingCloud'
+  
+      
 components:
   messages:
-    ping:
-      summary: Ping server to determine whether connection is alive
-      description: Client can ping server to determine whether connection is alive, server responds with pong. This is an application level ping as opposed to default ping in websockets standard which is server initiated
+    localization:
+      summary: 위치초기화 명령
       payload:
-        $ref: '#/components/schemas/ping'
-      x-response:
-        $ref: '#/components/messages/pong'
-    heartbeat:
-      description: Server heartbeat sent if no subscription traffic within 1 second (approximately)
+        type: object
+        properties:
+          command:
+            type: string
+            description: 위치초기화 명령
+            default: "semiautoinit"
+            enum:
+              - semiautoinit
+              - autoinit
+              - init
+              - start
+              - stop
+              - randominit
+          x:
+            type: string
+            description: 초기화 로봇의 위치 X (command==init 일때만 참조)
+            default: "0.000"
+          y:
+            type: string
+            description: 초기화 로봇의 위치 Y (command==init 일때만 참조)
+            default: "0.000"
+          rz:
+            type: string
+            description: 초기화 로봇의 위치 RZ (command==init 일때만 참조)
+            default: "0.000"
+          seed:
+            type: string
+            description: 초기화 로봇의 노드 ID (command==randominit 일때만 참조)
+            default: ""
+    localizationResponse:
+      summary: 위치초기화 응답
       payload:
-        $ref: '#/components/schemas/heartbeat'
-    pong:
-      summary: Pong is a response to ping message
-      description: Server pong response to a ping to determine whether connection is alive. This is an application level pong as opposed to default pong in websockets standard which is sent by client in response to a ping
+        type: object
+        properties:
+          command:
+            type: string
+            description: 위치초기화 명령
+            default: "semiautoinit"
+            enum:
+              - semiautoinit
+              - autoinit
+              - init
+              - start
+              - stop
+              - randominit
+          result:
+            type: string
+            description: 위치초기화 응답
+            default: "success"
+            enum: 
+              - accept
+              - reject
+              - success
+              - fail
+    load:
+      summary: SLAMNAV 로드요청
       payload:
-        $ref: '#/components/schemas/pong'
-    systemStatus:
-      description: Status sent on connection or system status changes.
+        type: object
+        properties:
+          command:
+            type: string
+            description: 로드 명령
+            default: "mapload"
+            enum:
+              - mapload
+          name:
+            type: string
+            description: 요청하는 맵 이름
+            default: "map_test"
+    loadResponse:
+      summary: SLAMNAV 로드요청 응답
       payload:
-        $ref: '#/components/schemas/systemStatus'
-      examples:
-        - payload:
-            connectionID: 8628615390848610000
-            event: systemStatus
-            status: online
-            version: 1.0.0
-    subscribe:
-      description: Subscribe to a topic on a single or multiple currency pairs.
+        type: object
+        properties:
+          command:
+            type: string
+            description: 로드 명령
+            default: "mapload"
+            enum:
+              - mapload
+          name:
+            type: string
+            description: 요청하는 맵 이름
+            default: "map_test"
+          result:
+            type: string
+            description: 로드 응답
+            default: "success"
+            enum: 
+              - accept
+              - reject
+              - success
+              - fail
+          message:
+            type: string
+            description: result가 reject, fail 일때의 사유
+            default: ""
+    motor:
+      summary: 로봇 모터 제어명령
       payload:
-        $ref: '#/components/schemas/subscribe'
-      examples:
-        - payload:
-            event: subscribe
-            pair:
-              - XBT/USD
-              - XBT/EUR
-            subscription:
-              name: ticker
-        - payload:
-            event: subscribe
-            subscription:
-              name: ownTrades
-              token: WW91ciBhdXRoZW50aWNhdGlvbiB0b2tlbiBnb2VzIGhlcmUu
-      x-response:
-        $ref: '#/components/messages/subscriptionStatus'
-    unsubscribe:
-      description: Unsubscribe, can specify a channelID or multiple currency pairs.
+        type: object
+        peoperties:
+          command:
+            type: string
+            description: 모터 제어 on/off
+            default: 'on'
+            enum:
+              - on
+              - off
+    led:
+      summary: LED 제어명령
       payload:
-        $ref: '#/components/schemas/subscribe'
-      examples:
-        - payload:
-            event: unsubscribe
-            pair:
-              - XBT/EUR
-              - XBT/USD
-            subscription:
-              name: ticker
-        - payload:
-            event: unsubscribe
-            subscription:
-              name: ownTrades
-              token: WW91ciBhdXRoZW50aWNhdGlvbiB0b2tlbiBnb2VzIGhlcmUu
-      x-response:
-        $ref: '#/components/messages/subscriptionStatus'
-    subscriptionStatus:
-      description: Subscription status response to subscribe, unsubscribe or exchange initiated unsubscribe.
+        type: object
+        peoperties:
+          command:
+            type: string
+            description: LED 수동제어 on/off. on인 경우 led 색상대로 켜지고 off인 경우 로봇 주행상태에 따라 자동 조절됨 
+            default: 'on'
+            enum:
+              - on
+              - off
+          led:
+            type: string
+            description: LED 수동제어 색상. (left yellow blinke / right yellow blink는 s100 모델은 지원안함)
+            default: 'none'
+            enum:
+              - none
+              - red
+              - blue
+              - white
+              - green
+              - magenta
+              - yellow
+              - red blink
+              - blue blink
+              - white blink
+              - green blink
+              - magenta blink
+              - yellow blink
+              - left yellow blink
+              - right yellow blink
+    lidarOnOff:
+      summary: lidarCloud 전송주기 제어명령
       payload:
-        $ref: '#/components/schemas/subscriptionStatus'
-      examples:
-        - payload:
-            channelID: 10001
-            channelName: ohlc-5
-            event: subscriptionStatus
-            pair: XBT/EUR
-            reqid: 42
-            status: unsubscribed
-            subscription:
-              interval: 5
-              name: ohlc
-        - payload:
-            errorMessage: Subscription depth not supported
-            event: subscriptionStatus
-            pair: XBT/USD
-            status: error
-            subscription:
-              depth: 42
-              name: book
+        type: object
+        peoperties:
+          command: 
+            type: string
+            description: 전송 on/off
+            default: on
+            enum:
+              - on
+              - off
+          frequency:
+            type: string
+            description: 전송 주기 (HZ)
+            default: "1"
+    pathOnOff:
+      summary: localPath, globalPath 전송주기 제어명령
+      payload:
+        type: object
+        peoperties:
+          command: 
+            type: string
+            description: 전송 on/off
+            default: on
+            enum:
+              - on
+              - off
+          frequency:
+            type: string
+            description: 전송 주기 (HZ)
+            default: "1"
 
-  schemas:
-    ping:
-      type: object
-      properties:
-        event:
-          type: string
-          const: ping
-        reqid:
-          $ref: '#/components/schemas/reqid'
-      required:
-        - event
-    heartbeat:
-      type: object
-      properties:
-        event:
-          type: string
-          const: heartbeat
-    pong:
-      type: object
-      properties:
-        event:
-          type: string
-          const: pong
-        reqid:
-          $ref: '#/components/schemas/reqid'
-    systemStatus:
-      type: object
-      properties:
-        event:
-          type: string
-          const: systemStatus
-        connectionID:
-          type: integer
-          description: The ID of the connection
-        status:
-          $ref: '#/components/schemas/status'
-        version:
-          type: string
+    moveCommand:
+      summary: 이동 명령
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            default: "goal"
+            description: 이동 명령값
+            enum:
+              - goal
+              - jog
+              - target
+              - pause
+              - resume
+              - stop
+          preset:
+            type: string
+            description: 속도 프리셋 (기본 0)
+            default: "0"
+          method:
+            type: string
+            description: 주행 방식
+            default: pp
+            enum:
+              - pp
+          goal_id:
+            type: string
+            description: 골 ID (command == goal 일때만 참조)
+            default: ""
+          x:
+            type: string
+            description: 골위치 X (command == target 일때만 참조)
+            default: "0.000"
+          y:
+            type: string
+            description: 골위치 Y (command == target 일때만 참조)
+            default: "0.000"
+          z:
+            type: string
+            description: 골위치 Z (command == target 일때만 참조)
+            default: "0.000"
+          rz:
+            type: string
+            default: "0.000"
+            description: 골위치 RZ (command == target 일때만 참조)
+          vx:
+            type: string
+            description: X방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+          vy:
+            type: string
+            description: Y방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+          wz:
+            type: string
+            description: 회전(Z)방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+    moveResponse:
+      summary: moveCommand 명령에 따른 응답
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            default: "goal"
+            description: 이동 명령값
+            enum:
+              - goal
+              - jog
+              - target
+              - pause
+              - resume
+              - stop
+          result: 
+            type: string
+            description: moveCommand 응답
+            default: 'accept'
+            enum:
+              - accept
+              - reject
+              - success
+              - fail
+          message:
+            type: string
+            description: result가 reject이나 fail일때 그 사유
+            default: ""
+          preset:
+            type: string
+            description: 속도 프리셋 (기본 0)
+            default: "0"
+          method:
+            type: string
+            description: 주행 방식
+            default: pp
+            enum:
+              - pp
+          goal_id:
+            type: string
+            description: 골 ID (command == goal 일때만 참조)
+            default: ""
+          x:
+            type: string
+            description: 골위치 X (command == target 일때만 참조)
+            default: "0.000"
+          y:
+            type: string
+            description: 골위치 Y (command == target 일때만 참조)
+            default: "0.000"
+          z:
+            type: string
+            description: 골위치 Z (command == target 일때만 참조)
+            default: "0.000"
+          rz:
+            type: string
+            default: "0.000"
+            description: 골위치 RZ (command == target 일때만 참조)
+          vx:
+            type: string
+            description: X방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+          vy:
+            type: string
+            description: Y방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+          wz:
+            type: string
+            description: 회전(Z)방향 속도 (command == jog 일때만 참조)
+            default: "0.000"
+
+    dock:
+      summary: 도킹 제어명령 (지원하는 모델만)
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 도킹명령
+            default: "dock"
+            enum:
+              - dock
+              - undock
+    dockResponse:
+      summary: 도킹 제어명령 응답 (지원하는 모델만)
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 도킹명령
+            default: "dock"
+            enum:
+              - dock
+              - undock
+          result:
+            type: string
+            description: 도킹명령 응답
+            default: "accept"
+            enum:
+              - accept
+              - reject
+              - success
+              - fail
+          message:
+            type: string
+            description: result == reject, fail 일때 사유
+            default: ""
+    mapping:
+      summary: 매핑 제어명령
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 매핑명령
+            default: "start"
+            enum:
+              - start
+              - stop
+              - save
+          name:
+            type: string
+            description: 매핑한 맵 저장이름 (command == save 일때만 참조)
+            default : ""
+    mappingResponse:
+      summary: 도킹 제어명령 응답 (지원하는 모델만)
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 매핑명령
+            default: "start"
+            enum:
+              - start
+              - stop
+              - save
+          name:
+            type: string
+            description: 매핑한 맵 저장이름 (command == save 일때만 참조)
+            default : ""
+          result:
+            type: string
+            description: 매핑명령 응답
+            default: "accept"
+            enum:
+              - accept
+              - reject
+              - success
+              - fail
+          message:
+            type: string
+            description: result == reject, fail 일때 사유
+            default: ""
+    randomseq:
+      summary: 랜덤 순회 제어 명령
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 랜덤 순회 명령
+            default: "randomseq"
+            enum:
+              - randomseq
+    randomseqResponse:
+      summary: 도킹 제어명령 응답 (지원하는 모델만)
+      payload:
+        type: object
+        properties:
+          command:
+            type: string
+            description: 랜덤 순회 명령
+            default: "randomseq"
+            enum:
+              - randomseq
+          result:
+            type: string
+            description: 랜덤 순회 명령 응답
+            default: "accept"
+            enum:
+              - accept
+              - reject
+              - success
+              - fail
+          message:
+            type: string
+            description: result == reject, fail 일때 사유
+            default: ""
     status:
-      type: string
-      enum:
-        - online
-        - maintenance
-        - cancel_only
-        - limit_only
-        - post_only
-    subscribe:
+      summary: SLAMNAV2가 송신하는 로봇 상태정보 (2HZ)
+      payload:
+        $ref: '#/components/schemas/status'
+    moveStatus:
+      summary: SLAMNAV2가 송신하는 로봇 이동 상태정보 (10HZ)
+      payload:
+        $ref: '#/components/schemas/moveStatus'
+    programStatus:
+      summary: RRS에 연결된 프로그램 상태 정보 (1HZ)
+      payload:
+        $ref: '#/components/schemas/programStatus'
+    localPath:
+      summary: SLAMNAV2가 송신하는 로컬경로 (변경될때마다)
+      payload:
+        $ref: '#/components/schemas/localPath'
+    globalPath:
+      summary: SLAMNAV2가 송신하는 글로벌경로 (변경될때마다)
+      payload:
+        $ref: '#/components/schemas/globalPath'
+    lidarCloud:
+      summary: SLAMNAV2가 송신하는 라이다클라우드와 로봇의 현재 위치 (1HZ)
+      payload:
+        $ref: '#/components/schemas/lidarCloud'
+    mappingCloud:
+      summary: SLAMNAV2가 송신하는 매핑클라우드 (변경될때마다)
+      payload:
+        $ref: '#/components/schemas/mappingCloud'
+  
+  schemas:
+    lidarCloud:
       type: object
+      description: 라이다 포인트 좌표
       properties:
-        event:
-          type: string
-          const: subscribe
-        reqid:
-          $ref: '#/components/schemas/reqid'
-        pair:
-          $ref: '#/components/schemas/pair'
-        subscription:
+        pose:
           type: object
+          description: 로봇 현재 위치
           properties:
-            depth:
-              $ref: '#/components/schemas/depth'
-            interval:
-              $ref: '#/components/schemas/interval'
-            name:
-              $ref: '#/components/schemas/name'
-            ratecounter:
-              $ref: '#/components/schemas/ratecounter'
-            snapshot:
-              $ref: '#/components/schemas/snapshot'
-            token:
-              $ref: '#/components/schemas/token'
-          required:
-            - name
-      required:
-        - event
-    unsubscribe:
-      type: object
-      properties:
-        event:
-          type: string
-          const: unsubscribe
-        reqid:
-          $ref: '#/components/schemas/reqid'
-        pair:
-          $ref: '#/components/schemas/pair'
-        subscription:
-          type: object
-          properties:
-            depth:
-              $ref: '#/components/schemas/depth'
-            interval:
-              $ref: '#/components/schemas/interval'
-            name:
-              $ref: '#/components/schemas/name'
-            token:
-              $ref: '#/components/schemas/token'
-          required:
-            - name
-      required:
-        - event
-    subscriptionStatus:
-      type: object
-      oneOf:
-        - $ref: '#/components/schemas/subscriptionStatusError'
-        - $ref: '#/components/schemas/subscriptionStatusSuccess'
-    subscriptionStatusError:
-      allOf:
-        - properties:
-            errorMessage:
+            x:
               type: string
-          required:
-            - errorMessage
-        - $ref: '#/components/schemas/subscriptionStatusCommon'
-    subscriptionStatusSuccess:
-      allOf:
-        - properties:
-            channelID:
-              type: integer
-              description: ChannelID on successful subscription, applicable to public messages only.
-            channelName:
+              default: "0.000"
+            y:
               type: string
-              description: Channel Name on successful subscription. For payloads 'ohlc' and 'book', respective interval or depth will be added as suffix.
-          required:
-            - channelID
-            - channelName
-        - $ref: '#/components/schemas/subscriptionStatusCommon'
-    subscriptionStatusCommon:
-      type: object
-      required:
-         - event
-      properties:
-        event:
-          type: string
-          const: subscriptionStatus
-        reqid:
-          $ref: '#/components/schemas/reqid'
-        pair:
-          $ref: '#/components/schemas/pair'
-        status:
-          $ref: '#/components/schemas/status'
-        subscription:
-          required:
-            - name
-          type: object
-          properties:
-            depth:
-              $ref: '#/components/schemas/depth'
-            interval:
-              $ref: '#/components/schemas/interval'
-            maxratecount:
-              $ref: '#/components/schemas/maxratecount'
-            name:
-              $ref: '#/components/schemas/name'
-            token:
-              $ref: '#/components/schemas/token'
-    interval:
-      type: integer
-      description: Time interval associated with ohlc subscription in minutes.
-      default: 1
-      enum:
-        - 1
-        - 5
-        - 15
-        - 30
-        - 60
-        - 240
-        - 1440
-        - 10080
-        - 21600
-    name:
-      type: string
-      description: The name of the channel you subscribe too.
-      enum:
-        - book
-        - ohlc
-        - openOrders
-        - ownTrades
-        - spread
-        - ticker
-        - trade
-    token:
-      type: string
-      description: base64-encoded authentication token for private-data endpoints.
-    depth:
-      type: integer
-      default: 10
-      enum:
-        - 10
-        - 25
-        - 100
-        - 500
-        - 1000
-      description: Depth associated with book subscription in number of levels each side.
-    maxratecount:
-      type: integer
-      description: Max rate-limit budget. Compare to the ratecounter field in the openOrders updates to check whether you are approaching the rate limit.
-    ratecounter:
-      type: boolean
-      default: false
-      description: Whether to send rate-limit counter in updates (supported only for openOrders subscriptions)
-    snapshot:
-      type: boolean
-      default: true
-      description: Whether to send historical feed data snapshot upon subscription (supported only for ownTrades subscriptions)
-    reqid:
-      type: integer
-      description: client originated ID reflected in response message.
-    pair:
+              default: "0.000"
+            rz:
+              type: string
+              default: "0.000"
+        data:
+          type: array
+          description: 라이다 위치 (360도 360포인트) 각 요소는 x, y, z, intensity
+          items:
+            type: array
+            default: ["0","0","0","0"]
+    mappingCloud:
       type: array
-      description: Array of currency pairs.
+      description: 매핑 중 클라우드 좌표(추가된 포인트만 송신) 각 요소는 x, y, z, intensity
       items:
-        type: string
-        description: Format of each pair is "A/B", where A and B are ISO 4217-A3 for standardized assets and popular unique symbol if not standardized.
-        pattern: '[A-Z\s]+\/[A-Z\s]+'
+        type: array
+        default: ["0","0","0","0"]
+
+    localPath:
+      type: array
+      items:
+        type: array
+        description: SLAMNAV2가 송신하는 로컬 이동경로 좌표 (x, y, rz)
+        default: ["0","0","0"]
+    globalPath:
+      type: array
+      items:
+        type: array
+        description: SLAMNAV2가 송신하는 글로벌 이동경로 좌표 (x, y, rz)
+        default: ["0","0","0"]
+    programStatus:
+      type: object
+      description: SLAMNAV, TASKMAN 연결 상태
+      properties:
+        slam:
+          type: object
+          description: SLAMNAV
+          properties:
+            connection:
+              type: string
+              default: "false"
+        task:
+          type: object
+          description: TASKMAN
+          properties:
+            connection:
+              type: string
+              default: "false"
+            file:
+              type: string
+              description: 현재 로드된 파일 이름
+              default: ""
+            id:
+              type: number
+              description: 현재 실행중인 TASK id 위치
+              default: 0
+            running:
+              type: string
+              description: TASK 실행 상태
+              default: "false"
+            variables:
+              type: array
+              default: []
+    moveStatus:
+      type: object
+      description: SLAMNAV2가 송신하는 로봇 이동 상태 값(10Hz)
+      properties: 
+        move_state:
+          type: object
+          description: 이동 상태
+          properties:
+            auto_move:
+              type: string
+              description: 자율주행 이동 상태
+              default: not ready
+              enum:
+                - not ready
+                - stop
+                - move
+                - pause
+                - error
+                - vir
+            dock_move:
+              type: string
+              description: 도킹주행 이동 상태(미사용)
+              default: none
+            jog_move:
+              type: string
+              description: 조이스틱주행 이동 상태(미사용)
+              default: none
+            obs:
+              type: string
+              description: 주행 중 장애물 상태
+              default: none
+              enum:
+                - none
+                - far
+                - near
+                - vir
+            path:
+              type: string
+              description: 주행 경로 요청 상태
+              default: none
+              enum:
+                - none
+                - req_path
+                - recv_path
+        pose:
+          type: object
+          description: 로봇 글로벌 좌표 (위치초기화 된 상태에서 유의미)
+          properties:
+            x:
+              type: string
+              default: "0.000"
+            y:
+              type: string
+              default: "0.000"
+            rz:
+              type: string
+              default: "0.000"
+        vel:
+          type: object
+          description: 로봇 속도
+          properties:
+            vx:
+              type: string
+              default: "0.000"
+            vy:
+              type: string
+              default: "0.000"
+            wz:
+              type: string
+              default: "0.000"
+        goal_node:
+          type: object
+          description: 주행 목표지점 정보 및 상태
+          properties:
+            id:
+              type: string
+              description: 목표지점(goal) 노드 ID
+              default: ""
+            name:
+              type: string
+              description: 목표지점(goal) 노드 이름
+              default: ""
+            state:
+              type: string
+              description: 목표지점(goal) 이동 상태
+              default: "none"
+              enum:
+                - none
+                - move
+                - complete
+                - fail
+                - obstacle
+                - cancel
+            x:
+              type: string
+              default: "0.000"
+            y:
+              type: string
+              default: "0.000"
+            rz:
+              type: string
+              default: "0.000"
+        cur_node:
+          type: object
+          description: 주행 중 현재 위치한 노드 정보
+          properties:
+            id:
+              type: string
+              description: 현재지점(cur) 노드 ID
+              default: ""
+            name:
+              type: string
+              description: 현재지점(cur) 노드 이름
+              default: ""
+            x:
+              type: string
+              default: "0.000"
+            y:
+              type: string
+              default: "0.000"
+            rz:
+              type: string
+              default: "0.000"
+        time:
+          type: string
+          default: "21352345124124"
+          description: 발송 시간
+    status:
+      type: object
+      description: SLAMNAV2가 송신하는 로봇 기타 상태 값(2Hz)
+      properties:
+        imu:
+          type: object
+          description: IMU, GYR 센서 값
+          properties:
+            acc_x:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            acc_y:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            acc_z:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            gyr_x:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            gyr_y:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            gyr_z:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            imu_rx:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            imu_ry:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+            imu_rz:
+              type: string
+              default: "0.000"
+              description: string 형식이지만 float 값
+        lidar:
+          type: array
+          description: 라이다 연결상태, 정보
+          items:
+            type: object
+            properties:
+              connection:
+                type: string
+                default: "false"
+                description: 라이다 연결상태
+              port:
+                type: string
+                default: "LAN"
+                description: 라이다 연결포트
+              serialnumber:
+                type: string
+                default: "not yet"
+                description: 라이다 시리얼넘버
+        motor:
+          type: array
+          description: 모터 연결상태, 정보
+          items:
+            type: object
+            properties:
+              connection:
+                type: string
+                default: "false"
+                description: 모터 연결상태
+              current:
+                type: string
+                default: "0.000"
+                description: 모터 전류
+              status:
+                type: string
+                default: "0"
+                description: 모터 상태. 각 비트(8bit) 당 상태값을 나타냄.
+              temp:
+                type: string
+                default: "0.000"
+                description: 모터 온도
+        condition:
+          type: object
+          description: 위치초기화 상태
+          properties:
+            inlier_error:
+              type: string
+              description: 위치 에러
+              default: "0.000"
+            inlier_ratio:
+              type: string
+              description: 위치 정확도
+              default: "0.000"
+            mapping_error:
+              type: string
+              description: 매핑 에러율
+              default: "0.000"
+            mapping_ratio:
+              type: string
+              description: 매핑 정확도
+              default: "0.000"
+        robot_state:
+          type: object
+          description: 로봇 충전,도킹,파워,위치초기화 상태
+          properties:
+            charge:
+              type: string
+              description: 충전 상태 (SRV는 none, ready(충전 중) 값만 존재)
+              default: "none"
+              enum:
+                - none
+                - ready
+                - battery_on
+                - charging
+                - finish
+                - fail
+            dock:
+              type: string
+              description: 도킹 상태
+              default: "false"
+              enum:
+                - true
+                - false
+            emo:
+              type: string
+              description: 비상전원스위치 상태
+              default: "false"
+              enum:
+                - true
+                - false
+            localization:
+              type: string
+              description: 위치초기화 상태
+              default: "none"
+              enum:
+                - none
+                - good
+                - fail
+            power:
+              type: string
+              description: 전원 상태
+              default: "false"
+              enum:
+                - true
+                - false
+        power:
+          type: object
+          description: 전원 상태
+          properties:
+            bat_current:
+              type: string
+              description: 배터리 전류
+              default: "0.000"
+            bat_in:
+              type: string
+              description: 배터리 입력
+              default: "0.000"
+            bat_out:
+              type: string
+              description: 배터리 출력
+              default: "0.000"
+            bat_percent:
+              type: string
+              description: 배터리 현재값(%)
+              default: "0.000"
+            charge_current:
+              type: string
+              description: 충전 전류
+              default: "0.000"
+            contact_voltage:
+              type: string
+              description: 충전 접촉 전압
+              default: "0.000"
+            power:
+              type: string
+              description: 전력
+              default: "0.000"
+            total_power:
+              type: string
+              description: 누적 전력
+              default: "0.000"
+        setting:
+          type: object
+          description: 세팅값
+          properties:
+            platform_type:
+              type: string
+              description: 플랫폼 타입
+              default: "SRV"
+        map:
+          type: object
+          description: 맵 상태
+          properties:
+            map_name:
+              type: string
+              description: 맵 이름
+              default: ""
+            map_status:
+              type: string
+              description: 맵 로딩 상태 
+              default: "none"
+              enum:
+                - none
+                - loading
+                - loaded
+        time:
+          type: string
+          default: "21352345124124"
+          description: 발송 시간
+
