@@ -17,10 +17,12 @@ import * as bodyParser from 'body-parser';
 import {ServeStaticModule} from '@nestjs/serve-static';
 import { instrument } from '@socket.io/admin-ui';
 import * as fs from 'fs';
+import * as express from 'express';
 import * as os from 'os';
 import * as https from 'https';
 import { osInfo } from 'systeminformation';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -90,13 +92,16 @@ async function bootstrap() {
     },
   };
 
+  console.log(join(__dirname,'docs'))
+  app.use('/docs/socket',express.static(join(__dirname,'..','docs')));
 
-
-  app.use('/swagger', (req, res, next) => {
+  app.use('/docs/api', (req, res, next) => {
     res.removeHeader('Content-Security-Policy');
     next();
   });
-  SwaggerModule.setup('swagger', app, swaggerDocument, swaggerCustomOptions);
+
+  // app.use('/docs',express.static(join(__dirname,'..','public')));
+  SwaggerModule.setup('docs/api', app, swaggerDocument, swaggerCustomOptions);
 
   const port = 11334;
   await app.listen(port);

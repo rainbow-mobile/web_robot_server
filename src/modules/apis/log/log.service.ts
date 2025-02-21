@@ -43,6 +43,7 @@ export class LogService {
     ){
       this.checkTables('status',Query.create_status);  
       this.checkTables('system',Query.create_system);
+      this.checkTables('variables',Query.create_variables);
 
       setInterval(()=>{
         this.readMemoryUsage();
