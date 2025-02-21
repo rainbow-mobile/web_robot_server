@@ -33,6 +33,7 @@ import { Payload } from '@nestjs/microservices';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as msgpack from 'msgpack-lite';
+import { TcpServerService } from '@sockets/tcp/tcp.service';
 
 @Global()
 @WebSocketGateway(11337,{
@@ -46,7 +47,7 @@ import * as msgpack from 'msgpack-lite';
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy, OnGatewayInit
 {
-  constructor(private readonly networkService:NetworkService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
+  constructor(private readonly networkService:NetworkService, private readonly tcpService:TcpServerService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
 
   }
   afterInit(){
@@ -54,6 +55,7 @@ export class SocketGateway
       auth: false,
       mode: "development",
     });
+    this.tcpService.start();
   }
 
   @WebSocketServer()
@@ -273,6 +275,7 @@ export class SocketGateway
           // to be continue...
           // this.mqttService.connect();
           // this.kafakService.connect();
+
         }catch(error){
           socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
