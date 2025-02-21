@@ -734,12 +734,10 @@ export class LogService {
 
     async checkTables(name:string, query:string) {
       httpLogger.debug(`checkTables: ${name}`)
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      httpLogger.debug(`checkTables connect: ${name}`)
       try{
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
         await queryRunner.startTransaction();
-        httpLogger.debug(`checkTables startTransaction: ${name}`)
         // 테이블 존재 여부 확인
         const [rows] = await queryRunner.query(`
             SELECT COUNT(*)
@@ -754,7 +752,7 @@ export class LogService {
           await queryRunner.query(query);
           httpLogger.info(`[LOG] checkTable: Table "${name}" created successfully.`);
         }else{
-          httpLogger.info(`[LOG] checkTable: Table "${name}" has`);
+          httpLogger.info(`[LOG] checkTable: Table "${name}" exist.`);
         }
       }catch(error){
         httpLogger.error(`[LOG] checkTable: ${errorToJson(error)}`)
