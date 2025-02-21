@@ -41,13 +41,18 @@ export class LogService {
         
         private readonly dataSource: DataSource
     ){
-      this.checkTables('status',Query.create_status);  
-      this.checkTables('system',Query.create_system);
-      this.checkTables('variables',Query.create_variables);
+      console.log("log constructor")
+      this.init();
 
       setInterval(()=>{
         this.readMemoryUsage();
       },500)
+    }
+
+    async init(){
+      await this.checkTables('variables',Query.create_variables);
+      this.checkTables('status',Query.create_status);  
+      this.checkTables('system',Query.create_system);
     }
 
     private systemUsage = null;
@@ -729,9 +734,9 @@ export class LogService {
 
     async checkTables(name:string, query:string) {
       httpLogger.debug(`checkTables: ${name}`)
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
       try{
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
         await queryRunner.startTransaction();
         // 테이블 존재 여부 확인
         const [rows] = await queryRunner.query(`
@@ -746,6 +751,8 @@ export class LogService {
           httpLogger.info(`[LOG] checkTable: Table "${name}" does not exist. Creating...`);
           await queryRunner.query(query);
           httpLogger.info(`[LOG] checkTable: Table "${name}" created successfully.`);
+        }else{
+          httpLogger.info(`[LOG] checkTable: Table "${name}" exist.`);
         }
       }catch(error){
         httpLogger.error(`[LOG] checkTable: ${errorToJson(error)}`)

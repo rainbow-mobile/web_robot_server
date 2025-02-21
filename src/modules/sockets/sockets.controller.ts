@@ -14,14 +14,18 @@ import { VariableDto } from '../apis/variables/dto/variables.dto';
 
 @ApiTags('소켓 관련 API (Sockets)')
 @Controller('sockets')
-export class SocketsController{
+export class SocketsController implements OnModuleInit{
   constructor(private readonly socketGateway: SocketGateway, private readonly variableService: VariablesService) {
+    
+  }
+
+  onModuleInit(){
+    console.log("socket init")
     this.getVariable();
     setTimeout(()=>{
       this.conSocket();
     },5000);
   }
-
 
   async getVariable(){
     global.robotSerial = await this.variableService.getVariable('robotSerial');
