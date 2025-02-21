@@ -8,7 +8,9 @@ import { Response } from 'express';
 @ApiTags('DB 관련 API (variables)')
 @Controller('variables')
 export class VariablesController {
-  constructor(private readonly variablesService: VariablesService) {}
+  constructor(private readonly variablesService: VariablesService) {
+    console.log("variables constructor")
+  }
 
   @Get()
   @ApiOperation({
