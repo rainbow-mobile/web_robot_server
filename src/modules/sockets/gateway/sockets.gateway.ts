@@ -217,7 +217,7 @@ export class SocketGateway
                   console.log("tcpClient command move : ",JSON.stringify(sendData));
                   this.slamnav.emit('move',sendData);
                 }else{
-                  socket.write('disconnected')
+                  this.tcpClient.write('disconnected')
                 }
               }else{
 
@@ -609,6 +609,10 @@ export class SocketGateway
           }
         });
       }
+      if(this.tcpClient){
+        socketLogger.debug(`[CONNECT] Send TCP : disconnected`);
+        this.tcpClient.write('disconnected')
+      }
       this.slamnav = null;
       this.moveState = {
           command: '',
@@ -789,7 +793,7 @@ export class SocketGateway
       }
 
       if(this.tcpClient){
-        console.log("tcpclient send moveresponse ",json.result);
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
         this.tcpClient.write(json.result);
       }
       this.moveState = json;
@@ -802,6 +806,7 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('loadResponse')
   async handleLoadReponseMessage(@MessageBody() payload: string) {
     try {
