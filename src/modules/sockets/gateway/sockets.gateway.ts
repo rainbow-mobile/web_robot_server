@@ -33,7 +33,7 @@ import { Payload } from '@nestjs/microservices';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as msgpack from 'msgpack-lite';
-
+import * as net from 'net';
 @Global()
 @WebSocketGateway(11337,{
   transports:['websocket','polling'],
@@ -54,11 +54,14 @@ export class SocketGateway
       auth: false,
       mode: "development",
     });
+    this.TCP_Open();
   }
 
   @WebSocketServer()
   server: Server; // WebSocket server 객체
   socket: Socket;
+  tcpServer = null;
+  tcpClient = null;
 
   slamnav: Socket;
   taskman: Socket;
@@ -187,6 +190,69 @@ export class SocketGateway
   lidarCloud: any[] = [];
   debugMode: boolean = false;
 
+  TCP_Open(){
+    this.tcpServer = net.createServer((socket) => {
+      this.tcpClient = socket;
+      socketLogger.info(`[NETWORK] TCP Client Connected : ${socket.remoteAddress}`);
+    
+      // 클라이언트로부터 데이터 수신
+      this.tcpClient.on('data', (data) => {
+          socketLogger.info(`[NETWORK] TCP Data in : ${data.toString()}`);
+    
+          try{
+              const key = data.toString().split(' ')[0];
+              const command = data.toString().split(' ')[1];
+              if(key == "move"){
+                if(this.slamnav){
+                  let sendData;
+                  if(command == "stop"){
+                      sendData = {command:'stop'};
+                  }else if(command == "pause"){
+                    sendData = {command:'pause'};
+                  }else if(command == "resume"){
+                    sendData = {command:'resume'};
+                  }else{
+                    sendData = {command:'goal',goal_id:command,method:'pp',preset:'0',time:Date.now().toString()};
+                  }
+                  console.log("tcpClient command move : ",JSON.stringify(sendData));
+                  this.slamnav.emit('move',sendData);
+                }else{
+                  socket.write('disconnected')
+                }
+              }else{
+
+              }
+
+          }catch(error){
+              socketLogger.error(`[NETWORK] TCP Data Parse : ${errorToJson(error)}`)
+              this.tcpClient.write('error');
+          }
+          // // 클라이언트에 응답 전송
+          // socket.write(`서버 응답: ${data}`);
+      });
+    
+      // 클라이언트 연결 종료 처리
+      this.tcpClient.on('end', () => {
+          socketLogger.info(`[NETWORK] TCP Client Disconnected`);
+      });
+    
+      // 에러 처리
+      this.tcpClient.on('error', (err) => {
+          socketLogger.error(`[NETWORK TCP Server Error : ${errorToJson(err)}]`);
+      });
+    });
+
+    // 서버 시작
+    this.tcpServer.listen('11338', '0.0.0.0', () => {
+        socketLogger.info(`[NETWORK] TCP Server listen : 11338`)
+    });
+    
+    // 서버 에러 처리
+    this.tcpServer.on('error', (err) => {
+        socketLogger.error(`[NETWORK] TCP Server error : ${errorToJson(err)}`)
+
+    });
+  }
   setDebugMode(onoff:boolean){
     socketLogger.info(`[COMMAND] setDebugMode : ${onoff}`)
     this.debugMode = onoff;
@@ -273,6 +339,7 @@ export class SocketGateway
           // to be continue...
           // this.mqttService.connect();
           // this.kafakService.connect();
+
         }catch(error){
           socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`)
         }
@@ -719,6 +786,11 @@ export class SocketGateway
 
       if(this.frsSocket?.connected){
         this.frsSocket.emit('moveResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
+      }
+
+      if(this.tcpClient){
+        console.log("tcpclient send moveresponse ",json.result);
+        this.tcpClient.write(json.result);
       }
       this.moveState = json;
 
