@@ -1,10 +1,14 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Query, Res } from '@nestjs/common';
 import { MapService } from './map.service';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { GoalReadDto } from './dto/goal.read.dto';
+import { errorToJson } from '@common/util/error.util';
+import { PaginationResponse } from '@common/pagination/pagination.response';
+import { isNumber } from 'class-validator';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -151,6 +155,62 @@ export class MapController {
     }
   }
 
+  @Get('nodes/:mapNm')
+  @ApiOperation({
+    summary: '맵 노드 리스트 요청 (페이지네이션)',
+    description:'맵 노드 리스트를 요청합니다.'
+  })
+  async getNodes(@Param('mapNm') mapNm:string, @Query() param: GoalReadDto, @Res() res: Response){
+    try{
+      httpLogger.debug(`[MAP] getNodes: ${mapNm}, ${param.pageNo}, ${param.pageSize}, ${param.type}, ${param.searchText}`);
+      if(mapNm == ""){
+        return res.status(HttpStatus.BAD_REQUEST).send({message:"맵 이름이 지정되지 않았습니다"});
+      }
+      const data = await this.mapService.readTopology(mapNm);
+      const goals = [];
+      console.log(data.length)
+      if(Array.isArray(data)){
+        data.map((node) => {
+          if(node.type == param.type){
+            console.log("match")
+            if(param.searchText != "" && param.searchText != undefined){
+              if(node.id.includes(param.searchText) || node.name.includes(param.searchText)){
+                console.log("in")
+                goals.push({id:node.id, name:node.name, 
+                  x:node.pose.split(',')[0],
+                  y:node.pose.split(',')[1],
+                  rz:node.pose.split(',')[2],
+                });
+              }
+            }else{
+              goals.push({id:node.id, name:node.name, 
+                x:node.pose.split(',')[0],
+                y:node.pose.split(',')[1],
+                rz:node.pose.split(',')[2],
+               });
+            }
+          }
+        })
+      }
+
+
+      const totalItems = goals.length;
+      const startIndex:number = (Number(param.pageNo) - 1) * Number(param.pageSize);
+      const endIndex:number = startIndex + Number(param.pageSize);
+      const items = goals.slice(startIndex, endIndex);
+      //sort
+
+      console.log(items)
+      items.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
+      res.send(new PaginationResponse(goals.length, Number(param.pageSize), items));
+
+      
+    }catch(error){
+      httpLogger.error(`[LOG] getStatus Log : ${errorToJson(error)}`);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
+    }
+  }
+
   @Get('goals/:mapNm')
   @ApiOperation({
     summary: '맵 골 리스트 요청',
@@ -167,7 +227,11 @@ export class MapController {
       if(Array.isArray(response)){
         response.map((node) => {
           if(node.type == "GOAL" || node.type == "INIT"){
-            goals.push({id:node.id, name:node.name});
+            goals.push({id:node.id, name:node.name, 
+              x:node.pose.split(',')[0],
+              y:node.pose.split(',')[1],
+              rz:node.pose.split(',')[2],
+             });
           }
         })
       }
