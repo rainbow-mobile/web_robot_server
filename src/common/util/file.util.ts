@@ -6,7 +6,7 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import { errorToJson } from './error.util';
 
 export async function readJson(dir:string){
-    return new Promise(async(resolve,reject) => {
+    return new Promise<any[]>(async(resolve,reject) => {
         try{
             fs.open(dir, "r", (err,fd) => {
                 if(err){
