@@ -175,18 +175,14 @@ export class MapController {
             // console.log("match")
             if(param.searchText != "" && param.searchText != undefined){
               if(node.id.toLowerCase().includes(param.searchText.toLowerCase()) || node.name.toLowerCase().includes(param.searchText.toLowerCase())){
-                goals.push({
-                  id:node.id, 
-                  name:node.name, 
+                goals.push({id:node.id, name:node.name, 
                   x:node.pose.split(',')[0],
                   y:node.pose.split(',')[1],
                   rz:node.pose.split(',')[2],
                 });
               }
             }else{
-              goals.push({
-                id:node.id, 
-                name:node.name, 
+              goals.push({id:node.id, name:node.name, 
                 x:node.pose.split(',')[0],
                 y:node.pose.split(',')[1],
                 rz:node.pose.split(',')[2],
@@ -201,7 +197,6 @@ export class MapController {
       let startIndex:number = (Number(param.pageNo) - 1) * Number(param.pageSize);
       let endIndex:number = startIndex + Number(param.pageSize);
 
-      goals.sort((a,b)=> a.id.localeCompare(b.id,undefined,{numeric:true}));
       while(startIndex >= totalItems){
         param.pageNo--;
         startIndex = (Number(param.pageNo) - 1) * Number(param.pageSize);
@@ -212,7 +207,10 @@ export class MapController {
       //sort
 
       console.log(items)
+      items.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
       res.send(new PaginationResponse(goals.length, Number(param.pageSize), items));
+
+      
     }catch(error){
       httpLogger.error(`[LOG] getStatus Log : ${errorToJson(error)}`);
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({message:HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500});
