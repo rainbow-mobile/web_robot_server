@@ -172,12 +172,9 @@ export class MapController {
       if(Array.isArray(data)){
         data.map((node) => {
           if(node.type == param.type){
-            console.log("match")
+            // console.log("match")
             if(param.searchText != "" && param.searchText != undefined){
-              
-
               if(node.id.toLowerCase().includes(param.searchText.toLowerCase()) || node.name.toLowerCase().includes(param.searchText.toLowerCase())){
-                console.log("in")
                 goals.push({id:node.id, name:node.name, 
                   x:node.pose.split(',')[0],
                   y:node.pose.split(',')[1],
@@ -197,8 +194,15 @@ export class MapController {
 
 
       const totalItems = goals.length;
-      const startIndex:number = (Number(param.pageNo) - 1) * Number(param.pageSize);
-      const endIndex:number = startIndex + Number(param.pageSize);
+      let startIndex:number = (Number(param.pageNo) - 1) * Number(param.pageSize);
+      let endIndex:number = startIndex + Number(param.pageSize);
+
+      while(startIndex >= totalItems){
+        param.pageNo--;
+        startIndex = (Number(param.pageNo) - 1) * Number(param.pageSize);
+        endIndex = startIndex + Number(param.pageSize);
+      }
+      console.log(totalItems, startIndex,endIndex);
       const items = goals.slice(startIndex, endIndex);
       //sort
 
