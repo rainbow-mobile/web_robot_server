@@ -199,37 +199,78 @@ export class SocketGateway
       this.tcpClient.on('data', (data) => {
           socketLogger.info(`[NETWORK] TCP Data in : ${data.toString()}`);
           try{
-              const key = data.toString().split(' ')[0];
-              const command = data.toString().split(' ')[1];
-              if(key == "move"){
-                if(this.slamnav){
+              const command = data.toString().split(' ')[0];
+              const param = data.toString().split(' ')[1];
+              if(command == "req_status"){
+                if(param == "slamnav"){
+                  this.tcpClient.write(this.slamnav?'connected':'disconnected');
+                }
+              }else if(this.slamnav){
+                if(command == "move"){
                   let sendData;
-                  if(command == "stop"){
-                      sendData = {command:'stop'};
-                  }else if(command == "pause"){
-                    sendData = {command:'pause'};
-                  }else if(command == "resume"){
-                    sendData = {command:'resume'};
+                  if(param == "stop"){
+                      sendData = {command:param};
+                  }else if(param == "pause"){
+                    sendData = {command:param};
+                  }else if(param == "resume"){
+                    sendData = {command:param};
                   }else{
                     sendData = {command:'goal',goal_id:command,method:'pp',preset:'0',time:Date.now().toString()};
                   }
                   console.log("tcpClient command move : ",JSON.stringify(sendData));
                   this.slamnav.emit('move',sendData);
-                }else{
-                  this.tcpClient.write('disconnected')
-                }
-              }else if(key == "undock" || key == "dock"){
-                if(this.slamnav){
+
+                }else if(command == "dock"){
                   const sendData = {
-                    command : key
+                    command : param
                   }
                   console.log("tcpClient command dock : ",JSON.stringify(sendData));
                   this.slamnav.emit('dock',sendData);
+
+                }else if(command == "mapload"){
+                  const sendData = {
+                    command : command,
+                    name : param
+                  }
+
+                  console.log("tcpClient command load : ",JSON.stringify(sendData));
+                  this.slamnav.emit('load',sendData);
+                }else if(command == "localization"){
+                  let sendData;
+                  if(param == "semiautoinit"){
+                    sendData = {
+                      command : param
+                    }
+                  }else if(param == "autoinit"){  
+                    sendData = {
+                      command : param
+                    }
+                  }else if(param == "start"){
+                    sendData = {
+                      command : param
+                    }
+                  }else if(param == "stop"){
+                    sendData = {
+                      command : param
+                    }
+                  }else if(param.split(',').length > 2){
+                    sendData = {
+                      command : 'init',
+                      x : param.split(',')[0],
+                      y : param.split(',')[1],
+                      rz : param.split(',')[2],
+                    }
+                  }else{
+                    this.tcpClient.write('#'+command +" unknowncommand");
+                    return;
+                  }
+                  console.log("tcpClient command localization : ",JSON.stringify(sendData));
+                  this.slamnav.emit('localization',sendData);
                 }else{
-                  this.tcpClient.write('disconnected')
+                  this.tcpClient.write('#'+command +" unknowncommand");
                 }
               }else{
-
+                this.tcpClient.write('#'+command+' disconnected')
               }
           }catch(error){
               socketLogger.error(`[NETWORK] TCP Data Parse : ${errorToJson(error)}`)
