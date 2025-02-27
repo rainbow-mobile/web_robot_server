@@ -198,7 +198,6 @@ export class SocketGateway
       // 클라이언트로부터 데이터 수신
       this.tcpClient.on('data', (data) => {
           socketLogger.info(`[NETWORK] TCP Data in : ${data.toString()}`);
-    
           try{
               const key = data.toString().split(' ')[0];
               const command = data.toString().split(' ')[1];
@@ -219,10 +218,19 @@ export class SocketGateway
                 }else{
                   this.tcpClient.write('disconnected')
                 }
+              }else if(key == "undock" || key == "dock"){
+                if(this.slamnav){
+                  const sendData = {
+                    command : key
+                  }
+                  console.log("tcpClient command dock : ",JSON.stringify(sendData));
+                  this.slamnav.emit('dock',sendData);
+                }else{
+                  this.tcpClient.write('disconnected')
+                }
               }else{
 
               }
-
           }catch(error){
               socketLogger.error(`[NETWORK] TCP Data Parse : ${errorToJson(error)}`)
               this.tcpClient.write('error');
@@ -888,6 +896,10 @@ export class SocketGateway
 
       if(this.frsSocket?.connected){
         this.frsSocket.emit('dockResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
+      }
+      if(this.tcpClient){
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+        this.tcpClient.write(json.result);
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV dockResponse: ${JSON.stringify(json)}`,

@@ -174,7 +174,9 @@ export class MapController {
           if(node.type == param.type){
             console.log("match")
             if(param.searchText != "" && param.searchText != undefined){
-              if(node.id.includes(param.searchText) || node.name.includes(param.searchText)){
+              
+
+              if(node.id.toLowerCase().includes(param.searchText.toLowerCase()) || node.name.toLowerCase().includes(param.searchText.toLowerCase())){
                 console.log("in")
                 goals.push({id:node.id, name:node.name, 
                   x:node.pose.split(',')[0],
