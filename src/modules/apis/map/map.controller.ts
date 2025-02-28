@@ -201,7 +201,11 @@ export class MapController {
       let startIndex:number = (Number(param.pageNo) - 1) * Number(param.pageSize);
       let endIndex:number = startIndex + Number(param.pageSize);
 
-      goals.sort((a,b)=> a.id.localeCompare(b.id,undefined,{numeric:true}));
+      if(param.sortOption == "name"){
+        goals.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
+      }else{
+        goals.sort((a,b)=> a.id.localeCompare(b.id,undefined,{numeric:true}));
+      }
       while(startIndex >= totalItems){
         param.pageNo--;
         startIndex = (Number(param.pageNo) - 1) * Number(param.pageSize);

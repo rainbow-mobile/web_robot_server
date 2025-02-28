@@ -31,4 +31,12 @@ export class GoalReadDto extends PaginationRequest {
   })
   searchText?: string;
 
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    example:'id',
+    required:false,
+    description: '정렬옵션'
+  })
+  sortOption?: string;
 }
