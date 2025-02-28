@@ -201,21 +201,68 @@ export class SocketGateway
           try{
               const command = data.toString().split(' ')[0];
               const param = data.toString().split(' ')[1];
+
+              console.log(data, command, param);
               if(command == "req_status"){
+                let data;
                 if(param == "slamnav"){
-                  this.tcpClient.write(this.slamnav?'connected':'disconnected');
+                  data = this.slamnav?'connected':'disconnected';
+                  this.tcpClient.write(data);
+                }else if(param == "pose"){
+                  data = "{"+this.robotState.pose.x+","+this.robotState.pose.y+","+this.robotState.pose.rz+"}";
+                  this.tcpClient.write(data);
+                }else if(param == "map"){
+                  data = this.robotState.map.map_name==""?"not loaded":this.robotState.map.map_name;
+                  this.tcpClient.write(data);
+                }else if(param == "localization"){
+                  data = this.robotState.robot_state.localization;
+                  this.tcpClient.write(data);
+                }else if(param == "charge"){
+                  data = this.robotState.robot_state.charge;
+                  this.tcpClient.write(data);
+                }else if(param == "dock"){
+                  data = this.robotState.robot_state.dock;
+                  this.tcpClient.write(data);
+                }else if(param == "auto_move"){
+                  data = this.robotState.move_state.auto_move;
+                  this.tcpClient.write(data);
+                }else if(param == "path"){
+                  data = this.robotState.move_state.path;
+                  this.tcpClient.write(data);
+                }else if(param == "obs"){
+                  data = this.robotState.move_state.obs;
+                  this.tcpClient.write(data);
+                }else if(param == "cur_node_id"){
+                  data = this.robotState.cur_node.id==""?"-":this.robotState.cur_node.id;
+                  this.tcpClient.write(data);
+                }else if(param == "cur_node_pose"){
+                  data = "{"+this.robotState.cur_node.x+","+this.robotState.cur_node.y+","+this.robotState.cur_node.rz+"}";
+                  this.tcpClient.write(data);
+                }else if(param == "goal_node_id"){
+                  data = this.robotState.goal_node.id==""?"-":this.robotState.goal_node.id;
+                  this.tcpClient.write(data);
+                }else if(param == "goal_node_state"){
+                  data = this.robotState.goal_node.state==""?"none":this.robotState.goal_node.state;
+                  this.tcpClient.write(data);
+                }else if(param == "goal_node_pose"){
+                  data = "{"+this.robotState.goal_node.x+","+this.robotState.goal_node.y+","+this.robotState.goal_node.rz+"}";
+                  this.tcpClient.write(data);
+                }else if(param == "battery"){
+                  data = "{"+this.robotState.power.bat_in+","+this.robotState.power.bat_out+","+this.robotState.power.bat_current+"}";
+                  this.tcpClient.write(data);
                 }
+                console.debug(param+" send : ",data);
               }else if(this.slamnav){
                 if(command == "move"){
                   let sendData;
                   if(param == "stop"){
-                      sendData = {command:param};
+                      sendData = {command:param,time:Date.now().toString()};
                   }else if(param == "pause"){
-                    sendData = {command:param};
+                    sendData = {command:param,time:Date.now().toString()};
                   }else if(param == "resume"){
-                    sendData = {command:param};
+                    sendData = {command:param,time:Date.now().toString()};
                   }else{
-                    sendData = {command:'goal',goal_id:command,method:'pp',preset:'0',time:Date.now().toString()};
+                    sendData = {command:'goal',goal_id:param,method:'pp',preset:'0',time:Date.now().toString()};
                   }
                   console.log("tcpClient command move : ",JSON.stringify(sendData));
                   this.slamnav.emit('move',sendData);
@@ -261,16 +308,16 @@ export class SocketGateway
                       rz : param.split(',')[2],
                     }
                   }else{
-                    this.tcpClient.write('#'+command +" unknowncommand");
+                    this.tcpClient.write("unknowncommand");
                     return;
                   }
                   console.log("tcpClient command localization : ",JSON.stringify(sendData));
                   this.slamnav.emit('localization',sendData);
                 }else{
-                  this.tcpClient.write('#'+command +" unknowncommand");
+                  this.tcpClient.write("unknowncommand");
                 }
               }else{
-                this.tcpClient.write('#'+command+' disconnected')
+                this.tcpClient.write('disconnected')
               }
           }catch(error){
               socketLogger.error(`[NETWORK] TCP Data Parse : ${errorToJson(error)}`)
@@ -865,6 +912,10 @@ export class SocketGateway
       if(this.frsSocket?.connected){
         this.frsSocket.emit('loadResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
       }
+      if(this.tcpClient){
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+        this.tcpClient.write(json.result);
+      }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV loadResponse: ${JSON.stringify(json)}`,
       );
@@ -903,6 +954,10 @@ export class SocketGateway
 
       if(this.frsSocket?.connected){
         this.frsSocket.emit('localizationResponse',msgpack.encode({robotSerial:global.robotSerial,data:json}))
+      }
+      if(this.tcpClient){
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+        this.tcpClient.write(json.result);
       }
       socketLogger.debug(
         `[RESPONSE] SLAMNAV localizationResponse: ${JSON.stringify(json)}`,
