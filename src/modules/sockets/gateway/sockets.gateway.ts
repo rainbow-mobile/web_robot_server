@@ -778,6 +778,12 @@ export class SocketGateway
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
+
+  @SubscribeMessage('sshCommand')
+  async handleSSHCommandMessage(@MessageBody() payload:string){
+
+  }
+  
   @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload:TaskPayload){
     try {
@@ -984,6 +990,7 @@ export class SocketGateway
       throw error();
     }
   }
+  
   @SubscribeMessage('dockResponse')
   async handleDockReponseMessage(@MessageBody() payload: string) {
     try {
