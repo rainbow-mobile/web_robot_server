@@ -12,11 +12,12 @@ import { MqttClientService } from './mqtt/mqtt.service';
 import { KafkaClientService } from './kafka/kafka.service';
 import { NetworkModule } from '../apis/network/network.module';
 import { NetworkService } from '../apis/network/network.service';
+import { SSHGateway } from './gateway/ssh.gateway';
 
 @Module({
   imports:[VariablesModule, LogModule],
   controllers: [SocketsController],
-  providers: [SocketGateway,SocketService,MqttClientService,NetworkService,KafkaClientService],
+  providers: [SocketGateway,SSHGateway,SocketService,MqttClientService,NetworkService,KafkaClientService],
   exports: [SocketGateway],
 })
 
