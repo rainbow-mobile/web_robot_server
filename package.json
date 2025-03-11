@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@asyncapi/generator-react-sdk": "^1.1.2",
-    "@influxdata/influxdb-client": "^1.35.0",
     "@influxdata/influxdb3-client": "^1.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
@@ -48,7 +47,6 @@
     "msgpack-lite": "^0.1.26",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
-    "node-influx": "^1.0.2",
     "node-wifi": "^2.0.16",
     "pako": "^2.1.0",
     "play-sound": "^1.1.6",
