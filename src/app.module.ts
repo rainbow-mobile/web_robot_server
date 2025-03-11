@@ -19,6 +19,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
+import { InfluxDBModule } from './modules/apis/influx/influx.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { SSHModule } from './modules/apis/ssh/ssh.module';
     MoveModule,
     MapModule,
     SettingModule,
+    InfluxDBModule,
     ProcessModule,
     VariablesModule,
     NetworkModule,

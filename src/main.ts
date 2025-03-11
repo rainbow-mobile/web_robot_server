@@ -19,6 +19,7 @@ import { instrument } from '@socket.io/admin-ui';
 import * as fs from 'fs';
 import * as express from 'express';
 import * as os from 'os';
+import * as cors from 'cors';
 import * as https from 'https';
 import { osInfo } from 'systeminformation';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
@@ -30,8 +31,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableCors({
     allowedHeaders: 'Content-Type, Accept, Authorization',
-    methods: ['POST', 'GET', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: false,
+    methods: ['POST', 'GET', 'PUT', 'FETCH', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
     origin: '*',
   });
 
@@ -41,7 +42,6 @@ async function bootstrap() {
   //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
   // };
 
-  
   app.use(bodyParser.json({limit:'1mb'}))
   app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
   app.useGlobalPipes(
@@ -93,10 +93,20 @@ async function bootstrap() {
   };
 
   console.log(join(__dirname,'docs'))
+  app.use('/docs/socket', (req, res, next) => {
+    res.removeHeader('Content-Security-Policy');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });
   app.use('/docs/socket',express.static(join(__dirname,'..','docs')));
 
   app.use('/docs/api', (req, res, next) => {
-    res.removeHeader('Content-Security-Policy');
+    // res.removeHeader('Content-Security-Policy');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
 
