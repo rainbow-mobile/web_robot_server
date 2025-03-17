@@ -7,6 +7,7 @@ import * as path from 'path';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { errorToJson } from '@common/util/error.util';
+import axios from 'axios';
 
 @Injectable()
 export class UploadService {
@@ -20,6 +21,47 @@ export class UploadService {
     });
 
     private upload = multer({storage:this.storage})
+
+    async downloadMap(fileName:string){
+      return new Promise(async(resolve, reject) => {
+        try{
+          const response = await axios.get(
+            global.frs_api + "/api/maps/frs-map/download",
+            {
+              responseType: "stream",
+              params: { attachmentFileDtlFlNm: fileName, deleteZipAt: "Y" },
+              // headers: { authorization: "Bearer " + data.token },
+            }
+          );
+  
+          const fileStream = fs.createWriteStream(homedir() + "/maps/" + fileName);
+          response.data.pipe(fileStream);
+  
+          fileStream.on("finish", async() => {
+            httpLogger.info(`[UPLOAD] DownloadMap: Done`)
+            const zipFilePath = path.join(homedir(), "maps", fileName);
+  
+            const extractToPath = path.join(homedir(), "maps");
+            httpLogger.info(`[UPLOAD] DownloadMap: Zip (${zipFilePath}, ${extractToPath})`)
+  
+            await this.unzipFolder(zipFilePath, extractToPath);
+  
+            resolve({})
+
+            httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`)
+            fs.unlink(homedir() + "/maps/" + fileName, (err) => {
+              if (err) 
+                httpLogger.error(`[UPLOAD] DownloadMap: Zip Delete Fail ${errorToJson(err)}`)
+  
+              httpLogger.info(`[UPLOAD] DownloadMap: Zip Delete Done`)
+            });
+          });
+        }catch(error){
+          httpLogger.error(`[UPLOAD] DownloadMap: ${errorToJson(error)}`)
+          reject(error);
+        }
+      })
+    }
 
     async zipFolder(sourceFolderPath:string, zipFilePath:string) {
         return new Promise((resolve, reject) => {

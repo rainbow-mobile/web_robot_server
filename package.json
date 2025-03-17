@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@asyncapi/generator-react-sdk": "^1.1.2",
+    "@influxdata/influxdb3-client": "^1.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",
@@ -46,6 +47,7 @@
     "msgpack-lite": "^0.1.26",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
+    "node-onvif": "^0.1.7",
     "node-wifi": "^2.0.16",
     "pako": "^2.1.0",
     "play-sound": "^1.1.6",
@@ -53,6 +55,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.8.1",
+    "ssh2": "^1.16.0",
     "systeminformation": "^5.25.11",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"

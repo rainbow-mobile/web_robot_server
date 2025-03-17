@@ -19,6 +19,7 @@ export class ExceptionFilterMiddleware implements ExceptionFilter {
       //   ? exception.message
       //   : HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500;
 
+      console.error(exception);
     httpLogger.warn(`[FILTER] Exception Filter: ${JSON.stringify(exception)}`)
     response.status(status).json({
       status,

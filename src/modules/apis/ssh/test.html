@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Terminal</title>
+  <style>
+    body {
+      font-family: "Courier New", monospace;
+      background-color: #1e1e1e;
+      color: #dcdcdc;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .terminal {
+      width: 90%;
+      height: 80%;
+      border: 2px solid #333;
+      background-color: #2e2e2e;
+      color: #dcdcdc;
+      padding: 20px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 16px;
+      border-radius: 8px;
+    }
+
+    .terminal input {
+      background: none;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      width: 100%;
+      outline: none;
+    }
+
+    .prompt {
+      color: #7cc7fc; /* 블루 색상 */
+    }
+
+    .output {
+      color: #dcdcdc; /* 기본 텍스트 색상 */
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal" id="terminal">
+    <div class="output">Welcome to the Web Terminal</div>
+    <div class="prompt">~$ <input type="text" id="command" autofocus /></div>
+  </div>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    const input = document.getElementById('command');
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const command = input.value;
+        processCommand(command);
+        input.value = '';
+      }
+    });
+
+    function processCommand(command) {
+      // 예시: 'pwd' 명령어 처리
+      if (command === 'pwd') {
+        displayOutput('/home/user');
+      } else {
+        displayOutput(`command not found: ${command}`);
+      }
+    }
+
+    function displayOutput(output) {
+      const outputDiv = document.createElement('div');
+      outputDiv.classList.add('output');
+      outputDiv.textContent = output;
+      terminal.appendChild(outputDiv);
+      terminal.scrollTop = terminal.scrollHeight; // 최신 출력으로 스크롤
+    }
+  </script>
+</body>
+</html>
