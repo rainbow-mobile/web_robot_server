@@ -213,7 +213,7 @@ export class SocketsController implements OnModuleInit {
     summary: '라이다 통신 ON/Off',
     description: '라이다 소켓 통신 열기, frequency(통신주기)',
   })
-  async lidarOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
+  async lidarOn(@Body() data: EmitOnOffDto) {
     try {
       httpLogger.info(
         `[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`,
@@ -232,7 +232,7 @@ export class SocketsController implements OnModuleInit {
     summary: '경로 통신 ON/Off',
     description: '경로 소켓 통신 열기, frequency(통신주기)',
   })
-  async pathOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
+  async pathOn(@Body() data: EmitOnOffDto) {
     try {
       httpLogger.info(
         `[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`,

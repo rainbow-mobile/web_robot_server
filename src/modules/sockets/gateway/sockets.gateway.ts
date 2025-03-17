@@ -14,20 +14,20 @@ import socketLogger from '@common/logger/socket.logger';
 import { TaskPayload } from '@common/interface/robot/task.interface';
 import { MovePayload } from '@common/interface/robot/move.interface';
 import { StatusPayload } from '@common/interface/robot/status.interface';
-import { getMacAddresses, stringifyAllValues } from '@common/util/network.util';
-import { Global, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import * as pako from 'pako';
-import { connect } from 'http2';
-import { TransformationType } from 'class-transformer';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { stringifyAllValues } from '@common/util/network.util';
+import { Global, OnModuleDestroy } from '@nestjs/common';
 import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 import { KafkaClientService } from '@sockets/kafka/kafka.service';
-import { Payload } from '@nestjs/microservices';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as msgpack from 'msgpack-lite';
 import * as net from 'net';
+import {
+  MotionCommand,
+  MotionMethod,
+} from 'src/modules/apis/motion/dto/motion.dto';
+import { MotionPayload } from '@common/interface/robot/motion.interface';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -85,6 +85,10 @@ export class SocketGateway
     method: undefined,
     result: undefined,
   };
+  motionState: MotionPayload = {
+    command: MotionCommand.MOTION_GATE,
+    method: MotionMethod.SITTING,
+  };
   robotState: StatusPayload = {
     pose: {
       x: '0',
@@ -93,6 +97,7 @@ export class SocketGateway
     },
     map: {
       map_name: '',
+      map_status: '',
     },
     vel: {
       vx: '0',
@@ -160,6 +165,7 @@ export class SocketGateway
       total_power: '0',
       charge_current: '0',
       contact_voltage: '0',
+      bat_percent: '0',
     },
     move_state: {
       auto_move: 'stop',
@@ -204,7 +210,6 @@ export class SocketGateway
           const command = data.toString().split(' ')[0];
           const param = data.toString().split(' ')[1];
 
-          console.log(data, command, param);
           if (command == 'req_status') {
             let data;
             if (param == 'slamnav') {
@@ -816,6 +821,7 @@ export class SocketGateway
       });
     } catch (error) {
       socketLogger.error(`[CONNECT] FRS Socket connect`);
+      throw error;
     }
   }
 
@@ -1299,7 +1305,7 @@ export class SocketGateway
   }
 
   @SubscribeMessage('taskDock')
-  async handleTaskDockMessage(@MessageBody() payload: any[]) {
+  async handleTaskDockMessage() {
     try {
       socketLogger.debug(`[COMMAND] Task Dock`);
       this.slamnav.emit('dock', {
@@ -1313,7 +1319,7 @@ export class SocketGateway
   }
 
   @SubscribeMessage('taskUndock')
-  async handleTaskUnDockMessage(@MessageBody() payload: any[]) {
+  async handleTaskUnDockMessage() {
     try {
       socketLogger.debug(`[COMMAND] Task UnDock`);
       this.slamnav.emit('dock', {
@@ -1322,6 +1328,45 @@ export class SocketGateway
       });
     } catch (error) {
       socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('motion')
+  async handleMotionMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload));
+      this.server.to('slamnav').emit('motion', json);
+
+      socketLogger.debug(`[COMMAND] Motion: ${JSON.stringify(json)}`);
+    } catch (error) {
+      socketLogger.error(`[INIT] Motion:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('motionResponse')
+  async handleMotionResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('motionResponse', json);
+
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit(
+          'motionResponse',
+          msgpack.encode({ robotSerial: global.robotSerial, data: json }),
+        );
+      }
+
+      if (this.tcpClient) {
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+        this.tcpClient.write(json.result);
+      }
+
+      this.motionState = json;
+
+      socketLogger.debug(`[RESPONSE] SLAMNAV Motion: ${JSON.stringify(json)}`);
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV Motion: ${errorToJson(error)}`);
       throw error();
     }
   }

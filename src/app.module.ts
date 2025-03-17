@@ -20,6 +20,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
 import { InfluxDBModule } from './modules/apis/influx/influx.module';
 import { OnvifModule } from './modules/apis/onvif/onvif.module';
+import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,6 +58,7 @@ import { OnvifModule } from './modules/apis/onvif/onvif.module';
     UploadModule,
     SoundModule,
     OnvifModule,
+    MotionModule,
   ],
   providers: [],
   controllers: [],
