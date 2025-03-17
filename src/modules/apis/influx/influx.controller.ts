@@ -36,11 +36,16 @@ import {
         
     }
 
+    @Get(':time')
+    async test(@Param('time') time:string, @Res() res:Response){
+      await this.influxService.testStatus(time);
+      res.send();
+    }
     @Get()
     async sshConnect(@Res() res:Response){
         try{
             await this.influxService.writeData();
-            res.send(await this.influxService.queryData());
+            res.send(await this.influxService.queryData('sensors','home'));
         }catch(error){
             console.error(error);
             res.send();
