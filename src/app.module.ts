@@ -17,6 +17,9 @@ import { LogModule } from './modules/apis/log/log.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
+import { SSHModule } from './modules/apis/ssh/ssh.module';
+import { InfluxDBModule } from './modules/apis/influx/influx.module';
+import { OnvifModule } from './modules/apis/onvif/onvif.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -42,15 +45,18 @@ import { SoundModule } from './modules/apis/sound/sound.module';
     SocketsModule,
     TaskModule,
     ControlModule,
+    SSHModule,
     MoveModule,
     MapModule,
     SettingModule,
+    InfluxDBModule,
     ProcessModule,
     VariablesModule,
     NetworkModule,
     LogModule,
     UploadModule,
     SoundModule,
+    OnvifModule,
   ],
   providers: [],
   controllers: [],
