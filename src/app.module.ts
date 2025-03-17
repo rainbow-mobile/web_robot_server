@@ -6,7 +6,6 @@ import { UsersModule } from 'src/modules/apis/users/users.module';
 import { SocketsModule } from 'src/modules/sockets/sockets.module';
 import { TaskModule } from '@task/task.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { MoveModule } from './modules/apis/move/move.module';
 import { ControlModule } from './modules/apis/control/control.module';
 import { MapModule } from './modules/apis/map/map.module';
@@ -27,7 +26,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: () => ({
         type: 'mariadb',
         host: '127.0.0.1',
         port: 3306,
@@ -36,7 +35,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
         database: 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         // synchronize: false,
-        logging: false
+        logging: false,
       }),
     }),
     UsersModule,
@@ -51,7 +50,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
     NetworkModule,
     LogModule,
     UploadModule,
-    SoundModule
+    SoundModule,
   ],
   providers: [],
   controllers: [],
