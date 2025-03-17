@@ -46,7 +46,7 @@ export class UploadService {
   
             await this.unzipFolder(zipFilePath, extractToPath);
   
-            resolve({})
+            resolve({});
 
             httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`)
             fs.unlink(homedir() + "/maps/" + fileName, (err) => {

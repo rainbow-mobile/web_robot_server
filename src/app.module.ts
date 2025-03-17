@@ -20,7 +20,8 @@ import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
 import { InfluxDBModule } from './modules/apis/influx/influx.module';
-import { OnvifModule } from './modules/apis/onvif/onvif.module';
+import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
+import { OnvifClientModule } from './modules/apis/onvif_client/onvif_client.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,7 +58,8 @@ import { OnvifModule } from './modules/apis/onvif/onvif.module';
     LogModule,
     UploadModule,
     SoundModule,
-    OnvifModule
+    OnvifClientModule,
+    OnvifDeviceModule
   ],
   providers: [],
   controllers: [],

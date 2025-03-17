@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { OnvifService } from './onvif.service';
+import { OnvifDeviceService } from './onvif.service';
 
 @Module({
-  providers: [OnvifService],
-  exports: [OnvifService],
+  providers: [OnvifDeviceService],
+  exports: [OnvifDeviceService],
 })
-export class OnvifModule {}
+export class OnvifDeviceModule {}
