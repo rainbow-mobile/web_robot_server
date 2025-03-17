@@ -34,6 +34,7 @@ import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as msgpack from 'msgpack-lite';
 import * as net from 'net';
+import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
 @Global()
 @WebSocketGateway(11337,{
   transports:['websocket','polling'],
@@ -46,7 +47,7 @@ import * as net from 'net';
 export class SocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy, OnGatewayInit
 {
-  constructor(private readonly networkService:NetworkService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
+  constructor(private readonly networkService:NetworkService, private readonly influxService:InfluxDBService, private readonly mqttService:MqttClientService,private readonly kafakService:KafkaClientService){
 
   }
   afterInit(){
@@ -92,7 +93,8 @@ export class SocketGateway
         rz: '0',
       },
       map:{
-        map_name:""
+        map_name:"",
+        map_status:""
       },
       vel: {
         vx: '0',
@@ -156,6 +158,7 @@ export class SocketGateway
         bat_in: '0',
         bat_out: '0',
         bat_current: '0',
+        bat_percent: '0',
         power: '0',
         total_power: '0',
         charge_current: '0',
@@ -434,7 +437,7 @@ export class SocketGateway
           }
           // to be continue...
           // this.mqttService.connect();
-          // this.kafakService.connect();
+          this.kafakService.connect();
 
         }catch(error){
           socketLogger.error(`[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`)
@@ -864,6 +867,8 @@ export class SocketGateway
         this.frsSocket.emit('status',msgpack.encode({robotSerial:global.robotSerial,data:json}));
     }
 
+    this.influxService.writeStatus(json);
+
     this.robotState = {...this.robotState,...json};
   }
 
@@ -875,6 +880,7 @@ export class SocketGateway
       this.frsSocket.emit('moveStatus',msgpack.encode({robotSerial:global.robotSerial,data:json}));
     }
 
+    this.influxService.writeMoveStatus(json);
     // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
     this.robotState = {...this.robotState,...json};
   }

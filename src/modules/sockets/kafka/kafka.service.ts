@@ -4,15 +4,20 @@ import * as mqtt from 'mqtt';
 import {Consumer, Kafka} from 'kafkajs';
 import { Transport } from '@nestjs/microservices';
 import { errorToJson } from '@common/util/error.util';
+import { UploadService } from 'src/modules/apis/upload/upload.service';
 
 @Injectable()
 export class KafkaClientService {
   private kafka:Kafka = null;
   private client:Consumer = null;
 
+  constructor(private readonly uploadService:UploadService){
+
+  }
+
   async connect(){
     global.kafkaConnect = false;
-    global.kafka_url = "192.168.1.195:9092"
+    // global.kafka_url = "kafka://10.108.1.180:9092"
     socketLogger.info(`[KAFKA] Try to connect KAFKA : ${global.kafka_url}`)
     this.kafka = new Kafka({
         brokers:[global.kafka_url],
@@ -23,21 +28,33 @@ export class KafkaClientService {
     try{
       await this.client.connect();
       global.kafkaConnect = true;
-      await this.client.subscribe({topic:'kafka-emit1', fromBeginning:true})
+      await this.client.subscribe({topic:'frs-map-publish_'+global.robotSerial, fromBeginning:true})
   
       await this.client.run({
       eachMessage: async ({ topic, partition, message }) => {
-          console.log({
-              topic: topic.toString(),
-              partition: partition.toString(),
-              key: message.key.toString(),
-              value: message.value.toString(),
-              header: message.headers.toString()
-          });
+          socketLogger.info(`[KAFKA] New Message : ${topic.toString()}, ${JSON.stringify(message.value.toString())}`);
+          if(topic == 'frs-map-publish_'+global.robotSerial){
+            this.mapPublish(JSON.parse(message.value.toString()));
+          }
         }
       });
     }catch(error){
       socketLogger.error(`[KAFKA] ${error.name}: ${error.message}`);
     }
   }
+
+  async mapPublish(data:any){
+    const fileName = data.attachmentFileDtlFlNm;
+    if(fileName != ""){
+      socketLogger.info(`[KAFKA] mapPublish: ${fileName}`);
+      await this.uploadService.downloadMap(fileName);
+      socketLogger.info(`[KAFKA] mapPublish Success Done`)
+
+    }else{
+      socketLogger.error(`[KAFKA] mapPublish: attachmentFileDtlFlNm is undefined(${fileName})`);
+    }
+  }
+
+
+
 }
