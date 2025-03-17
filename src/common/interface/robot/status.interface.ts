@@ -50,6 +50,7 @@ export interface StatusPayload {
     bat_in: string;
     bat_out: string;
     bat_current: string;
+    bat_percent: string;
     power: string;
     total_power: string;
     charge_current: string;
@@ -87,6 +88,7 @@ export interface StatusPayload {
   };
   map:{
     map_name:string;
+    map_status:string;
   };
   condition: {
     inlier_error: string;

@@ -92,7 +92,6 @@ async function bootstrap() {
     },
   };
 
-  console.log(join(__dirname,'docs'))
   app.use('/docs/socket', (req, res, next) => {
     res.removeHeader('Content-Security-Policy');
     res.header('Access-Control-Allow-Origin', '*');
@@ -103,10 +102,10 @@ async function bootstrap() {
   app.use('/docs/socket',express.static(join(__dirname,'..','docs')));
 
   app.use('/docs/api', (req, res, next) => {
-    // res.removeHeader('Content-Security-Policy');
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.removeHeader('Content-Security-Policy');
+    // res.header('Access-Control-Allow-Origin', '*');
+    // res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    // res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
 

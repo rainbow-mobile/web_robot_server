@@ -35,6 +35,7 @@ export class SocketsController implements OnModuleInit{
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
   }
+
   async conSocket(){
     socketLogger.info(`[CONNECT] ConnectSocket : ${global.robotSn}, ${global.frs_socket}`)
     this.socketGateway.connectFrsSocket(global.frs_socket);
@@ -74,11 +75,12 @@ export class SocketsController implements OnModuleInit{
         return res.status(HttpStatus.BAD_REQUEST).send({message:HttpStatusMessagesConstants.INVALID_DATA_400})
       }
 
-      global.kafka_url = url.replace('http://','kafka://')+":9092";
+      global.kafka_url = url.replace('http://','')+":9092";
       global.mqtt_url = url.replace('http://','mqtt://')+":1883";
       global.frs_url = url;
       global.frs_api = url+":3000";
       global.frs_socket = url+":3001/socket/robots";
+      
       await this.variableService.upsertVariable('kafka_url',global.kafka_url);
       await this.variableService.upsertVariable('mqtt_url',global.mqtt_url);
       await this.variableService.upsertVariable('frs_url',global.frs_url);
