@@ -72,38 +72,8 @@ export class DownloadController {
   async downloadMap(@Body() data: DownloadMapDto, @Res() res: Response){
     try {
         httpLogger.info(`[UPLOAD] DownloadMap: ${JSON.stringify(data)}`)
-        const response = await axios.get(
-          global.frs_api + "/api/maps/frs-map/download",
-          {
-            responseType: "stream",
-            params: { attachmentFileDtlFlNm: data.name, deleteZipAt: "Y" },
-            headers: { authorization: "Bearer " + data.token },
-          }
-        );
-
-        const fileStream = fs.createWriteStream(homedir() + "/maps/" + data.name);
-        response.data.pipe(fileStream);
-
-        fileStream.on("finish", async() => {
-          httpLogger.info(`[UPLOAD] DownloadMap: Done`)
-          const zipFilePath = path.join(homedir(), "maps", data.name);
-
-          const extractToPath = path.join(homedir(), "maps", data.name.split(".")[0]);
-          httpLogger.info(`[UPLOAD] DownloadMap: Zip (${zipFilePath}, ${extractToPath})`)
-
-          await this.uploadService.unzipFolder(zipFilePath, extractToPath);
-
-          res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.MAP.SUCCESS_201});
-
-          httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`)
-          fs.unlink(homedir() + "/maps/" + data.name, (err) => {
-            if (err) 
-              httpLogger.error(`[UPLOAD] DownloadMap: Zip Delete Fail ${errorToJson(err)}`)
-
-            httpLogger.info(`[UPLOAD] DownloadMap: Zip Delete Done`)
-          });
-        });
-      
+        await this.uploadService.downloadMap(data.name);
+        res.status(HttpStatus.CREATED).send({message:HttpStatusMessagesConstants.MAP.SUCCESS_201});
     } catch (error) {
       httpLogger.error(`[UPLOAD] DownloadMap: Download Fail ${errorToJson(error.response.data)}`)
       res.status(error.response.status).send();
