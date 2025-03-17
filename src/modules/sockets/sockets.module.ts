@@ -13,11 +13,14 @@ import { KafkaClientService } from './kafka/kafka.service';
 import { NetworkModule } from '../apis/network/network.module';
 import { NetworkService } from '../apis/network/network.service';
 import { SSHGateway } from './gateway/ssh.gateway';
+import { InfluxDBModule } from '../apis/influx/influx.module';
+import { InfluxDBService } from '../apis/influx/influx.service';
+import { UploadService } from '../apis/upload/upload.service';
 
 @Module({
   imports:[VariablesModule, LogModule],
   controllers: [SocketsController],
-  providers: [SocketGateway,SSHGateway,SocketService,MqttClientService,NetworkService,KafkaClientService],
+  providers: [SocketGateway, UploadService, InfluxDBService, SSHGateway,SocketService,MqttClientService,NetworkService,KafkaClientService],
   exports: [SocketGateway],
 })
 

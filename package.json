@@ -47,6 +47,7 @@
     "msgpack-lite": "^0.1.26",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
+    "node-onvif": "^0.1.7",
     "node-wifi": "^2.0.16",
     "pako": "^2.1.0",
     "play-sound": "^1.1.6",
