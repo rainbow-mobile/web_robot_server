@@ -1,24 +1,13 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpStatus,
-    Inject,
-    Param,
-    Post,
-    Put,
-    Query,
-    Res,
-    UseGuards,
-  } from '@nestjs/common';
-  import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOperation,
-    ApiResponse,
-    ApiTags,
-  } from '@nestjs/swagger';
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Post,
+  Res,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { MoveService } from './move.service';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
@@ -30,10 +19,10 @@ import { errorToJson } from '@common/util/error.util';
 @ApiTags('이동 관련 API (move)')
 @Controller('move')
 export class MoveController {
-    constructor(private readonly socketGateway: SocketGateway) {}
+  constructor(private readonly socketGateway: SocketGateway) {}
 
-    @Inject()
-    private readonly moveService: MoveService;
+  @Inject()
+  private readonly moveService: MoveService;
 
   /**
    * @description 로봇 이동 명령을 처리하는 API 엔드포인트
@@ -52,51 +41,74 @@ export class MoveController {
      command가 jog인 경우, vx, vy, wz를 파라메터로 인식합니다.
      그 외의 command는 파라메터를 입력받지 않습니다.
      method는 주행방식을 선언합니다. 기본 pp (point to point) 방식으로 주행하며 그 외 주행방식은 아직 미지원합니다.
-     preset은 지정된 속도프리셋을 설정합니다. 아직 미지원합니다.`
+     preset은 지정된 속도프리셋을 설정합니다. 아직 미지원합니다.`,
   })
   @ApiResponse({
     status: 200,
     description: HttpStatusMessagesConstants.MOVE.MOVE_ACCEPT_200,
   })
-  async moveControl(@Body() data:MoveCommandDto, @Res() res: Response) {
+  async moveControl(@Body() data: MoveCommandDto, @Res() res: Response) {
     try {
       httpLogger.info(`[MOVE] moveControl: ${JSON.stringify(data)}`);
 
-      if(data.command == "goal"){
-        if(data.goal_id == "" || data.method == "" || data.preset == ""){
+      if (data.command == 'goal') {
+        if (data.goal_id == '' || data.method == '' || data.preset == '') {
           httpLogger.warn(`[MOVE] moveControl: move Goal parameter missing`);
-          return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (id, method, preset)"});
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (id, method, preset)' });
         }
-      }else if(data.command == "target"){
-        if(data.x == "" || data.y == "" || data.rz == "" || data.method == "" || data.preset == ""){
+      } else if (data.command == 'target') {
+        if (
+          data.x == '' ||
+          data.y == '' ||
+          data.rz == '' ||
+          data.method == '' ||
+          data.preset == ''
+        ) {
           httpLogger.warn(`[MOVE] moveControl: move Target parameter missing`);
-          return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (x, y, rz, method, preset)"});
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (x, y, rz, method, preset)' });
         }
-      }else if(data.command == "jog"){
-        if(data.vx == "" || data.vy == "" || data.wz == ""){
+      } else if (data.command == 'jog') {
+        if (data.vx == '' || data.vy == '' || data.wz == '') {
           httpLogger.warn(`[MOVE] moveControl: move Target parameter missing`);
-          return res.status(HttpStatus.BAD_REQUEST).send({message:"parameter missing (x, y, rz, method, preset)"});
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (x, y, rz, method, preset)' });
         }
-      }else if(data.command == "stop" || data.command == "pause" || data.command == "resume"){
-
-      }else{
-        httpLogger.warn(`[MOVE] moveControl: move Command parameter unknown : ${data.command}`);
-        return res.status(HttpStatus.BAD_REQUEST).send({message:"Unknown Parameter (command)"});
+      } else if (
+        data.command == 'stop' ||
+        data.command == 'pause' ||
+        data.command == 'resume'
+      ) {
+      } else {
+        httpLogger.warn(
+          `[MOVE] moveControl: move Command parameter unknown : ${data.command}`,
+        );
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: 'Unknown Parameter (command)' });
       }
 
-      const newData = {...data,time:Date.now().toString()}
-      httpLogger.debug(`[MOVE] moveControl: ${JSON.stringify(newData)}`)
+      const newData = { ...data, time: Date.now().toString() };
+      httpLogger.debug(`[MOVE] moveControl: ${JSON.stringify(newData)}`);
 
-      if(data.command != "jog"){
+      if (data.command != 'jog') {
         const response = await this.moveService.moveCommand(newData);
-        httpLogger.debug(`[MOVE] moveControl Response: ${JSON.stringify(response)}`)
+        httpLogger.debug(
+          `[MOVE] moveControl Response: ${JSON.stringify(response)}`,
+        );
         return res.send(response);
-      }else{
+      } else {
         this.moveService.moveJog(newData);
         return res.send();
       }
     } catch (error) {
-      httpLogger.error(`[MOVE] moveControl: ${JSON.stringify(data)}, ${errorToJson(error)}`);
+      httpLogger.error(
+        `[MOVE] moveControl: ${JSON.stringify(data)}, ${errorToJson(error)}`,
+      );
       return res.status(error.status).send(error.data);
     }
   }
@@ -118,17 +130,17 @@ export class MoveController {
   })
   async moveStop(@Res() res: Response) {
     try {
-      const newData = {command:'stop',time:Date.now().toString()}
-      httpLogger.debug(`[MOVE] moveStop: ${JSON.stringify(newData)}`)
+      const newData = { command: 'stop', time: Date.now().toString() };
+      httpLogger.debug(`[MOVE] moveStop: ${JSON.stringify(newData)}`);
       const response = await this.moveService.moveCommand(newData);
-      httpLogger.debug(`[MOVE] moveStop Response: ${JSON.stringify(response)}`)
+      httpLogger.debug(`[MOVE] moveStop Response: ${JSON.stringify(response)}`);
       return res.send(response);
     } catch (error) {
       httpLogger.error(`[MOVE] moveStop:  ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }
-  
+
   /**
    * @description 로봇 이동 명령을 처리하는 API 엔드포인트
    * @author yjheo4@rainbow-robotics.com
@@ -146,10 +158,12 @@ export class MoveController {
   })
   async movePause(@Res() res: Response) {
     try {
-      const newData = {command:'pause',time:Date.now().toString()}
-      httpLogger.debug(`[MOVE] movePause: ${JSON.stringify(newData)}`)
+      const newData = { command: 'pause', time: Date.now().toString() };
+      httpLogger.debug(`[MOVE] movePause: ${JSON.stringify(newData)}`);
       const response = await this.moveService.moveCommand(newData);
-      httpLogger.debug(`[MOVE] movePause Response: ${JSON.stringify(response)}`)
+      httpLogger.debug(
+        `[MOVE] movePause Response: ${JSON.stringify(response)}`,
+      );
       return res.send(response);
     } catch (error) {
       httpLogger.error(`[MOVE] movePause: ${errorToJson(error)}`);
@@ -173,10 +187,12 @@ export class MoveController {
   })
   async moveResume(@Res() res: Response) {
     try {
-      const newData = {command:'resume',time:Date.now().toString()}
-      httpLogger.debug(`[MOVE] moveResume: ${JSON.stringify(newData)}`)
+      const newData = { command: 'resume', time: Date.now().toString() };
+      httpLogger.debug(`[MOVE] moveResume: ${JSON.stringify(newData)}`);
       const response = await this.moveService.moveCommand(newData);
-      httpLogger.debug(`[MOVE] moveResume Response: ${JSON.stringify(response)}`)
+      httpLogger.debug(
+        `[MOVE] moveResume Response: ${JSON.stringify(response)}`,
+      );
       return res.send(response);
     } catch (error) {
       httpLogger.error(`[MOVE] moveResume: ${errorToJson(error)}`);

@@ -7,27 +7,17 @@ import {
 } from '@nestjs/swagger';
 
 import helmet from 'helmet';
-import * as morgan from 'morgan';
 import { ValidationPipe } from '@nestjs/common';
 import { loggerMiddleware } from '@common/middleware/logger.middleware';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExceptionFilterMiddleware } from '@common/middleware/exception-filter.middleware';
-import { ConfigService } from '@nestjs/config';
 import * as bodyParser from 'body-parser';
-import {ServeStaticModule} from '@nestjs/serve-static';
-import { instrument } from '@socket.io/admin-ui';
-import * as fs from 'fs';
 import * as express from 'express';
-import * as os from 'os';
-import * as cors from 'cors';
-import * as https from 'https';
-import { osInfo } from 'systeminformation';
-import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+
   app.setGlobalPrefix('api');
   app.enableCors({
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -42,7 +32,7 @@ async function bootstrap() {
   //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
   // };
 
-  app.use(bodyParser.json({limit:'1mb'}))
+  app.use(bodyParser.json({ limit: '1mb' }));
   app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
   app.useGlobalPipes(
     new ValidationPipe({
@@ -99,7 +89,7 @@ async function bootstrap() {
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
-  app.use('/docs/socket',express.static(join(__dirname,'..','docs')));
+  app.use('/docs/socket', express.static(join(__dirname, '..', 'docs')));
 
   app.use('/docs/api', (req, res, next) => {
     res.removeHeader('Content-Security-Policy');
