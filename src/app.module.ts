@@ -6,7 +6,6 @@ import { UsersModule } from 'src/modules/apis/users/users.module';
 import { SocketsModule } from 'src/modules/sockets/sockets.module';
 import { TaskModule } from '@task/task.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { MoveModule } from './modules/apis/move/move.module';
 import { ControlModule } from './modules/apis/control/control.module';
 import { MapModule } from './modules/apis/map/map.module';
@@ -21,6 +20,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
 import { InfluxDBModule } from './modules/apis/influx/influx.module';
 import { OnvifModule } from './modules/apis/onvif/onvif.module';
+import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,7 +30,7 @@ import { OnvifModule } from './modules/apis/onvif/onvif.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: () => ({
         type: 'mariadb',
         host: '127.0.0.1',
         port: 3306,
@@ -39,7 +39,7 @@ import { OnvifModule } from './modules/apis/onvif/onvif.module';
         database: 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         // synchronize: false,
-        logging: false
+        logging: false,
       }),
     }),
     UsersModule,
@@ -57,7 +57,8 @@ import { OnvifModule } from './modules/apis/onvif/onvif.module';
     LogModule,
     UploadModule,
     SoundModule,
-    OnvifModule
+    OnvifModule,
+    MotionModule,
   ],
   providers: [],
   controllers: [],

@@ -6,6 +6,6 @@ import { SocketsModule } from '@sockets/sockets.module';
 @Module({
   imports: [SocketsModule],
   providers: [ControlService],
-  controllers: [ControlController]
+  controllers: [ControlController],
 })
 export class ControlModule {}
