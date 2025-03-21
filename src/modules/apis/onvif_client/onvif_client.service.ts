@@ -3,17 +3,22 @@ import * as onvif from 'node-onvif';
 
 @Injectable()
 export class OnvifClientService implements OnModuleInit {
-    private service: onvif.onvifService;
+  private service: onvif.onvifService;
+
   async onModuleInit() {
     console.log('Starting ONVIF discovery...');
     // await this.discoverDevices();
-    const d = onvif.onvifService();
+    setInterval(() => {
+      // this.discoverDevices();
+    }, 1000);
+
+    // const d = onvif.onvifService();
   }
 
   async discoverDevices() {
     console.log('Searching for ONVIF devices...');
     const devices = await onvif.startProbe();
-    devices.forEach(device => {
+    devices.forEach((device) => {
       console.log(`Found ONVIF device: ${device.urn} at ${device.xaddrs}`);
     });
   }
@@ -26,7 +31,9 @@ export class OnvifClientService implements OnModuleInit {
     });
 
     await device.init();
-    console.log(`Connected to ONVIF device: ${device.getInformation().Manufacturer}`);
+    console.log(
+      `Connected to ONVIF device: ${device.getInformation().Manufacturer}`,
+    );
 
     return device;
   }

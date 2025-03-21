@@ -1,9 +1,16 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { OnvifClientService } from './onvif_client.service';
+import { Response } from 'express';
 
-@Controller('onvif')
+@Controller('onvif_client')
 export class OnvifClientController {
   constructor(private readonly OnvifClientService: OnvifClientService) {}
+
+  @Get()
+  async test(@Res() res: Response) {
+    this.OnvifClientService.discoverDevices();
+    res.send();
+  }
 
   @Get('discover')
   async discoverDevices() {

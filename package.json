@@ -38,6 +38,7 @@
     "class-validator": "^0.14.1",
     "csv": "^6.3.11",
     "date-fns": "^4.1.0",
+    "express-xml-bodyparser": "^0.3.0",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.1",
     "kafkajs": "^2.2.4",
@@ -54,11 +55,13 @@
     "redis": "^4.7.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "soap": "^1.1.9",
     "socket.io-client": "^4.8.1",
     "ssh2": "^1.16.0",
     "systeminformation": "^5.25.11",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
