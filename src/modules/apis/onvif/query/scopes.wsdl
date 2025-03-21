@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+    xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+  <soap:Body>
+    <tds:GetScopesResponse >
+      <tds:Scopes>
+        <tds:ScopeItem>
+          <tds:ScopeDef>Fixed</tds:ScopeDef>
+          <tds:ScopeItem>onvif://www.onvif.org/type/NetworkVideoTransmitter</tds:ScopeItem>
+        </tds:ScopeItem>
+        <tds:ScopeItem>
+          <tds:ScopeDef>Configurable</tds:ScopeDef>
+          <tds:ScopeItem>onvif://www.onvif.org/location/camera1</tds:ScopeItem>
+        </tds:ScopeItem>
+        <tds:ScopeItem>
+          <tds:ScopeDef>Configurable</tds:ScopeDef>
+          <tds:ScopeItem>onvif://www.onvif.org/name/MyCamera</tds:ScopeItem>
+        </tds:ScopeItem>
+      </tds:Scopes>
+    </tds:GetScopesResponse>
+  </soap:Body>
+</soap:Envelope>

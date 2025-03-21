@@ -1,0 +1,33 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <s:Body>
+        <GetSystemDateAndTimeResponse xmlns="http://www.onvif.org/ver10/device/wsdl">
+            <SystemDateAndTime>
+                <UTCDateTime>
+                    <Date>
+                        <Year>__YEAR_UTC__</Year>
+                        <Month>__MONTH_UTC__</Month>
+                        <Day>__DAY_UTC__</Day>
+                    </Date>
+                    <Time>
+                        <Hour>__HOUR_UTC__</Hour>
+                        <Minute>__MINUTE_UTC__</Minute>
+                        <Second>__SECOND_UTC__</Second>
+                    </Time>
+                </UTCDateTime>
+                <LocalDateTime>
+                    <Date>
+                        <Year>__YEAR__</Year>
+                        <Month>__MONTH__</Month>
+                        <Day>__DAY__</Day>
+                    </Date>
+                    <Time>
+                        <Hour>__HOUR__</Hour>
+                        <Minute>__MINUTE__</Minute>
+                        <Second>__SECOND__</Second>
+                    </Time>
+                </LocalDateTime>
+                <Timezone>UTC+09:00</Timezone>
+            </SystemDateAndTime>
+        </GetSystemDateAndTimeResponse>
+    </s:Body>
+</s:Envelope>

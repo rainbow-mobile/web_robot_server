@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope 
+    xmlns:soap="http://www.w3.org/2003/05/soap-envelope"  
+    xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+  <soap:Body>
+    <tds:GetNetworkInterfacesResponse>
+      <tds:NetworkInterfaces token="eno1">
+        <tds:Enabled>true</tds:Enabled>
+        <tds:Info>
+          <tds:Name>eno1</tds:Name>
+          <tds:HwAddress>00:1A:2B:3C:4D:5E</tds:HwAddress>
+          <tds:MTU>1500</tds:MTU>
+        </tds:Info>
+        <tds:IPv4>
+          <tds:Enabled>true</tds:Enabled>
+          <tds:Config>
+            <tds:Manual>
+              <tds:Address>192.168.1.88</tds:Address>
+              <tds:PrefixLength>24</tds:PrefixLength>
+            </tds:Manual>
+            <tds:DHCP>false</tds:DHCP>
+          </tds:Config>
+        </tds:IPv4>
+      </tds:NetworkInterfaces>
+    </tds:GetNetworkInterfacesResponse>
+  </soap:Body>
+</soap:Envelope>

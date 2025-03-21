@@ -40,7 +40,7 @@ import { OnvifClientModule } from './modules/apis/onvif_client/onvif_client.modu
         database: 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         // synchronize: false,
-        logging: false
+        logging: false,
       }),
     }),
     UsersModule,
@@ -59,7 +59,7 @@ import { OnvifClientModule } from './modules/apis/onvif_client/onvif_client.modu
     UploadModule,
     SoundModule,
     OnvifClientModule,
-    OnvifDeviceModule
+    OnvifDeviceModule,
   ],
   providers: [],
   controllers: [],

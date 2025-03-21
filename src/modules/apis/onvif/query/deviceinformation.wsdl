@@ -1,0 +1,12 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <s:Header/>
+    <s:Body>
+        <GetDeviceInformationResponse xmlns="http://www.onvif.org/ver10/device/wsdl">
+            <Manufacturer>__MANUFACTURER__</Manufacturer>
+            <Model>__MODEL__</Model>
+            <FirmwareVersion>__FIRMWARE__VERSION__</FirmwareVersion>
+            <SerialNumber>__SERIAL_NUMBER__</SerialNumber>
+            <HardwareId>__HARDWARE_ID__</HardwareId>
+        </GetDeviceInformationResponse>
+    </s:Body>
+</s:Envelope>
