@@ -16,7 +16,7 @@ export class MapService {
   private mapDir: string = homedir() + '/maps';
 
   async getMapList() {
-    return new Promise<any[]>(async (resolve, reject) => {
+    return new Promise<any>(async (resolve, reject) => {
       try {
         const response = await this.parseMapList(this.mapDir);
         resolve(response.list);

@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
-import { OnvifService } from './onvif.service';
+import { OnvifDeviceService } from './onvif.service';
+import { OnvifDeviceController } from './onvif.controller';
+import { SocketsModule } from '@sockets/sockets.module';
+import { VariablesModule } from '../variables/variables.module';
 
 @Module({
-  providers: [OnvifService],
-  exports: [OnvifService],
+  imports: [SocketsModule, VariablesModule],
+  providers: [OnvifDeviceService],
+  controllers: [OnvifDeviceController],
+  exports: [OnvifDeviceService],
 })
-export class OnvifModule {}
+export class OnvifDeviceModule {}

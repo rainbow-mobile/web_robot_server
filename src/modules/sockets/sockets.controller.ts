@@ -17,6 +17,7 @@ import { VariablesService } from '../apis/variables/variables.service';
 import { Response } from 'express';
 import socketLogger from '@common/logger/socket.logger';
 import { FrsUrlDto } from './dto/frs.url.dto';
+// import { MqttClientService } from './mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 import { EmitOnOffDto } from './dto/lidar.onoff.dto';
 import { VariableDto } from '../apis/variables/dto/variables.dto';
@@ -213,7 +214,7 @@ export class SocketsController implements OnModuleInit {
     summary: '라이다 통신 ON/Off',
     description: '라이다 소켓 통신 열기, frequency(통신주기)',
   })
-  async lidarOn(@Body() data: EmitOnOffDto) {
+  async lidarOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
       httpLogger.info(
         `[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`,
@@ -222,6 +223,7 @@ export class SocketsController implements OnModuleInit {
         'lidarOnOff',
         JSON.stringify({ ...data, time: Date.now().toString() }),
       );
+      res.send();
     } catch (error) {
       httpLogger.error(`[SOCKET] lidar OnOff: ${errorToJson(error)}`);
     }
@@ -232,7 +234,7 @@ export class SocketsController implements OnModuleInit {
     summary: '경로 통신 ON/Off',
     description: '경로 소켓 통신 열기, frequency(통신주기)',
   })
-  async pathOn(@Body() data: EmitOnOffDto) {
+  async pathOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
       httpLogger.info(
         `[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`,
@@ -241,6 +243,7 @@ export class SocketsController implements OnModuleInit {
         'pathOnOff',
         JSON.stringify({ ...data, time: Date.now().toString() }),
       );
+      res.send();
     } catch (error) {
       httpLogger.error(`[SOCKET] path OnOff: ${errorToJson(error)}`);
     }

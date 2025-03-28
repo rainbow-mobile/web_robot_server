@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from 'src/modules/apis/users/users.module';
-// import { AuthModule } from '@auth/auth.module';
-// import { RobotsModule } from '@robots/robots.module';
 import { SocketsModule } from 'src/modules/sockets/sockets.module';
 import { TaskModule } from '@task/task.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -19,7 +17,7 @@ import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
 import { InfluxDBModule } from './modules/apis/influx/influx.module';
-import { OnvifModule } from './modules/apis/onvif/onvif.module';
+import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
 import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
   imports: [
@@ -57,7 +55,7 @@ import { MotionModule } from './modules/apis/motion/motion.module';
     LogModule,
     UploadModule,
     SoundModule,
-    OnvifModule,
+    OnvifDeviceModule,
     MotionModule,
   ],
   providers: [],

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope"
+xmlns:enc="http://www.w3.org/2003/05/soap-encoding"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:xop="http://www.w3.org/2004/08/xop/include"
+xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+xmlns:tt="http://www.onvif.org/ver10/schema">
+    <env:Header>
+    </env:Header>
+    <env:Body>
+        <tds:GetServicesResponse>
+            <tds:Service>
+                <tds:Namespace>http://www.onvif.org/ver10/device/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __DEVICE_XADDRS__
+                </tds:XAddr>
+                <tds:Capabilities>
+                    <tds:Capabilities>
+                        <tds:Network IPFilter="false" ZeroConfiguration="true"
+                        IPVersion6="false" DynDNS="false" Dot11Configuration="false"
+                        HostnameFromDHCP="false" NTP="0" />
+                        <tds:Security TLS1.0="false" TLS1.1="false" TLS1.2="false"
+                        OnboardKeyGeneration="false" AccessPolicyConfig="false" DefaultAccessPolicy="false"
+                        Dot1X="false" RemoteUserHandling="false" X.509Token="false" SAMLToken="false"
+                        KerberosToken="false" UsernameToken="false" HttpDigest="false" RELToken="false" />
+                        <tds:System DiscoveryResolve="true" DiscoveryBye="true"
+                        RemoteDiscovery="false" SystemBackup="false" SystemLogging="false"
+                        FirmwareUpgrade="true" HttpFirmwareUpgrade="false" HttpSystemBackup="false"
+                        HttpSystemLogging="false" HttpSupportInformation="false" />
+                        <tds:Misc AuxiliaryCommands="" />
+                    </tds:Capabilities>
+                </tds:Capabilities>
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:Service>
+            <tds:Media>
+                <tds:Namespace>http://www.onvif.org/ver10/media/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __MEDIA_XADDRS__
+                </tds:XAddr>
+                <!-- <tds:Capabilities>
+                    <trt:Capabilities xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+                    SnapshotUri="true" Rotation="false">
+                    <trt:ProfileCapabilities MaximumNumberOfProfiles="10" />
+                    <trt:StreamingCapabilities RTPMulticast="true" RTP_TCP="false"
+                    RTP_RTSP_TCP="true" NonAggregateControl="true" />
+                    </trt:Capabilities>
+                </tds:Capabilities> -->
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:Media>
+            <tds:PTZ>
+                <tds:Namespace>http://www.onvif.org/ver20/ptz/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __PTZ_XADDRS__
+                </tds:XAddr>
+                <tds:Capabilities>
+                    <tptz:Capabilities xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl"
+                    EFlip="false" Reverse="false" />
+                </tds:Capabilities>
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:PTZ>
+            <tds:Event>
+                <tds:Namespace>http://www.onvif.org/ver10/events/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __EVENT_XADDRS__
+                </tds:XAddr>
+                <tds:Capabilities>
+                    <tev:Capabilities xmlns:tev="http://www.onvif.org/ver10/events/wsdl"
+                    WSSubscriptionPolicySupport="false" WSPullPointSupport="false"
+                    WSPausableSubscription="false" />
+                </tds:Capabilities>
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:Event>
+            <tds:Service>
+                <tds:Namespace>http://www.onvif.org/ver20/imaging/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __IMAGING_XADDRS__
+                </tds:XAddr>
+                <tds:Capabilities>
+                    <timg:Capabilities xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl"
+                    ImageStabilization="false" />
+                </tds:Capabilities>
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:Service>
+            <tds:Service>
+                <tds:Namespace>http://www.onvif.org/ver10/deviceIO/wsdl</tds:Namespace>
+                <tds:XAddr>
+                    __DEVICEIO_XADDRS__
+                </tds:XAddr>
+                <tds:Capabilities>
+                    <tmd:Capabilities xmlns:tmd="http://www.onvif.org/ver10/deviceIO/wsdl"
+                    VideoSources="1" VideoOutputs="0" AudioSources="1" AudioOutputs="1" RelayOutputs="0"
+                    SerialPorts="0" DigitalInputs="0" />
+                </tds:Capabilities>
+                <tds:Version>
+                    <tt:Major>2</tt:Major>
+                    <tt:Minor>20</tt:Minor>
+                </tds:Version>
+            </tds:Service>
+        </tds:GetServicesResponse>
+    </env:Body>
+</env:Envelope>

@@ -12,27 +12,28 @@ import { loggerMiddleware } from '@common/middleware/logger.middleware';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExceptionFilterMiddleware } from '@common/middleware/exception-filter.middleware';
 import * as bodyParser from 'body-parser';
+import * as xmlParser from 'express-xml-bodyparser';
 import * as express from 'express';
 import { join } from 'path';
+// import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   app.setGlobalPrefix('api');
   app.enableCors({
     allowedHeaders: 'Content-Type, Accept, Authorization',
-    methods: ['POST', 'GET', 'PUT', 'FETCH', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
+    methods: ['POST', 'GET', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: false,
     origin: '*',
   });
 
+  app.use(bodyParser.json({ limit: '1mb' }));
+  app.use(xmlParser());
   // HTTPS를 위한 SSL 인증서
   // const httpsOptions = {
   //   key: fs.readFileSync(os.homedir() + '/key.pem'),
   //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
   // };
-
-  app.use(bodyParser.json({ limit: '1mb' }));
   app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
   app.useGlobalPipes(
     new ValidationPipe({
@@ -41,6 +42,14 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // app.use(
+  //   '/',
+  //   createProxyMiddleware({
+  //     target: 'http://192.168.1.88:8180',
+  //     changeOrigin: false,
+  //   }),
+  // );
 
   app.use(helmet());
   // app.use(morgan('dev'));
@@ -93,25 +102,13 @@ async function bootstrap() {
 
   app.use('/docs/api', (req, res, next) => {
     res.removeHeader('Content-Security-Policy');
-    // res.header('Access-Control-Allow-Origin', '*');
-    // res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    // res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
 
-  // app.use('/docs',express.static(join(__dirname,'..','public')));
   SwaggerModule.setup('docs/api', app, swaggerDocument, swaggerCustomOptions);
 
   const port = 11334;
   await app.listen(port);
-  // HTTPS 서버를 생성
-  // const httpsServer = https.createServer(httpsOptions, app.getHttpAdapter().getInstance());
-
-  // Socket.io 어댑터와 함께 WebSocket 연결 처리
-  // const socketGateway = app.get(SocketGateway);
-  // httpsServer.listen(443, () => {
-  //   console.log('HTTPS server running on wss://localhost:11337');
-  // });
 }
 
 bootstrap();

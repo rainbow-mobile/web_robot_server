@@ -46,6 +46,7 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
+    private readonly influxService: InfluxDBService,
     private readonly mqttService: MqttClientService,
     private readonly kafakService: KafkaClientService,
   ) {}
@@ -64,6 +65,7 @@ export class SocketGateway
   tcpClient = null;
 
   slamnav: Socket;
+  streaming: Socket;
   taskman: Socket;
 
   taskState: TaskPayload = {
@@ -161,11 +163,11 @@ export class SocketGateway
       bat_in: '0',
       bat_out: '0',
       bat_current: '0',
+      bat_percent: '0',
       power: '0',
       total_power: '0',
       charge_current: '0',
       contact_voltage: '0',
-      bat_percent: '0',
     },
     move_state: {
       auto_move: 'stop',
@@ -210,6 +212,7 @@ export class SocketGateway
           const command = data.toString().split(' ')[0];
           const param = data.toString().split(' ')[1];
 
+          console.log(data, command, param);
           if (command == 'req_status') {
             let data;
             if (param == 'slamnav') {
@@ -820,6 +823,7 @@ export class SocketGateway
         }
       });
     } catch (error) {
+      console.error(error);
       socketLogger.error(`[CONNECT] FRS Socket connect`);
       throw error;
     }
@@ -861,6 +865,8 @@ export class SocketGateway
       this.taskman = client;
       this.taskState.connection = true;
       // this.taskman.emit('file')
+    } else if (client.handshake.query.name == 'streaming') {
+      this.streaming = client;
     }
     client.join(client.handshake.query.name);
   }
@@ -1018,6 +1024,23 @@ export class SocketGateway
     }
   }
 
+  /**
+   * @description 태스크 이동 메시지를 처리하는 함수
+   * @param socket
+   * @param payload 로봇 이동 변수
+   */
+  @SubscribeMessage('moveCommand')
+  async handleMoveCommandMessage2(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload));
+      this.server.to('slamnav').emit('move', json);
+
+      socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
+    } catch (error) {
+      socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
     const json = JSON.parse(payload);
@@ -1029,6 +1052,8 @@ export class SocketGateway
         msgpack.encode({ robotSerial: global.robotSerial, data: json }),
       );
     }
+
+    // this.influxService.writeStatus(json);
 
     this.robotState = { ...this.robotState, ...json };
   }
@@ -1044,6 +1069,7 @@ export class SocketGateway
       );
     }
 
+    // this.influxService.writeMoveStatus(json);
     // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
     this.robotState = { ...this.robotState, ...json };
   }
