@@ -1,20 +1,21 @@
-import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
+import { MotionCommandDto } from './dto/motion.dto';
+import httpLogger from '@common/logger/http.logger';
 
 @Injectable()
-export class MoveService {
+export class MotionService {
   constructor(private readonly socketGateway: SocketGateway) {}
 
-  async moveCommand(data: any) {
+  async motionCommand(data: MotionCommandDto) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('move', data);
-        httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
+        this.socketGateway.server.to('slamnav').emit('motion', data);
+        httpLogger.info(`[MOTION] motionCommand: ${JSON.stringify(data)}`);
 
-        this.socketGateway.slamnav.once('moveResponse', (data2) => {
+        this.socketGateway.slamnav.once('motionResponse', (data2) => {
           httpLogger.info(
-            `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
+            `[MOTION] motionCommand Response: ${JSON.stringify(data2)}`,
           );
           resolve(data2);
           clearTimeout(timeoutId);
@@ -33,11 +34,5 @@ export class MoveService {
         });
       }
     });
-  }
-
-  async moveJog(data: object) {
-    if (this.socketGateway.slamnav != null) {
-      this.socketGateway.server.to('slamnav').emit('move', data);
-    }
   }
 }

@@ -10,12 +10,9 @@ export function loggerMiddleware(
 
   res.on('finish', () => {
     const duration = Date.now() - startRequestTime;
-    
-    const { authorization, cookie, ...safeHeaders } = req.headers;
-    const headers = JSON.stringify(safeHeaders);
 
     const message = `[${req.method}] ${req.url}: 응답(${res.statusCode}), 응답시간(${duration}ms), 요청자(${req.ip})`;
-    
+
     httpLogger.debug(message);
   });
 

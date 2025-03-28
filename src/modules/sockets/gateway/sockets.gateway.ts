@@ -23,7 +23,11 @@ import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as msgpack from 'msgpack-lite';
 import * as net from 'net';
-import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
+import {
+  MotionCommand,
+  MotionMethod,
+} from 'src/modules/apis/motion/dto/motion.dto';
+import { MotionPayload } from '@common/interface/robot/motion.interface';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -82,6 +86,10 @@ export class SocketGateway
     preset: undefined,
     method: undefined,
     result: undefined,
+  };
+  motionState: MotionPayload = {
+    command: MotionCommand.MOTION_GATE,
+    method: MotionMethod.SITTING,
   };
   robotState: StatusPayload = {
     pose: {
@@ -817,6 +825,7 @@ export class SocketGateway
     } catch (error) {
       console.error(error);
       socketLogger.error(`[CONNECT] FRS Socket connect`);
+      throw error;
     }
   }
 
@@ -832,9 +841,9 @@ export class SocketGateway
     };
     this.server.emit('programStatus', statusData.data);
     if (this.frsSocket?.connected && global.robotSerial != '') {
-      // socketLogger.debug(
-      // `[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`,
-      // );
+      socketLogger.debug(
+        `[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`,
+      );
       this.frsSocket.emit('programStatus', msgpack.encode(statusData));
     }
   }, 1000);
@@ -948,10 +957,6 @@ export class SocketGateway
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
-
-  // @SubscribeMessage('sshCommand')
-  // async handleSSHCommandMessage(@MessageBody() payload: string) {}
-
   @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload: TaskPayload) {
     try {
@@ -1207,7 +1212,6 @@ export class SocketGateway
       throw error();
     }
   }
-
   @SubscribeMessage('dockResponse')
   async handleDockReponseMessage(@MessageBody() payload: string) {
     try {
@@ -1350,6 +1354,45 @@ export class SocketGateway
       });
     } catch (error) {
       socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('motion')
+  async handleMotionMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload));
+      this.server.to('slamnav').emit('motion', json);
+
+      socketLogger.debug(`[COMMAND] Motion: ${JSON.stringify(json)}`);
+    } catch (error) {
+      socketLogger.error(`[INIT] Motion:  ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+  @SubscribeMessage('motionResponse')
+  async handleMotionResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload);
+      this.server.emit('motionResponse', json);
+
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit(
+          'motionResponse',
+          msgpack.encode({ robotSerial: global.robotSerial, data: json }),
+        );
+      }
+
+      if (this.tcpClient) {
+        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+        this.tcpClient.write(json.result);
+      }
+
+      this.motionState = json;
+
+      socketLogger.debug(`[RESPONSE] SLAMNAV Motion: ${JSON.stringify(json)}`);
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] SLAMNAV Motion: ${errorToJson(error)}`);
       throw error();
     }
   }

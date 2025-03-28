@@ -63,32 +63,32 @@ export interface StatusPayload {
     localization: string;
     dock: string;
   };
-  move_state:{
-    auto_move:string;
-    dock_move:string;
-    jog_move:string;
-    obs:string;
-    path:string;
+  move_state: {
+    auto_move: string;
+    dock_move: string;
+    jog_move: string;
+    obs: string;
+    path: string;
   };
-  goal_node:{
+  goal_node: {
     id: string;
-    name:string;
-    state:string;
-    x:string;
-    y:string;
-    rz:string;
+    name: string;
+    state: string;
+    x: string;
+    y: string;
+    rz: string;
   };
-  cur_node:{
+  cur_node: {
     id: string;
-    name:string;
-    state:string;
-    x:string;
-    y:string;
-    rz:string;
+    name: string;
+    state: string;
+    x: string;
+    y: string;
+    rz: string;
   };
-  map:{
-    map_name:string;
-    map_status:string;
+  map: {
+    map_name: string;
+    map_status: string;
   };
   condition: {
     inlier_error: string;
