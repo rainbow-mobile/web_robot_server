@@ -1,0 +1,17 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+  <s:Header/>
+  <s:Body>
+    <tds:GetNetworkProtocolsResponse xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+      <tds:NetworkProtocols>
+        <tds:NetworkProtocol>
+          <tt:Protocol>TCP</tt:Protocol>
+          <tt:Port>80</tt:Port>
+        </tds:NetworkProtocol>
+        <tds:NetworkProtocol>
+          <tt:Protocol>UDP</tt:Protocol>
+          <tt:Port>5000</tt:Port>
+        </tds:NetworkProtocol>
+      </tds:NetworkProtocols>
+    </tds:GetNetworkProtocolsResponse>
+  </s:Body>
+</s:Envelope>

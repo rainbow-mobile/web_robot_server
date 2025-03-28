@@ -1,0 +1,55 @@
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+               xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:tt="http://www.onvif.org/ver10/schema"
+                >
+    <soap:Body>
+        <trt:GetProfileResponse>
+            <trt:Profile token="cam0">
+                <tt:Name>cam0</tt:Name>
+                <tt:VideoSourceConfiguration xsi:type="tt:VideoSourceConfiguration" token="vscfg0">
+                    <tt:Name>vscfg0</tt:Name>
+                    <tt:UseCount>1</tt:UseCount>
+                    <tt:SourceToken>vidsrc0</tt:SourceToken>
+                    <tt:Bounds height="180" width="320" y="0" x="0"></tt:Bounds>
+                </tt:VideoSourceConfiguration>
+                <tt:VideoEncoderConfiguration xsi:type="tt:VideoEncoderConfiguration" token="cam0">
+                    <tt:Name>Main stream encoder</tt:Name>
+                    <tt:UseCount>1</tt:UseCount>
+                    <tt:Encoding>H264</tt:Encoding>
+                    <tt:Resolution>
+                        <tt:Width>320</tt:Width>
+                        <tt:Height>180</tt:Height>
+                    </tt:Resolution>
+                    <tt:Quality>8</tt:Quality>
+                    <tt:RateControl>
+                        <tt:FrameRateLimit>5</tt:FrameRateLimit>
+                        <tt:EncodingInterval>1</tt:EncodingInterval>
+                        <tt:BitrateLimit>1000</tt:BitrateLimit>
+                    </tt:RateControl>
+                    <tt:H264>
+                        <tt:GovLength>30</tt:GovLength>
+                        <tt:H264Profile>High</tt:H264Profile>
+                    </tt:H264>
+                    <tt:SessionTimeout>PT60S</tt:SessionTimeout>
+                </tt:VideoEncoderConfiguration>
+                <tt:PTZConfiguration token="ptzcfg0">
+                    <tt:Name>PTZ Config</tt:Name>
+                    <tt:UseCount>1</tt:UseCount>
+                    <tt:NodeToken>ptznode0</tt:NodeToken>
+                    <tt:DefaultAbsolutePantTiltPositionSpace>http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace</tt:DefaultAbsolutePantTiltPositionSpace>
+                    <tt:DefaultAbsoluteZoomPositionSpace>http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace</tt:DefaultAbsoluteZoomPositionSpace>
+                    <tt:DefaultRelativePanTiltTranslationSpace>http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace</tt:DefaultRelativePanTiltTranslationSpace>
+                    <tt:DefaultRelativeZoomTranslationSpace>http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace</tt:DefaultRelativeZoomTranslationSpace>
+                    <tt:DefaultContinuousPanTiltVelocitySpace>http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace</tt:DefaultContinuousPanTiltVelocitySpace>
+                    <tt:DefaultContinuousZoomVelocitySpace>http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace</tt:DefaultContinuousZoomVelocitySpace>
+                    <tt:DefaultPTZSpeed>
+                        <tt:PanTilt space="http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace" y="1" x="1"></tt:PanTilt>
+                        <tt:Zoom space="http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace" x="1"></tt:Zoom>
+                    </tt:DefaultPTZSpeed>
+                    <tt:DefaultPTZTimeout>PT60S</tt:DefaultPTZTimeout>
+                </tt:PTZConfiguration>
+            </trt:Profile>
+        </trt:GetProfileResponse>
+    </soap:Body>
+</soap:Envelope> 

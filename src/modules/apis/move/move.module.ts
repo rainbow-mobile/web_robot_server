@@ -6,6 +6,6 @@ import { SocketsModule } from '@sockets/sockets.module';
 @Module({
   imports: [SocketsModule],
   providers: [MoveService],
-  controllers: [MoveController]
+  controllers: [MoveController],
 })
 export class MoveModule {}

@@ -6,9 +6,6 @@ import {
   Get,
   Param,
   Res,
-  Patch,
-  Put,
-  Delete,
   Post,
   HttpStatus,
   Query,
@@ -16,9 +13,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
-import { StatusLogEntity } from './entity/status.entity';
 import { StatusTestDto } from './dto/status.dto';
-import * as pako from 'pako';
 import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { errorToJson } from '@common/util/error.util';

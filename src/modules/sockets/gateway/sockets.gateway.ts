@@ -61,6 +61,7 @@ export class SocketGateway
   tcpClient = null;
 
   slamnav: Socket;
+  streaming: Socket;
   taskman: Socket;
 
   taskState: TaskPayload = {
@@ -490,7 +491,7 @@ export class SocketGateway
           }
           // to be continue...
           // this.mqttService.connect();
-          this.kafakService.connect();
+          // this.kafakService.connect();
         } catch (error) {
           socketLogger.error(
             `[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -855,6 +856,8 @@ export class SocketGateway
       this.taskman = client;
       this.taskState.connection = true;
       // this.taskman.emit('file')
+    } else if (client.handshake.query.name == 'streaming') {
+      this.streaming = client;
     }
     client.join(client.handshake.query.name);
   }
