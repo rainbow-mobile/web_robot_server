@@ -3,8 +3,7 @@ import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { exec, execSync } from 'child_process';
-import * as moment from 'moment';
+import { exec } from 'child_process';
 import * as wifi from 'node-wifi';
 import { WiFiNetwork } from 'node-wifi';
 
@@ -72,7 +71,7 @@ export class NetworkService {
   }
   async getNetwork() {
     return new Promise(async (resolve, reject) => {
-      exec('nmcli device show', async (err, stdout, stderr) => {
+      exec('nmcli device show', async (err, stdout) => {
         if (err) {
           httpLogger.error(`[NETOWRK] getNetwork: ${errorToJson(err)}`);
           reject({
@@ -87,7 +86,6 @@ export class NetworkService {
             this.curWifi = [];
             this.curBluetooth = [];
             const networks = stdout.split(/\n\s*\n/);
-            const test: NetworkPayload[] = [];
             for (const i in networks) {
               const json = await this.transNMCLI(networks[i]);
               if (json.type == 'ethernet') {
@@ -195,7 +193,7 @@ export class NetworkService {
             httpLogger.error(`[NETWORK] getCurrentWifi: ${errorToJson(error)}`);
             reject();
           } else {
-            httpLogger.info(
+            httpLogger.debug(
               `[NETWORK] getCurrentWifi: ${JSON.stringify(networks)}`,
             );
             resolve(networks);
@@ -230,14 +228,14 @@ export class NetworkService {
           ' ipv4.method manual';
 
         httpLogger.info(`[NETWORK] SET IP: ${cmd}, ${JSON.stringify(info)}`);
-        exec(cmd, async (err, stdout, stderr) => {
+        exec(cmd, async (err) => {
           if (err) {
             httpLogger.error('[NETWORK] SET IP: ', errorToJson(err));
             reject();
           } else {
             exec(
               'sudo nmcli device up "' + info.device + '"',
-              async (err, stdout, stderr) => {
+              async (err, stdout) => {
                 if (err) {
                   httpLogger.error(
                     `[NETWORK] SET IP: ${cmd}, ${errorToJson(err)}`,
@@ -276,7 +274,7 @@ export class NetworkService {
         httpLogger.info(
           `[NETWORK] Connect Wifi : ${cmd_line}, ${JSON.stringify(info)}`,
         );
-        exec(cmd_line, async (err, stdout, stderr) => {
+        exec(cmd_line, async (err, stdout) => {
           if (err) {
             httpLogger.error(`[NETWORK] Connect Wifi: ${errorToJson(err)}`);
             if (err.toString().includes('Secrets were required')) {

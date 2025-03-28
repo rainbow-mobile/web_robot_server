@@ -15,6 +15,7 @@ import * as bodyParser from 'body-parser';
 import * as xmlParser from 'express-xml-bodyparser';
 import * as express from 'express';
 import { join } from 'path';
+// import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -36,6 +37,14 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // app.use(
+  //   '/',
+  //   createProxyMiddleware({
+  //     target: 'http://192.168.1.88:8180',
+  //     changeOrigin: false,
+  //   }),
+  // );
 
   app.use(helmet());
   // app.use(morgan('dev'));

@@ -19,7 +19,7 @@ const httpLogger = createLogger({
       level: 'debug',
     }),
     new transports.Console({
-      level: 'debug',
+      level: 'info',
       format: format.combine(
         format.colorize(),
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
