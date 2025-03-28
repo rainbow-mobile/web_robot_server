@@ -1,0 +1,10 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <s:Body>
+        <GetHostnameResponse xmlns="http://www.onvif.org/ver10/device/wsdl">
+            <HostnameInformation>
+                <FromDHCP>false</FromDHCP>
+                <Name>RRS</Name>
+            </HostnameInformation>
+        </GetHostnameResponse>
+    </s:Body>
+</s:Envelope>

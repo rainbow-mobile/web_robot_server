@@ -1,0 +1,14 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+  <s:Header/>
+  <s:Body>
+    <GetDNSResponse xmlns="http://www.onvif.org/ver10/device/wsdl">
+      <DNS>
+        <FromDHCP>false</FromDHCP>
+        <DNSManual>
+          <DNS1>8.8.8.8</DNS1>
+          <DNS2>8.8.4.4</DNS2>
+        </DNSManual>
+      </DNS>
+    </GetDNSResponse>
+  </s:Body>
+</s:Envelope>

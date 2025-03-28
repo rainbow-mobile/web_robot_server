@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OnvifController } from './onvif.controller';
+import { OnvifDeviceController } from './onvif.controller';
 
-describe('OnvifController', () => {
-  let controller: OnvifController;
+describe('OnvifDeviceController', () => {
+  let controller: OnvifDeviceController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [OnvifController],
+      controllers: [OnvifDeviceController],
     }).compile();
 
-    controller = module.get<OnvifController>(OnvifController);
+    controller = module.get<OnvifDeviceController>(OnvifDeviceController);
   });
 
   it('should be defined', () => {

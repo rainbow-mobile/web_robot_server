@@ -1,0 +1,15 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+                   xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                   xmlns:trt="http://www.onvif.org/ver10/media/wsdl">
+  <SOAP-ENV:Header/>
+  <SOAP-ENV:Body>
+  <GetVideoSourceConfigurationResponse>
+  <Configuration token="vscfg0">
+    <Name>Camera1</Name>
+    <UseCount>1</UseCount>
+    <SourceToken>cam0</SourceToken>
+    <Bounds x="0" y="0" width="320" height="180"/>
+  </Configuration>
+</GetVideoSourceConfigurationResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

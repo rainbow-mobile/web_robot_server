@@ -1,0 +1,31 @@
+<soap:Envelope 
+    xmlns:soap="http://www.w3.org/2003/05/soap-envelope"  
+    xmlns:tt="http://www.onvif.org/ver10/schema"
+    xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+  <soap:Body>
+    <tds:GetNetworkInterfacesResponse>
+      <tds:NetworkInterfaces>
+        <tt:Enabled>true</tt:Enabled>
+        <tt:Info>
+            <tt:Name>__NAME__</tt:Name>
+            <tt:HwAddress>__HW_ADDRESS__</tt:HwAddress>
+            <tt:MTU>1500</tt:MTU>
+        </tt:Info>
+        <tt:IPv4>
+            <tt:Enabled>true</tt:Enabled>
+            <tt:Config>
+                <tt:Manual>
+                    <tt:Address>__IPV4__</tt:Address>
+                    <tt:PrefixLength>__IPV4_SUBNET__</tt:PrefixLength>
+                </tt:Manual>
+                <tt:FromDHCP>
+                    <tt:Address>__IPV4_DHCP__</tt:Address>
+                    <tt:PrefixLength>__IPV4_SUBNET__</tt:PrefixLength>
+                </tt:FromDHCP>
+                <tt:DHCP>__IS_DHCP__</tt:DHCP>
+            </tt:Config>
+        </tt:IPv4>
+    </tds:NetworkInterfaces>
+    </tds:GetNetworkInterfacesResponse>
+  </soap:Body>
+</soap:Envelope>

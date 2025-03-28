@@ -459,6 +459,14 @@ export class LogService {
       dateStart.setHours(0, 0, 0, 0);
       dateEnd.setHours(23, 59, 59, 999);
 
+
+
+      const dateStart = new Date(param.startDt);
+      const dateEnd = new Date(param.endDt);
+
+      dateStart.setHours(0, 0, 0, 0);
+      dateEnd.setHours(23, 59, 59, 999);
+
       if (param.startDt) {
         queryBuilder.andWhere('time >= :startDt', {
           startDt: dateStart,
@@ -1042,198 +1050,90 @@ export class LogService {
   async getProcessUsage() {
     try {
       const processUsages = new Map<string, ProcessUsagePayload>();
+      const data = execSync('ps aux --sort=-%cpu')
+        .toString()
+        .split('\n')
+        .slice(1);
 
-      if (process.platform === 'darwin') {
-        // Mac에서는 ps 명령어 옵션이 다름
-        const { stdout } = await new Promise<{
-          stdout: string;
-          stderr: string;
-        }>((resolve, reject) => {
-          exec(
-            'ps -eo user,pid,%cpu,%mem,vsz,rss,time,command',
-            (error, stdout, stderr) => {
-              if (error) {
-                reject(error);
-              } else {
-                resolve({ stdout, stderr });
-              }
-            },
-          );
-        });
+      // 각 프로세스의 정보를 파싱
+      const processes = data.map((line) => {
+        const columns = line.trim().split(/\s+/);
+        return {
+          user: columns[0],
+          pid: columns[1],
+          cpu: parseFloat(columns[2]), // CPU 사용량 (%)
+          mem: parseFloat(columns[3]), // 메모리 사용량 (%)
+          vsz: parseInt(columns[4]) / 1024 / 1024, //가상메모리(GB)
+          rss: parseInt(columns[5]) / 1024 / 1024, //실제메모리(GB)
+          time: columns[8], //실행후지난시간
+          command: columns.slice(10).join(' '), // 실행된 명령어
+        };
+      });
 
-        const data = stdout.split('\n').slice(1);
+      let serverInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
+      let uiInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
+      let slamnavInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
+      let taskmanInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
 
-        // 각 프로세스의 정보를 파싱
-        const processes = data
-          .map((line) => {
-            const columns = line.trim().split(/\s+/);
-            if (columns.length < 8) return null;
-
-            return {
-              user: columns[0],
-              pid: columns[1],
-              cpu: parseFloat(columns[2]), // CPU 사용량 (%)
-              mem: parseFloat(columns[3]), // 메모리 사용량 (%)
-              vsz: parseInt(columns[4]) / 1024 / 1024, // 가상메모리(GB)
-              rss: parseInt(columns[5]) / 1024 / 1024, // 실제메모리(GB)
-              time: columns[6], // 실행후지난시간
-              command: columns.slice(7).join(' '), // 실행된 명령어
+      try {
+        processes.map((process) => {
+          if (
+            process.command.includes('web_robot_server') ||
+            process.command.includes('nest')
+          ) {
+            //  console.log("server : ", process);
+            serverInfo = {
+              cpu: serverInfo.cpu + process.cpu / 8,
+              mem: serverInfo.mem + process.mem,
+              vsz: serverInfo.vsz + process.vsz,
+              rss: serverInfo.rss + process.rss,
             };
-          })
-          .filter((p) => p !== null);
-
-        let serverInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let uiInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let slamnavInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let taskmanInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-
-        try {
-          processes.map((process) => {
-            if (
-              process.command.includes('web_robot_server') ||
-              process.command.includes('nest')
-            ) {
-              //  console.log("server : ", process);
-              serverInfo = {
-                cpu: serverInfo.cpu + process.cpu / 8,
-                mem: serverInfo.mem + process.mem,
-                vsz: serverInfo.vsz + process.vsz,
-                rss: serverInfo.rss + process.rss,
-              };
-            } else if (
-              process.command.includes('web_robot_ui') ||
-              process.command.includes('next')
-            ) {
-              // console.log("ui : ", process);
-              uiInfo = {
-                cpu: uiInfo.cpu + process.cpu / 8,
-                mem: uiInfo.mem + process.mem,
-                vsz: uiInfo.vsz + process.vsz,
-                rss: uiInfo.rss + process.rss,
-              };
-              // processUsages.set('web_robot_ui',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('TaskMan')) {
-              // console.log("TaskMan : ", process);
-              taskmanInfo = {
-                cpu: taskmanInfo.cpu + process.cpu / 8,
-                mem: taskmanInfo.mem + process.mem,
-                vsz: taskmanInfo.vsz + process.vsz,
-                rss: taskmanInfo.rss + process.rss,
-              };
-              // processUsages.set('TaskMan',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('SLAMNAV2')) {
-              // console.log("SLAMNAV : ", process)
-              slamnavInfo = {
-                cpu: slamnavInfo.cpu + process.cpu / 8,
-                mem: slamnavInfo.mem + process.mem,
-                vsz: slamnavInfo.vsz + process.vsz,
-                rss: slamnavInfo.rss + process.rss,
-              };
-              // processUsages.set('SLAMNAV2',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('mediamtx')) {
-              // console.log("mediamtx : ", process)
-              // processUsages.set('mediamtx',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            }
-          });
-
-          processUsages.set('web_robot_server', serverInfo);
-          processUsages.set('web_robot_ui', uiInfo);
-          processUsages.set('SLAMNAV2', slamnavInfo);
-          processUsages.set('TaskMan', taskmanInfo);
-        } catch (error) {
-          console.error(error);
-        }
-
-        // console.log(processUsages);
-        return processUsages;
-      } else {
-        // Linux 환경에서는 기존 코드 사용
-
-        const data = execSync('ps aux --sort=-%cpu')
-          .toString()
-          .split('\n')
-          .slice(1);
-
-        // 각 프로세스의 정보를 파싱
-        const processes = data.map((line) => {
-          const columns = line.trim().split(/\s+/);
-          return {
-            user: columns[0],
-            pid: columns[1],
-            cpu: parseFloat(columns[2]), // CPU 사용량 (%)
-            mem: parseFloat(columns[3]), // 메모리 사용량 (%)
-            vsz: parseInt(columns[4]) / 1024 / 1024, //가상메모리(GB)
-            rss: parseInt(columns[5]) / 1024 / 1024, //실제메모리(GB)
-            time: columns[8], //실행후지난시간
-            command: columns.slice(10).join(' '), // 실행된 명령어
-          };
+          } else if (
+            process.command.includes('web_robot_ui') ||
+            process.command.includes('next')
+          ) {
+            // console.log("ui : ", process);
+            uiInfo = {
+              cpu: uiInfo.cpu + process.cpu / 8,
+              mem: uiInfo.mem + process.mem,
+              vsz: uiInfo.vsz + process.vsz,
+              rss: uiInfo.rss + process.rss,
+            };
+            // processUsages.set('web_robot_ui',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+          } else if (process.command.includes('TaskMan')) {
+            // console.log("TaskMan : ", process);
+            taskmanInfo = {
+              cpu: taskmanInfo.cpu + process.cpu / 8,
+              mem: taskmanInfo.mem + process.mem,
+              vsz: taskmanInfo.vsz + process.vsz,
+              rss: taskmanInfo.rss + process.rss,
+            };
+            // processUsages.set('TaskMan',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+          } else if (process.command.includes('SLAMNAV2')) {
+            // console.log("SLAMNAV : ", process)
+            slamnavInfo = {
+              cpu: slamnavInfo.cpu + process.cpu / 8,
+              mem: slamnavInfo.mem + process.mem,
+              vsz: slamnavInfo.vsz + process.vsz,
+              rss: slamnavInfo.rss + process.rss,
+            };
+            // processUsages.set('SLAMNAV2',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+          } else if (process.command.includes('mediamtx')) {
+            // console.log("mediamtx : ", process)
+            // processUsages.set('mediamtx',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
+          }
         });
 
-        let serverInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let uiInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let slamnavInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-        let taskmanInfo = { cpu: 0, mem: 0, vsz: 0, rss: 0 };
-
-        try {
-          processes.map((process) => {
-            if (
-              process.command.includes('web_robot_server') ||
-              process.command.includes('nest')
-            ) {
-              //  console.log("server : ", process);
-              serverInfo = {
-                cpu: serverInfo.cpu + process.cpu / 8,
-                mem: serverInfo.mem + process.mem,
-                vsz: serverInfo.vsz + process.vsz,
-                rss: serverInfo.rss + process.rss,
-              };
-            } else if (
-              process.command.includes('web_robot_ui') ||
-              process.command.includes('next')
-            ) {
-              // console.log("ui : ", process);
-              uiInfo = {
-                cpu: uiInfo.cpu + process.cpu / 8,
-                mem: uiInfo.mem + process.mem,
-                vsz: uiInfo.vsz + process.vsz,
-                rss: uiInfo.rss + process.rss,
-              };
-              // processUsages.set('web_robot_ui',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('TaskMan')) {
-              // console.log("TaskMan : ", process);
-              taskmanInfo = {
-                cpu: taskmanInfo.cpu + process.cpu / 8,
-                mem: taskmanInfo.mem + process.mem,
-                vsz: taskmanInfo.vsz + process.vsz,
-                rss: taskmanInfo.rss + process.rss,
-              };
-              // processUsages.set('TaskMan',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('SLAMNAV2')) {
-              // console.log("SLAMNAV : ", process)
-              slamnavInfo = {
-                cpu: slamnavInfo.cpu + process.cpu / 8,
-                mem: slamnavInfo.mem + process.mem,
-                vsz: slamnavInfo.vsz + process.vsz,
-                rss: slamnavInfo.rss + process.rss,
-              };
-              // processUsages.set('SLAMNAV2',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            } else if (process.command.includes('mediamtx')) {
-              // console.log("mediamtx : ", process)
-              // processUsages.set('mediamtx',{cpu:process.cpu,mem:process.mem,vsz:process.vsz,rss:process.rss,time:process.time});
-            }
-          });
-
-          processUsages.set('web_robot_server', serverInfo);
-          processUsages.set('web_robot_ui', uiInfo);
-          processUsages.set('SLAMNAV2', slamnavInfo);
-          processUsages.set('TaskMan', taskmanInfo);
-        } catch (error) {
-          console.error(error);
-        }
-
-        // console.log(processUsages);
-        return processUsages;
+        processUsages.set('web_robot_server', serverInfo);
+        processUsages.set('web_robot_ui', uiInfo);
+        processUsages.set('SLAMNAV2', slamnavInfo);
+        processUsages.set('TaskMan', taskmanInfo);
+      } catch (error) {
+        console.error(error);
       }
+
+      // console.log(processUsages);
+      return processUsages;
     } catch (error) {
       console.error(`[LOG] getProcessUsage: ${JSON.stringify(error)}`);
     }
@@ -1244,217 +1144,77 @@ export class LogService {
   async getNetworkUsage() {
     try {
       const networkUsages = new Map<string, NetworkUsagePayload>();
+      const data = fs.readFileSync('/proc/net/dev', 'utf8');
 
-      if (process.platform === 'darwin') {
-        // Mac 환경에서는 networksetup 또는 ifconfig 명령어 사용
-        const { stdout } = await new Promise<{
-          stdout: string;
-          stderr: string;
-        }>((resolve, reject) => {
-          exec('ifconfig', (error, stdout, stderr) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ stdout, stderr });
-            }
-          });
-        });
+      const lines = data.split('\n');
+      const interfaces = {};
 
-        const interfaces = {};
-        let currentInterface = '';
+      // 각 인터페이스의 rx, tx 바이트 추출
+      lines.forEach((line) => {
+        if (line.includes(':')) {
+          const parts = line.split(':');
+          const interfaceName = parts[0].trim();
+          const stats = parts[1].trim().split(/\s+/);
+          const rxPackets = parseInt(stats[1]);
+          const txPackets = parseInt(stats[9]);
+          const rxDrops = parseInt(stats[3]);
+          const txDrops = parseInt(stats[11]);
+          const rxErrors = parseInt(stats[2]);
+          const txErrors = parseInt(stats[10]);
+          const rxKBytes = (parseInt(stats[0], 10) * 8) / 1000;
+          const txKBytes = (parseInt(stats[8], 10) * 8) / 1000;
 
-        // ifconfig 출력 파싱
-        stdout.split('\n').forEach((line) => {
-          // 새로운 인터페이스 시작
-          if (line.match(/^[a-z0-9]+:/i)) {
-            currentInterface = line.split(':')[0];
-            interfaces[currentInterface] = {
-              rxKBytes: 0,
-              txKBytes: 0,
-              rxPackets: 0,
-              txPackets: 0,
-              rxDrops: 0,
-              txDrops: 0,
-              rxErrors: 0,
-              txErrors: 0,
-              rxKbps: 0,
-              txKbps: 0,
-            };
-          }
-
-          // 패킷 정보 파싱
-          if (currentInterface && line.includes('packets')) {
-            if (line.includes('RX packets')) {
-              const parts = line.trim().split(/\s+/);
-              interfaces[currentInterface].rxPackets = parseInt(
-                parts[2].replace('packets:', ''),
-              );
-
-              // 에러와 드롭 정보가 있는 경우
-              for (const part of parts) {
-                if (part.includes('errors')) {
-                  interfaces[currentInterface].rxErrors = parseInt(
-                    part.split(':')[1],
-                  );
-                }
-                if (part.includes('dropped')) {
-                  interfaces[currentInterface].rxDrops = parseInt(
-                    part.split(':')[1],
-                  );
-                }
-              }
-            } else if (line.includes('TX packets')) {
-              const parts = line.trim().split(/\s+/);
-              interfaces[currentInterface].txPackets = parseInt(
-                parts[2].replace('packets:', ''),
-              );
-
-              // 에러와 드롭 정보가 있는 경우
-              for (const part of parts) {
-                if (part.includes('errors')) {
-                  interfaces[currentInterface].txErrors = parseInt(
-                    part.split(':')[1],
-                  );
-                }
-                if (part.includes('dropped')) {
-                  interfaces[currentInterface].txDrops = parseInt(
-                    part.split(':')[1],
-                  );
-                }
-              }
-            }
-          }
-
-          // 바이트 정보 파싱
-          if (currentInterface && line.includes('bytes')) {
-            if (line.includes('RX bytes')) {
-              const bytesMatch = line.match(/RX bytes:(\d+)/);
-              if (bytesMatch) {
-                interfaces[currentInterface].rxKBytes =
-                  (parseInt(bytesMatch[1]) * 8) / 1000;
-              }
-            } else if (line.includes('TX bytes')) {
-              const bytesMatch = line.match(/TX bytes:(\d+)/);
-              if (bytesMatch) {
-                interfaces[currentInterface].txKBytes =
-                  (parseInt(bytesMatch[1]) * 8) / 1000;
-              }
-            }
-          }
-        });
-
-        // 변화를 확인하여 비트 전송률 계산
-        for (const interfaceName in interfaces) {
-          if (this.previousStats[interfaceName]) {
-            const rxDiff =
-              interfaces[interfaceName].rxKBytes -
-              this.previousStats[interfaceName].rxKBytes;
-            const txDiff =
-              interfaces[interfaceName].txKBytes -
-              this.previousStats[interfaceName].txKBytes;
-
-            const timeDiff =
-              (new Date().getTime() - this.previousTime.getTime()) / 1000;
-            const rxKbps = rxDiff / timeDiff; // 1초 간격으로 계산
-            const txKbps = txDiff / timeDiff;
-
-            interfaces[interfaceName] = {
-              ...interfaces[interfaceName],
-              rxKbps,
-              txKbps,
-            };
-          } else {
-            interfaces[interfaceName] = {
-              ...interfaces[interfaceName],
-              rxKbps: 0,
-              txKbps: 0,
-            };
-          }
-
-          // 활성 인터페이스만 추가 (lo0 제외)
-          if (interfaceName !== 'lo0') {
-            networkUsages.set(interfaceName, interfaces[interfaceName]);
-          }
+          interfaces[interfaceName] = {
+            rxKBytes,
+            txKBytes,
+            rxPackets,
+            txPackets,
+            rxDrops,
+            txDrops,
+            rxErrors,
+            txErrors,
+          };
         }
+      });
 
-        // 현재 상태 업데이트
-        this.previousStats = interfaces;
-        this.previousTime = new Date();
+      // 변화를 확인하여 비트 전송률 계산
+      for (const interfaceName in interfaces) {
+        if (this.previousStats[interfaceName]) {
+          const rxDiff =
+            interfaces[interfaceName].rxKBytes -
+            this.previousStats[interfaceName].rxKBytes;
+          const txDiff =
+            interfaces[interfaceName].txKBytes -
+            this.previousStats[interfaceName].txKBytes;
 
-        return networkUsages;
-      } else {
-        const data = fs.readFileSync('/proc/net/dev', 'utf8');
-
-        const lines = data.split('\n');
-        const interfaces = {};
-
-        // 각 인터페이스의 rx, tx 바이트 추출
-        lines.forEach((line) => {
-          if (line.includes(':')) {
-            const parts = line.split(':');
-            const interfaceName = parts[0].trim();
-            const stats = parts[1].trim().split(/\s+/);
-            const rxPackets = parseInt(stats[1]);
-            const txPackets = parseInt(stats[9]);
-            const rxDrops = parseInt(stats[3]);
-            const txDrops = parseInt(stats[11]);
-            const rxErrors = parseInt(stats[2]);
-            const txErrors = parseInt(stats[10]);
-            const rxKBytes = (parseInt(stats[0], 10) * 8) / 1000;
-            const txKBytes = (parseInt(stats[8], 10) * 8) / 1000;
-
-            interfaces[interfaceName] = {
-              rxKBytes,
-              txKBytes,
-              rxPackets,
-              txPackets,
-              rxDrops,
-              txDrops,
-              rxErrors,
-              txErrors,
-            };
-          }
-        });
-
-        // 변화를 확인하여 비트 전송률 계산
-        for (const interfaceName in interfaces) {
-          if (this.previousStats[interfaceName]) {
-            const rxDiff =
-              interfaces[interfaceName].rxKBytes -
-              this.previousStats[interfaceName].rxKBytes;
-            const txDiff =
-              interfaces[interfaceName].txKBytes -
-              this.previousStats[interfaceName].txKBytes;
-
-            const timeDiff =
-              (new Date().getTime() - this.previousTime.getTime()) / 1000;
-            const rxKbps = rxDiff / timeDiff; // 1초 간격으로 계산
-            const txKbps = txDiff / timeDiff;
-            // console.log(`${interfaceName} rxKbps: ${rxKbps}, ${timeDiff}`)
-            // console.log(`${interfaceName} txKbps: ${txKbps}, ${timeDiff}`)
-            interfaces[interfaceName] = {
-              ...interfaces[interfaceName],
-              rxKbps,
-              txKbps,
-            };
-          } else {
-            interfaces[interfaceName] = {
-              ...interfaces[interfaceName],
-              rxKbps: 0,
-              txKbps: 0,
-            };
-          }
-          networkUsages.set(interfaceName, interfaces[interfaceName]);
+          const timeDiff =
+            (new Date().getTime() - this.previousTime.getTime()) / 1000;
+          const rxKbps = rxDiff / timeDiff; // 1초 간격으로 계산
+          const txKbps = txDiff / timeDiff;
+          // console.log(`${interfaceName} rxKbps: ${rxKbps}, ${timeDiff}`)
+          // console.log(`${interfaceName} txKbps: ${txKbps}, ${timeDiff}`)
+          interfaces[interfaceName] = {
+            ...interfaces[interfaceName],
+            rxKbps,
+            txKbps,
+          };
+        } else {
+          interfaces[interfaceName] = {
+            ...interfaces[interfaceName],
+            rxKbps: 0,
+            txKbps: 0,
+          };
         }
-        // 현재 상태 업데이트
-        this.previousStats = interfaces;
-        this.previousTime = new Date();
-
-        // console.log(networkUsages);
-        return networkUsages;
+        networkUsages.set(interfaceName, interfaces[interfaceName]);
       }
+      // 현재 상태 업데이트
+      this.previousStats = interfaces;
+      this.previousTime = new Date();
+
+      // console.log(networkUsages);
+      return networkUsages;
     } catch (error) {
-      httpLogger.error(`[LOG] getNetworkUsage: ${errorToJson(error)}`);
+      console.error(error);
     }
   }
 

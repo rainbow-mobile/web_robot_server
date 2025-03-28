@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OnvifService } from './onvif.service';
+import { OnvifDeviceService } from './onvif.service';
 
 describe('OnvifService', () => {
-  let service: OnvifService;
+  let service: OnvifDeviceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [OnvifService],
+      providers: [OnvifDeviceService],
     }).compile();
 
-    service = module.get<OnvifService>(OnvifService);
+    service = module.get<OnvifDeviceService>(OnvifDeviceService);
   });
 
   it('should be defined', () => {

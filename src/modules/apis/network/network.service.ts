@@ -406,7 +406,7 @@ export class NetworkService {
             httpLogger.error(`[NETWORK] getCurrentWifi: ${errorToJson(error)}`);
             reject();
           } else {
-            httpLogger.info(
+            httpLogger.debug(
               `[NETWORK] getCurrentWifi: ${JSON.stringify(networks)}`,
             );
             resolve(networks);
