@@ -25,7 +25,7 @@ import {
   ProcessUsagePayload,
   SystemUsagePayload,
 } from '@common/interface/system/usage.interface';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { SystemLogEntity } from './entity/system.entity';
 
 @Injectable()
@@ -452,14 +452,6 @@ export class LogService {
       } else if (type == 'system') {
         queryBuilder = this.systemRepository.createQueryBuilder();
       }
-
-      const dateStart = new Date(param.startDt);
-      const dateEnd = new Date(param.endDt);
-
-      dateStart.setHours(0, 0, 0, 0);
-      dateEnd.setHours(23, 59, 59, 999);
-
-
 
       const dateStart = new Date(param.startDt);
       const dateEnd = new Date(param.endDt);
