@@ -28,6 +28,7 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
+import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
