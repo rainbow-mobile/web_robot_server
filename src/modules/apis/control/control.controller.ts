@@ -1,14 +1,24 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Inject,
   Param,
   Post,
+  Put,
+  Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ControlService } from './control.service';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
