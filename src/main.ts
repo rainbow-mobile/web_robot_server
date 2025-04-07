@@ -29,6 +29,11 @@ async function bootstrap() {
 
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(xmlParser());
+  // HTTPS를 위한 SSL 인증서
+  // const httpsOptions = {
+  //   key: fs.readFileSync(os.homedir() + '/key.pem'),
+  //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
+  // };
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.useGlobalPipes(
     new ValidationPipe({
@@ -86,6 +91,13 @@ async function bootstrap() {
     },
   };
 
+  app.use('/docs/socket', (req, res, next) => {
+    res.removeHeader('Content-Security-Policy');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });
   app.use('/docs/socket', express.static(join(__dirname, '..', 'docs')));
 
   app.use('/docs/api', (req, res, next) => {
