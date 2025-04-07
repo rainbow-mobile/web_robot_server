@@ -11,6 +11,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as os from 'os';
 import { OnvifDeviceService } from './onvif.service';
 import * as xml2js from 'xml2js';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
@@ -187,7 +188,7 @@ export class OnvifDeviceController implements OnModuleInit {
   async getSnapshot(@Res() res: Response) {
     httpLogger.info(`[ONVIF] getSnapshot`);
 
-    fs.readFile('/home/rainbow/snapshot.jpg', (err, data) => {
+    fs.readFile(os.homedir() + '/snapshot.jpg', (err, data) => {
       if (err) {
         res.status(500).send('Error reading snapshot');
         return;

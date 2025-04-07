@@ -111,7 +111,7 @@ export class OnvifDeviceService implements OnModuleInit {
   getWSDLPath(category: string, filename: string) {
     return (
       process.cwd() +
-      '/src/modules/apis/onvif/wsdl/' +
+      '/wsdl/' +
       category +
       '/' +
       filename

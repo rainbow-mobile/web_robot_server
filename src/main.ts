@@ -27,9 +27,9 @@ async function bootstrap() {
     origin: '*',
   });
 
-  app.use(bodyParser.json({ limit: '1mb' }));
+  app.use(bodyParser.json({ limit: '50mb' }));
   app.use(xmlParser());
-  app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
