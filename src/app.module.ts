@@ -30,7 +30,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
       inject: [ConfigService],
       useFactory: () => ({
         type: 'mariadb',
-        host: process.env.DB_HOST || 'mariadb', // mariaDB 컨테이너 이름
+        host: process.env.DB_HOST || '127.0.0.1', // mariaDB 컨테이너 이름
         port: 3306,
         username: process.env.DB_USER || 'rainbow',
         password: process.env.DB_PASSWORD || 'rainbow',
