@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: rainbow
+      MARIADB_USER: rainbow
+      MARIADB_PASSWORD: rainbow
+      MARIADB_DATABASE: rainbow_rrs
+      MYSQL_ROOT_PASSWORD: rainbow
+      MYSQL_USER: rainbow
+      MYSQL_PASSWORD: rainbow
+      MYSQL_DATABASE: rainbow_rrs
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+  nestjs:
+    image: web_robot_server
+    container_name: web_robot_server
+    build: .
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: rainbow
+      DB_PASSWORD: rainbow
+      DB_NAME: rainbow_rrs
+    depends_on:
+      - mariadb
+    networks:
+      - app-network
+    restart: unless-stopped
+networks:
+  app-network:
+    driver: bridge

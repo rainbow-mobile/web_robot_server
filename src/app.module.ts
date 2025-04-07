@@ -30,11 +30,11 @@ import { MotionModule } from './modules/apis/motion/motion.module';
       inject: [ConfigService],
       useFactory: () => ({
         type: 'mariadb',
-        host: '127.0.0.1',
+        host: process.env.DB_HOST || '127.0.0.1', // mariaDB 컨테이너 이름
         port: 3306,
-        username: 'rainbow',
-        password: 'rainbow',
-        database: 'rainbow_rrs',
+        username: process.env.DB_USER || 'rainbow',
+        password: process.env.DB_PASSWORD || 'rainbow',
+        database: process.env.DB_DATABASE || 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         // synchronize: false,
         logging: false,
