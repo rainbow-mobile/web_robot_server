@@ -24,7 +24,6 @@ import { ControlService } from './control.service';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
-import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { LocalizationDto } from 'src/modules/apis/control/dto/localization.command.dto';
 import { errorToJson } from '@common/util/error.util';
 import { LedControlDto } from './dto/led.control.dto';
