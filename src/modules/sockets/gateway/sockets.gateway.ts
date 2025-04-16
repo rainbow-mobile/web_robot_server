@@ -789,14 +789,14 @@ export class SocketGateway
         try {
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(
-            `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
-          );
+          // socketLogger.debug(
+          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
+          // );
           this.server.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
-          socketLogger.error(
-            `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
-          );
+          // socketLogger.error(
+          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+          // );
         }
       });
 
