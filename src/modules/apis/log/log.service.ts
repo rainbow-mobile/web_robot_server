@@ -12,6 +12,7 @@ import * as Query from '@common/interface/db/query';
 import { TaskPayload } from '@common/interface/robot/task.interface';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as readline from 'readline';
 import * as os from 'os';
 import { homedir } from 'os';
 import * as AdmZip from 'adm-zip';
@@ -280,71 +281,95 @@ export class LogService {
     });
   }
 
+  async readLogLines(filePath: string): Promise<string[]> {
+    const lines: string[] = [];
+    const fileStream = fs.createReadStream(filePath, 'utf-8');
+    const rl = readline.createInterface({ input: fileStream });
+  
+    for await (const line of rl) {
+      if (line.trim()) {
+        lines.push(line);
+      }
+    }
+  
+    return lines;
+  }
+
+  async parseLines(line:string, param:any){
+    const logRegex =
+      /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)](?: \[(\w+)\])? (.+)$/;
+    const match = line.match(logRegex);
+
+    if (match) {
+      const [, time, level, category, text] = match;
+      if (param.levels) {
+        if (!param.levels.includes(level)) return null;
+      }
+
+      if (param.searchType == 'category') {
+        if (param.searchText != '') {
+          if (!category || !category.includes(param.searchText)) {
+            return null;
+          }
+        }
+      } else if (param.searchType == 'log') {
+        if (param.searchText != '') {
+          if (!text.includes(param.searchText)) {
+            return null;
+          }
+        }
+      } else if (param.searchType == 'time') {
+        if (param.searchText != '') {
+          if (!time.includes(param.searchText)) {
+            return null;
+          }
+        }
+      }
+
+        return {
+          time,
+          level,
+          category: category ? category : '',
+          text
+        }
+    }
+  }
+
   async getLogs(
     type: string,
     param: LogReadDto,
   ): Promise<PaginationResponse<any>> {
     try {
       const logPath = homedir() + '/log/' + type;
-      const logdata: any[] = [];
+      const logdata: Array<{
+        time: string;
+        level: string;
+        category: string;
+        text: string;
+      }> = [];
       const dt = new Date(param.startDt);
       const dateEnd = new Date(param.endDt);
       while (dt <= dateEnd) {
         const filePath =
           logPath + '/' + DateUtil.formatDateYYYYMMDD(dt) + '.log';
+          // console.debug(filePath);
         if (fs.existsSync(filePath)) {
-          const data = fs.readFileSync(filePath, 'utf-8');
+          const data = fs.readFileSync(filePath,'utf-8');
           const lines = data.split('\n').filter((line) => line.trim() !== '');
+          const BATCH_SIZE = 100000;
+          const chunks:string[][] = [];
+          for (let i = 0; i < lines.length; i += BATCH_SIZE) {
+            chunks.push(lines.slice(i, i + BATCH_SIZE));
+          }
 
-          // 로그 라인을 파싱
-          const parsedLogs = lines
-            .map((line) => {
-              const logRegex =
-                /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)](?: \[(\w+)\])? (.+)$/;
-              const match = line.match(logRegex);
-
-              if (match) {
-                const [, time, level, category, text] = match;
-                if (param.levels) {
-                  if (!param.levels.includes(level)) return null;
-                }
-
-                if (param.searchType == 'category') {
-                  if (param.searchText != '') {
-                    if (!category || !category.includes(param.searchText)) {
-                      return null;
-                    }
-                  }
-                } else if (param.searchType == 'log') {
-                  if (param.searchText != '') {
-                    if (!text.includes(param.searchText)) {
-                      return null;
-                    }
-                  }
-                } else if (param.searchType == 'time') {
-                  if (param.searchText != '') {
-                    if (!time.includes(param.searchText)) {
-                      return null;
-                    }
-                  }
-                }
-                return {
-                  time,
-                  level,
-                  category: category ? category : '',
-                  text,
-                };
+          for(const chunk of chunks){
+            for (const line of chunk) {
+              const parsedLine = await this.parseLines(line,param);
+              if(parsedLine){
+                logdata.push(parsedLine)
               }
-              return null; // 일치하지 않는 라인은 무시
-            })
-            .filter((log) => log !== null) as Array<{
-            time: string;
-            level: string;
-            category: string;
-            text: string;
-          }>;
-
-          logdata.push(...parsedLogs);
+            }
+          }
         } else {
           httpLogger.debug(`[LOG] getLogs File not found: ${filePath}`);
         }
