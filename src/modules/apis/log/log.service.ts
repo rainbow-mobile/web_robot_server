@@ -365,9 +365,42 @@ export class LogService {
 
           for(const chunk of chunks){
             for (const line of chunk) {
-              const parsedLine = await this.parseLines(line,param);
-              if(parsedLine){
-                logdata.push(parsedLine)
+              const logRegex =
+                /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)](?: \[(\w+)\])? (.+)$/;
+              const match = line.match(logRegex);
+
+              if (match) {
+                const [, time, level, category, text] = match;
+
+                if (param.levels) {
+                  if (!param.levels.includes(level)) continue;
+                }
+
+                if (param.searchType == 'category') {
+                  if (param.searchText != '') {
+                    if (!category || !category.includes(param.searchText)) {
+                      continue;
+                    }
+                  }
+                } else if (param.searchType == 'log') {
+                  if (param.searchText != '') {
+                    if (!text.includes(param.searchText)) {
+                      continue;
+                    }
+                  }
+                } else if (param.searchType == 'time') {
+                  if (param.searchText != '') {
+                    if (!time.includes(param.searchText)) {
+                      continue;
+                    }
+                  }
+                }
+                logdata.push({
+                  time,
+                  level,
+                  category: category ? category : '',
+                  text
+                })
               }
             }
           }
