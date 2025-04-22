@@ -55,7 +55,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     LogModule,
     UploadModule,
     SoundModule,
-    OnvifDeviceModule,
+    // OnvifDeviceModule,
   ],
   providers: [],
   controllers: [],
