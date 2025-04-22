@@ -86,8 +86,11 @@ export class NetworkService {
             this.curWifi = [];
             this.curBluetooth = [];
             const networks = stdout.split(/\n\s*\n/);
+            console.log(networks);
             for (const i in networks) {
               const json = await this.transNMCLI(networks[i]);
+              console.log("--------------------------------------");
+              console.log(json);
               if (json.type == 'ethernet') {
                 this.curEthernet.push({ ...json });
                 global.ip_ethernet = json.ip;
