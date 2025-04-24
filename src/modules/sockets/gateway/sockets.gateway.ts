@@ -1392,7 +1392,7 @@ export class SocketGateway
       if (this.frsSocket?.connected) {
         this.frsSocket.emit(
           'motionResponse',
-          msgpack.encode({ robotSerial: global.robotSerial, data: json }),
+          { robotSerial: global.robotSerial, data: json },
         );
       }
 
