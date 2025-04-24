@@ -14,8 +14,9 @@ export class NetworkService {
       iface: null, // 디폴트 네트워크 인터페이스를 사용합니다.
     });
     this.isPlatformMac = process.platform === 'darwin';
-    this.wifiScan();
-    this.getNetwork();
+    this.isPlatformWindows = process.platform.includes('win');
+    console.log(process.platform);
+    this.NetworkInit();
   }
 
   private wifi_list: WiFiNetwork[] = [];
@@ -23,7 +24,16 @@ export class NetworkService {
   private curWifi: NetworkPayload[] = [];
   private curBluetooth: NetworkPayload[] = [];
   private isPlatformMac = false;
+  private isPlatformWindows = false;
 
+  async NetworkInit(){
+    try{
+      await this.wifiScan();
+      await this.getNetwork();
+    }catch(error){
+
+    }
+  }
   async wifiScan() {
     return new Promise(async (resolve, reject) => {
       try {
@@ -40,7 +50,9 @@ export class NetworkService {
               this.scanWifiNetworks(resolve, reject);
             },
           );
-        } else {
+        } else if(this.isPlatformWindows){
+          reject('windows');
+        }else {
           exec('nmcli dev wifi rescan', (err) => {
             if (err) {
               httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
@@ -169,6 +181,8 @@ export class NetworkService {
             }
           },
         );
+      } else if(this.isPlatformWindows){
+        reject('windows');
       } else {
         exec('nmcli device show', async (err, stdout) => {
           if (err) {

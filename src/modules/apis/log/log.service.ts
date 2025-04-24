@@ -1298,9 +1298,11 @@ export class LogService {
 
   async readMemoryUsage() {
     try {
-      this.systemUsage = await this.getCpuUsage();
-      this.processUsage = await this.getProcessUsage();
-      this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
+      if(process.platform.includes('linux')){
+        this.systemUsage = await this.getCpuUsage();
+        this.processUsage = await this.getProcessUsage();
+        this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
+      }
     } catch (error) {
       httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`);
     }
