@@ -13,11 +13,11 @@ const socketLogger = createLogger({
     customFormat,
   ),
   transports: [
-    // new (DailyRotateFile as any)({
-    //   filename: homedir()+'/log/socket/%DATE%.log',
-    //   datePattern: 'YYYY-MM-DD',
-    //   level:'debug'
-    // }),
+    new (DailyRotateFile as any)({
+      filename: homedir()+'/log/socket/%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      level:'info'
+    }),
     new transports.Console({
       level: 'debug',
       format: format.combine(
