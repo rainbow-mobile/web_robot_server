@@ -13,11 +13,11 @@ const httpLogger = createLogger({
     customFormat,
   ),
   transports: [
-    // new (DailyRotateFile as any)({
-    //   filename: homedir() + '/log/http/%DATE%.log',
-    //   datePattern: 'YYYY-MM-DD',
-    //   level: 'debug',
-    // }),
+    new (DailyRotateFile as any)({
+      filename: homedir() + '/log/http/%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      level: 'info',
+    }),
     new transports.Console({
       level: 'info',
       format: format.combine(
