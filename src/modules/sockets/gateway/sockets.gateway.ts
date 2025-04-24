@@ -437,7 +437,7 @@ export class SocketGateway
         this.frsSocket = null;
       }
 
-      await this.networkService.getNetwork();
+      // await this.networkService.getNetwork();
 
       this.frsSocket = io(url, { transports: ['websocket'] });
       this.frsSocket.off();
@@ -455,10 +455,10 @@ export class SocketGateway
         global.frsConnect = true;
         const sendData = {
           robotSerial: global.robotSerial,
-          robotIpAdrs:
-            global.ip_wifi == '' || global.ip_wifi == undefined
-              ? global.ip_ethernet
-              : global.ip_wifi,
+          // robotIpAdrs:
+          //   global.ip_wifi == '' || global.ip_wifi == undefined
+          //     ? global.ip_ethernet
+          //     : global.ip_wifi,
         };
 
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
@@ -840,7 +840,7 @@ export class SocketGateway
         time: Date.now().toString(),
       },
     };
-    this.server.emit('programStatus', statusData.data);
+    this.server?.emit('programStatus', statusData.data);
     if (this.frsSocket?.connected && global.robotSerial != '') {
       socketLogger.debug(
         `[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`,
