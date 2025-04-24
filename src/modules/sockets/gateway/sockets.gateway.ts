@@ -1038,10 +1038,10 @@ export class SocketGateway
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
     const json = JSON.parse(payload);
-    this.server.emit('status', json);
+    this.server.volatile.emit('status', json);
 
     if (this.frsSocket?.connected) {
-      this.frsSocket.emit(
+      this.frsSocket.volatile.emit(
         'status',
         { robotSerial: global.robotSerial, data: json },
       );
@@ -1055,9 +1055,9 @@ export class SocketGateway
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
     const json = JSON.parse(payload);
-    this.server.emit('moveStatus', json);
+    this.server.volatile.emit('moveStatus', json);
     if (this.frsSocket?.connected) {
-      this.frsSocket.emit(
+      this.frsSocket.volatile.emit(
         'moveStatus',
         { robotSerial: global.robotSerial, data: json },
       );
