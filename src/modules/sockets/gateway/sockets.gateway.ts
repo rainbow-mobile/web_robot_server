@@ -498,8 +498,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('move', (_data) => {
+      this.frsSocket.on('move', (_data, ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
@@ -528,8 +529,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('load', (_data) => {
+      this.frsSocket.on('load', (_data, ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
@@ -558,8 +560,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('motor', (_data) => {
+      this.frsSocket.on('motor', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
@@ -588,8 +591,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('localization', (_data) => {
+      this.frsSocket.on('localization', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
@@ -620,8 +624,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('randomseq', (_data) => {
+      this.frsSocket.on('randomseq', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
@@ -652,8 +657,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('mapping', (_data) => {
+      this.frsSocket.on('mapping', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
@@ -682,8 +688,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('dock', (_data) => {
+      this.frsSocket.on('dock', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
@@ -712,8 +719,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('lidarOnOff', (_data) => {
+      this.frsSocket.on('lidarOnOff', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
@@ -732,8 +740,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('led', (_data) => {
+      this.frsSocket.on('led', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
@@ -750,8 +759,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('pathOnOff', (_data) => {
+      this.frsSocket.on('pathOnOff', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
@@ -770,8 +780,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('path', (_data) => {
+      this.frsSocket.on('path', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
@@ -784,8 +795,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('vobsRobots', (_data) => {
+      this.frsSocket.on('vobsRobots', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           // socketLogger.debug(
@@ -799,8 +811,9 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('vobsClosures', (_data) => {
+      this.frsSocket.on('vobsClosures', (_data,ack) => {
         try {
+          ack('received');
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
