@@ -18,6 +18,7 @@ export function getMacAddresses() {
   return macAddresses;
 }
 
+
 export function stringifyAllValues(obj) {
   for (const key in obj) {
     if (typeof obj[key] === 'object') {
@@ -30,7 +31,9 @@ export function stringifyAllValues(obj) {
   }
   return obj;
 }
+
 module.exports = {
   getMacAddresses: getMacAddresses,
   stringifyAllValues: stringifyAllValues,
 };
+ 

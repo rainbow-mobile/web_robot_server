@@ -16,7 +16,7 @@ const httpLogger = createLogger({
     new (DailyRotateFile as any)({
       filename: homedir() + '/log/http/%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      level: 'debug',
+      level: 'info',
     }),
     new transports.Console({
       level: 'info',

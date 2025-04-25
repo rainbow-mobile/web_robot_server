@@ -16,7 +16,7 @@ const socketLogger = createLogger({
     new (DailyRotateFile as any)({
       filename: homedir()+'/log/socket/%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      level:'debug'
+      level:'info'
     }),
     new transports.Console({
       level: 'debug',
