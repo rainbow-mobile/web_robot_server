@@ -109,13 +109,7 @@ export class OnvifDeviceService implements OnModuleInit {
 
   //wsdl파일 경로 반환
   getWSDLPath(category: string, filename: string) {
-    return (
-      process.cwd() +
-      '/wsdl/' +
-      category +
-      '/' +
-      filename
-    );
+    return process.cwd() + '/wsdl/' + category + '/' + filename;
   }
 
   // 랜덤 UUID 생성 (UUID v4)
