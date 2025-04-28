@@ -800,7 +800,7 @@ export class SocketGateway
           // socketLogger.debug(
           //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
           // );
-          this.server.volatile.emit('vobsRobots', stringifyAllValues(json));
+          this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           // socketLogger.error(
           //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -815,7 +815,7 @@ export class SocketGateway
           socketLogger.debug(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`,
           );
-          this.server.volatile.emit('vobsClosures', stringifyAllValues(json));
+          this.slamnav?.emit('vobsClosures', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -839,12 +839,12 @@ export class SocketGateway
         time: Date.now().toString(),
       },
     };
-    this.server?.volatile.emit('programStatus', statusData.data);
+    this.server?.emit('programStatus', statusData.data);
     if (this.frsSocket?.connected && global.robotSerial != '') {
       // socketLogger.debug(
       // `[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`,
       // );
-      this.frsSocket.volatile.emit('programStatus',statusData);
+      this.frsSocket.emit('programStatus',statusData);
     }
   }, 1000);
 
@@ -879,7 +879,7 @@ export class SocketGateway
 
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
-        this.server.volatile.emit('moveResponse', {
+        this.server.emit('moveResponse', {
           robotSerial: global.robotSerial,
           data: {
             ...this.moveState,
@@ -906,7 +906,7 @@ export class SocketGateway
       };
       //TaskStop
       if (this.taskState.running) {
-        this.server.volatile.emit('taskStop', 'disconnected');
+        this.server.emit('taskStop', 'disconnected');
       }
     } else if (client.handshake.query.name == 'taskman') {
       this.taskState = {
@@ -1044,10 +1044,10 @@ export class SocketGateway
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
     const json = JSON.parse(payload);
-    this.server.volatile.emit('status', json);
+    this.server.emit('status', json);
 
     if (this.frsSocket?.connected) {
-      this.frsSocket.volatile.emit(
+      this.frsSocket.emit(
         'status',
         { robotSerial: global.robotSerial, data: json },
       );
@@ -1242,7 +1242,7 @@ export class SocketGateway
   @SubscribeMessage('lidarCloud')
   async handleLidarCloudMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('lidarCloud', payload);
+      this.server.emit('lidarCloud', payload);
       if (this.frsSocket?.connected) {
         // this.frsSocket.volatile.emit('lidarCloud',msgpack.encode({robotSerial:global.robotSerial,data:payload}))
       }
@@ -1256,7 +1256,7 @@ export class SocketGateway
   @SubscribeMessage('mappingCloud')
   async handleMappingCloudMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('mappingCloud', payload);
+      this.server.emit('mappingCloud', payload);
     } catch (error) {
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
@@ -1266,13 +1266,13 @@ export class SocketGateway
   @SubscribeMessage('localPath')
   async handleLocalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('localPath', payload);
+      this.server.emit('localPath', payload);
       if (this.frsSocket?.connected && global.robotSerial != '') {
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.volatile.emit('localPath', sendData);
+        this.frsSocket.emit('localPath', sendData);
       }
     } catch (error) {
       socketLogger.error(`[STATUS] localPath: ${errorToJson(error)}`);
@@ -1282,14 +1282,14 @@ export class SocketGateway
   @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('globalPath', payload);
+      this.server.emit('globalPath', payload);
       socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`);
       if (this.frsSocket?.connected && global.robotSerial != '') {
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.volatile.emit('globalPath', sendData);
+        this.frsSocket.emit('globalPath', sendData);
       }
     } catch (error) {
       socketLogger.error(`[STATUS] globalPath: ${errorToJson(error)}`);
