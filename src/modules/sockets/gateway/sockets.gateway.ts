@@ -1061,9 +1061,9 @@ export class SocketGateway
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
     const json = JSON.parse(payload);
-    this.server.volatile.emit('moveStatus', json);
+    this.server.emit('moveStatus', json);
     if (this.frsSocket?.connected) {
-      this.frsSocket.volatile.emit(
+      this.frsSocket.emit(
         'moveStatus',
         { robotSerial: global.robotSerial, data: json },
       );
