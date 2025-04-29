@@ -46,7 +46,7 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
-    private readonly influxService: InfluxDBService,
+    // private readonly influxService: InfluxDBService,
     private readonly mqttService: MqttClientService,
     private readonly kafakService: KafkaClientService,
   ) {}
