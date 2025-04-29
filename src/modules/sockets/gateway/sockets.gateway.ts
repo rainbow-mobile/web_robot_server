@@ -800,7 +800,7 @@ export class SocketGateway
           // socketLogger.debug(
           //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
           // );
-          this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
+          this.slamnav?.volatile.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           // socketLogger.error(
           //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -815,7 +815,7 @@ export class SocketGateway
           socketLogger.debug(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`,
           );
-          this.slamnav?.emit('vobsClosures', stringifyAllValues(json));
+          this.slamnav?.volatile.emit('vobsClosures', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
