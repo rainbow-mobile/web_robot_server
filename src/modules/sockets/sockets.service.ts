@@ -5,7 +5,7 @@ import { InfluxDBService } from "../apis/influx/influx.service";
 
 @Injectable()
 export class SocketService {
-    constructor(private readonly socketGateway: SocketGateway, private readonly logService: LogService, private readonly influxService:InfluxDBService) {}
+    constructor(private readonly socketGateway: SocketGateway, private readonly logService: LogService){}//, private readonly influxService:InfluxDBService) {}
 
     private saver = setInterval(() => {
         if(this.socketGateway.slamnav){    

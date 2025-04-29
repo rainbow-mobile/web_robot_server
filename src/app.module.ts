@@ -18,6 +18,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
 import { SSHModule } from './modules/apis/ssh/ssh.module';
 import { InfluxDBModule } from './modules/apis/influx/influx.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
+import { MotionModule } from './modules/apis/motion/motion.module';
 // import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
   imports: [
@@ -44,11 +45,11 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     SocketsModule,
     TaskModule,
     ControlModule,
-    SSHModule,
+    // SSHModule,
     MoveModule,
     MapModule,
     SettingModule,
-    InfluxDBModule,
+    // InfluxDBModule,
     ProcessModule,
     VariablesModule,
     NetworkModule,
@@ -56,7 +57,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     UploadModule,
     SoundModule,
     // MotionModule,
-    OnvifDeviceModule,
+    // OnvifDeviceModule,
   ],
   providers: [],
   controllers: [],
