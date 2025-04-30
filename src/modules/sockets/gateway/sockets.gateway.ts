@@ -1043,35 +1043,43 @@ export class SocketGateway
   }
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.emit('status', json);
-
-    if (this.frsSocket?.connected) {
-      this.frsSocket.emit(
-        'status',
-        { robotSerial: global.robotSerial, data: json },
-      );
+    if(payload){
+      const json = JSON.parse(payload);
+      this.server.emit('status', json);
+  
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit(
+          'status',
+          { robotSerial: global.robotSerial, data: json },
+        );
+      }
+  
+      // this.influxService.writeStatus(json);
+  
+      this.robotState = { ...this.robotState, ...json };
+    }else{
+      socketLogger.warn(`[GATEWAY] Status null`)
     }
-
-    // this.influxService.writeStatus(json);
-
-    this.robotState = { ...this.robotState, ...json };
   }
 
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.volatile.emit('moveStatus', json);
-    if (this.frsSocket?.connected) {
-      this.frsSocket.volatile.emit(
-        'moveStatus',
-        { robotSerial: global.robotSerial, data: json },
-      );
+    if(payload){
+      const json = JSON.parse(payload);
+      this.server.volatile.emit('moveStatus', json);
+      if (this.frsSocket?.connected) {
+        this.frsSocket.volatile.emit(
+          'moveStatus',
+          { robotSerial: global.robotSerial, data: json },
+        );
+      }
+  
+      // this.influxService.writeMoveStatus(json);
+      // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
+      this.robotState = { ...this.robotState, ...json };
+    }else{
+      socketLogger.warn(`[GATEWAY] MoveStatus null`)
     }
-
-    // this.influxService.writeMoveStatus(json);
-    // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
-    this.robotState = { ...this.robotState, ...json };
   }
 
   /**
@@ -1082,23 +1090,27 @@ export class SocketGateway
   @SubscribeMessage('moveResponse')
   async handleMoveReponseMessage(@MessageBody() payload: string) {
     try {
-      const json = JSON.parse(payload);
-      this.server.emit('moveResponse', json);
-
-      if (this.frsSocket?.connected) {
-        this.frsSocket.emit(
-          'moveResponse',
-          { robotSerial: global.robotSerial, data: json },
-        );
+      if(payload){
+        const json = JSON.parse(payload);
+        this.server.emit('moveResponse', json);
+  
+        if (this.frsSocket?.connected) {
+          this.frsSocket.emit(
+            'moveResponse',
+            { robotSerial: global.robotSerial, data: json },
+          );
+        }
+  
+        if (this.tcpClient) {
+          socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+          this.tcpClient.write(json.result);
+        }
+        this.moveState = json;
+  
+        socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+      }else{
+        socketLogger.warn(`[GATEWAY] moveResponse null`)
       }
-
-      if (this.tcpClient) {
-        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
-        this.tcpClient.write(json.result);
-      }
-      this.moveState = json;
-
-      socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
