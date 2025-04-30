@@ -56,7 +56,7 @@ import { MotionModule } from './modules/apis/motion/motion.module';
     LogModule,
     UploadModule,
     SoundModule,
-    MotionModule,
+    // MotionModule,
     //OnvifDeviceModule,
   ],
   providers: [],
