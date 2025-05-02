@@ -127,7 +127,7 @@ export class OnvifDeviceService implements OnModuleInit {
   }
 
   getXaddr(ip: string, url: string) {
-    if (ip.includes('::ffff:')) {
+    if (ip?.includes('::ffff:')) {
       ip = ip.split('::ffff:')[1];
     }
     return 'http://' + ip + ':11334/api/onvif/' + url;
@@ -167,9 +167,11 @@ export class OnvifDeviceService implements OnModuleInit {
 
   getLocalIps(): string[] {
     const interfaces = os.networkInterfaces();
+    httpLogger.info(`[ONVIF] interfaces : ${interfaces}`);
     const ips: string[] = [];
     for (const iface of Object.values(interfaces)) {
       for (const config of iface || []) {
+        httpLogger.info(`[ONVIF] config : ${config}`);
         if (config.family === 'IPv4' && !config.internal) {
           // 같은 네트워크 대역대에 있는 IP만 반환
           httpLogger.info(`[ONVIF] getLocalIps :  ${config.address}`);

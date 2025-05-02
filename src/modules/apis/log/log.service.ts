@@ -285,17 +285,17 @@ export class LogService {
     const lines: string[] = [];
     const fileStream = fs.createReadStream(filePath, 'utf-8');
     const rl = readline.createInterface({ input: fileStream });
-  
+
     for await (const line of rl) {
       if (line.trim()) {
         lines.push(line);
       }
     }
-  
+
     return lines;
   }
 
-  async parseLines(line:string, param:any){
+  async parseLines(line: string, param: any) {
     const logRegex =
       /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)](?: \[(\w+)\])? (.+)$/;
     const match = line.match(logRegex);
@@ -326,12 +326,12 @@ export class LogService {
         }
       }
 
-        return {
-          time,
-          level,
-          category: category ? category : '',
-          text
-        }
+      return {
+        time,
+        level,
+        category: category ? category : '',
+        text,
+      };
     }
   }
 
@@ -352,17 +352,17 @@ export class LogService {
       while (dt <= dateEnd) {
         const filePath =
           logPath + '/' + DateUtil.formatDateYYYYMMDD(dt) + '.log';
-          // console.debug(filePath);
+        // console.debug(filePath);
         if (fs.existsSync(filePath)) {
-          const data = fs.readFileSync(filePath,'utf-8');
+          const data = fs.readFileSync(filePath, 'utf-8');
           const lines = data.split('\n').filter((line) => line.trim() !== '');
           const BATCH_SIZE = 100000;
-          const chunks:string[][] = [];
+          const chunks: string[][] = [];
           for (let i = 0; i < lines.length; i += BATCH_SIZE) {
             chunks.push(lines.slice(i, i + BATCH_SIZE));
           }
 
-          for(const chunk of chunks){
+          for (const chunk of chunks) {
             for (const line of chunk) {
               const logRegex =
                 /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)](?: \[(\w+)\])? (.+)$/;
@@ -398,8 +398,8 @@ export class LogService {
                   time,
                   level,
                   category: category ? category : '',
-                  text
-                })
+                  text,
+                });
               }
             }
           }
@@ -1298,10 +1298,10 @@ export class LogService {
 
   async readMemoryUsage() {
     try {
-      if(process.platform.includes('linux')){
+      if (process.platform.includes('linux')) {
         this.systemUsage = await this.getCpuUsage();
         this.processUsage = await this.getProcessUsage();
-        this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
+        // this.networkUsage = Object.fromEntries(await this.getNetworkUsage());
       }
     } catch (error) {
       httpLogger.error(`[LOG] readMemoryUsage: ${JSON.stringify(error)}`);
