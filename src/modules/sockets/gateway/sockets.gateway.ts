@@ -775,9 +775,9 @@ export class SocketGateway
         try {
           const data = _data;
           const json = JSON.parse(data);
-          // socketLogger.debug(
-          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
-          // );
+          socketLogger.debug(
+            `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
+          );
           this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
@@ -1044,6 +1044,11 @@ export class SocketGateway
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
     if (payload) {
       const json = JSON.parse(payload);
+
+      if (!json) {
+        socketLogger.debug(`[COMMAND] MoveStatus: ${JSON.stringify(json)}`);
+      }
+
       this.server.emit('moveStatus', json);
       if (this.frsSocket?.connected) {
         this.frsSocket.emit('moveStatus', {
