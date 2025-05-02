@@ -999,7 +999,7 @@ export class SocketGateway
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
       const json = JSON.parse(JSON.stringify(payload));
-      this.server.to('slamnav').emit('move', json);
+      this.server.to('slamnav').volatile.emit('move', json);
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
     } catch (error) {
