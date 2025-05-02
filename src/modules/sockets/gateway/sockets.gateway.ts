@@ -778,6 +778,9 @@ export class SocketGateway
           socketLogger.debug(
             `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
           );
+          socketLogger.debug(
+            `[COMMAND] FRS vobsRobots slamnav: ${this.slamnav}`,
+          );
           this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
@@ -792,6 +795,9 @@ export class SocketGateway
           const json = JSON.parse(data);
           socketLogger.debug(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`,
+          );
+          socketLogger.debug(
+            `[COMMAND] FRS vobsClosures slamnav: ${this.slamnav}`,
           );
           this.slamnav?.emit('vobsClosures', stringifyAllValues(json));
         } catch (error) {
