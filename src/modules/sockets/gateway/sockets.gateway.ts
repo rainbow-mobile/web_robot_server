@@ -27,7 +27,6 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
-import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -46,7 +45,7 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
-    private readonly influxService: InfluxDBService,
+    // private readonly influxService: InfluxDBService,
     private readonly mqttService: MqttClientService,
     private readonly kafakService: KafkaClientService,
   ) {}
@@ -776,11 +775,10 @@ export class SocketGateway
         try {
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(
-            `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
-          );
-
-          this.server.emit('vobsRobots', stringifyAllValues(json));
+          // socketLogger.debug(
+          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
+          // );
+          this.slamnav?.volatile.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -795,7 +793,7 @@ export class SocketGateway
           socketLogger.debug(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`,
           );
-          this.server.emit('vobsClosures', stringifyAllValues(json));
+          this.slamnav?.volatile.emit('vobsClosures', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -1023,35 +1021,43 @@ export class SocketGateway
   }
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.emit('status', json);
+    if (payload) {
+      const json = JSON.parse(payload);
+      this.server.emit('status', json);
 
-    if (this.frsSocket?.connected) {
-      this.frsSocket.emit('status', {
-        robotSerial: global.robotSerial,
-        data: json,
-      });
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit('status', {
+          robotSerial: global.robotSerial,
+          data: json,
+        });
+      }
+
+      // this.influxService.writeStatus(json);
+
+      this.robotState = { ...this.robotState, ...json };
+    } else {
+      socketLogger.warn(`[GATEWAY] Status null`);
     }
-
-    // this.influxService.writeStatus(json);
-
-    this.robotState = { ...this.robotState, ...json };
   }
 
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.emit('moveStatus', json);
-    if (this.frsSocket?.connected) {
-      this.frsSocket.emit('moveStatus', {
-        robotSerial: global.robotSerial,
-        data: json,
-      });
-    }
+    if (payload) {
+      const json = JSON.parse(payload);
+      this.server.volatile.emit('moveStatus', json);
+      if (this.frsSocket?.connected) {
+        this.frsSocket.volatile.emit('moveStatus', {
+          robotSerial: global.robotSerial,
+          data: json,
+        });
+      }
 
-    // this.influxService.writeMoveStatus(json);
-    // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
-    this.robotState = { ...this.robotState, ...json };
+      // this.influxService.writeMoveStatus(json);
+      // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
+      this.robotState = { ...this.robotState, ...json };
+    } else {
+      socketLogger.warn(`[GATEWAY] MoveStatus null`);
+    }
   }
 
   /**
@@ -1062,23 +1068,27 @@ export class SocketGateway
   @SubscribeMessage('moveResponse')
   async handleMoveReponseMessage(@MessageBody() payload: string) {
     try {
-      const json = JSON.parse(payload);
-      this.server.emit('moveResponse', json);
+      if (payload) {
+        const json = JSON.parse(payload);
+        this.server.emit('moveResponse', json);
 
-      if (this.frsSocket?.connected) {
-        this.frsSocket.emit('moveResponse', {
-          robotSerial: global.robotSerial,
-          data: json,
-        });
+        if (this.frsSocket?.connected) {
+          this.frsSocket.emit('moveResponse', {
+            robotSerial: global.robotSerial,
+            data: json,
+          });
+        }
+
+        if (this.tcpClient) {
+          socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
+          this.tcpClient.write(json.result);
+        }
+        this.moveState = json;
+
+        socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+      } else {
+        socketLogger.warn(`[GATEWAY] moveResponse null`);
       }
-
-      if (this.tcpClient) {
-        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
-        this.tcpClient.write(json.result);
-      }
-      this.moveState = json;
-
-      socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
