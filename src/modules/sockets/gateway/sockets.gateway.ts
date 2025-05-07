@@ -28,8 +28,6 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
-import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
-import { AnyElement } from 'soap/lib/wsdl/elements';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -510,6 +508,7 @@ export class SocketGateway
 
       this.frsSocket.on('move', (_data) => {
         try {
+
           if(_data == null || _data == undefined ){
             socketLogger.warn(`[COMMAND] FRS Move : NULL`)
             return;
@@ -574,7 +573,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -610,7 +609,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -648,7 +647,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -686,7 +685,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -722,7 +721,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -754,7 +753,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            );
+            });
           }
         } catch (error) {
           socketLogger.error(
@@ -856,7 +855,6 @@ export class SocketGateway
           }
           const data = _data;
           const json = JSON.parse(data);
-
           if(isEqual(json,this.lastFRSVobsRobot)){
             socketLogger.warn(`[COMMAND] FRS vobsRobots : Equal lastFRSVobsRobot`)
             return;
@@ -865,9 +863,9 @@ export class SocketGateway
           socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
           this.slamnav.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
-          // socketLogger.error(
-          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
-          // );
+          socketLogger.error(
+            `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+          );
         }
       });
 
@@ -1096,11 +1094,6 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
-      // if(isEqual(json,this.lastMoveRequest)){
-      //   socketLogger.warn(`[COMMAND] Move: Equal lastMoveRequest`);
-      //   return;
-      // }
-      // this.lastMoveRequest = json;
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav.emit('move', stringifyAllValues(json));
@@ -1219,14 +1212,15 @@ export class SocketGateway
         );
       }
 
-      if (this.tcpClient) {
-        socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
-        this.tcpClient.write(json.result);
+        socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+      } else {
+        socketLogger.warn(`[GATEWAY] moveResponse null`);
       }
 
       this.moveState = json;
 
       socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
