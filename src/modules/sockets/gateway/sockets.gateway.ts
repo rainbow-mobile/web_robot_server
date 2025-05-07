@@ -22,12 +22,14 @@ import { KafkaClientService } from '@sockets/kafka/kafka.service';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as net from 'net';
+import isEqual from 'lodash/isEqual';
 import {
   MotionCommand,
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
 import { InfluxDBService } from 'src/modules/apis/influx/influx.service';
+import { AnyElement } from 'soap/lib/wsdl/elements';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -46,16 +48,17 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
-    private readonly influxService: InfluxDBService,
-    private readonly mqttService: MqttClientService,
-    private readonly kafakService: KafkaClientService,
+    // private readonly influxService: InfluxDBService,
+    // private readonly mqttService: MqttClientService,
+    // private readonly kafakService: KafkaClientService,
   ) {}
+
   afterInit() {
     instrument(this.server, {
       auth: false,
       mode: 'development',
     });
-    this.TCP_Open();
+    // this.TCP_Open();
   }
 
   @WebSocketServer()
@@ -198,6 +201,20 @@ export class SocketGateway
   lidarCloud: any[] = [];
   debugMode: boolean = false;
 
+  //lastInputValue - SLAMNAV to RRS
+  lastStatus:any;
+  lastMoveStatus:any;
+  lastLidarCloud:any;
+  lastMappingCloud:any;
+  lastLocalPath:any;
+  lastGlobalPath:any;
+
+  //lastInputValue - FRS to RRS
+  lastFRSVobsRobot:any;
+  lastFRSVobsClosure:any;
+  lastFRSPath:any;
+
+  //disabled(25-05-07, for traffic test)
   TCP_Open() {
     this.tcpServer = net.createServer((socket) => {
       this.tcpClient = socket;
@@ -416,18 +433,20 @@ export class SocketGateway
       socketLogger.error(`[NETWORK] TCP Server error : ${errorToJson(err)}`);
     });
   }
+
+  //disabled(25-05-07, for traffic test)
   setDebugMode(onoff: boolean) {
     socketLogger.info(`[COMMAND] setDebugMode : ${onoff}`);
-    this.debugMode = onoff;
+    this.debugMode = false;// onoff;
   }
 
   async connectFrsSocket(url: string) {
     try {
-      // url="http://10.108.1.5:3001/socket/robots"
       if (global.robotSerial == undefined || global.robotSerial == '') {
         socketLogger.warn(`[CONNECT] FRS Socket pass : robotSerial missing`);
         return;
       }
+
       if (this.frsSocket?.connected) {
         this.frsSocket.disconnect();
         socketLogger.info(`[CONNECT] FRS Socket disconnect`);
@@ -435,8 +454,6 @@ export class SocketGateway
         global.frsConnect = false;
         this.frsSocket = null;
       }
-
-      // await this.networkService.getNetwork();
 
       this.frsSocket = io(url, { transports: ['websocket'] });
       this.frsSocket.off();
@@ -447,17 +464,9 @@ export class SocketGateway
       this.frsSocket.on('connect', () => {
         socketLogger.info(`[CONNECT] FRS Socket connected`);
 
-        if (this.debugMode) {
-          this.server.emit('frs-connect');
-        }
-
         global.frsConnect = true;
         const sendData = {
-          robotSerial: global.robotSerial,
-          // robotIpAdrs:
-          //   global.ip_wifi == '' || global.ip_wifi == undefined
-          //     ? global.ip_ethernet
-          //     : global.ip_wifi,
+          robotSerial: global.robotSerial
         };
 
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
@@ -468,36 +477,28 @@ export class SocketGateway
         socketLogger.error(
           `[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`,
         );
-        if (this.debugMode) {
-          this.server.volatile.emit('frs-disconnect', data);
-        }
         global.frsConnect = false;
       });
 
       this.frsSocket.on('error', (error) => {
         socketLogger.error(`[CONNECT] FRS Socket error: ${errorToJson(error)}`);
-        if (this.debugMode) {
-          this.server.volatile.emit('frs-error', error);
-        }
       });
 
       this.frsSocket.on('init', (_data) => {
         try {
+          if(_data == null || _data == undefined){
+            socketLogger.warn(`[INIT] Frs Init : NULL`);
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(`[INIT] FRS Get init: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.volatile.emit('frs-init', data);
-          }
-          console.log(json.robotSerial, global.robotSerial);
           if (json.robotSerial == global.robotSerial) {
             socketLogger.info(
               `[INIT] Get Robot Info from FRS: SerialNumber(${json.robotSerial}), ip(${json.robotIpAdrs}), name(${json.robotNm})`,
             );
             global.robotNm = json.robotNm;
-            console.log(global.robotNm);
           }
-          // to be continue...
+          //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
           // this.kafakService.connect();
         } catch (error) {
@@ -509,27 +510,35 @@ export class SocketGateway
 
       this.frsSocket.on('move', (_data) => {
         try {
-          const data = _data;
-          const json = JSON.parse(data);
-          socketLogger.debug(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.volatile.emit('frs-move', data);
-          }
-          if (this.slamnav) {
-            this.slamnav.emit('move', stringifyAllValues(json));
-          } else {
-            this.frsSocket.volatile.emit(
-              'moveResponse',
-              {
-                robotSerial: global.robotSerial,
-                data: {
-                  ...data,
-                  result: 'fail',
-                  message: 'SLAMNAV2 disconnected',
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS Move : NULL`)
+            return;
+          }else{
+            const data = _data;
+            const json = JSON.parse(data);
+
+            if(json.command == null || json.command == undefined || json.command == ""){
+              socketLogger.warn(`[COMMAND] FRS Move : Command NULL`)
+              return;
+            }
+
+            socketLogger.info(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
+            if (this.slamnav) {
+              this.slamnav.emit('move', stringifyAllValues(json));
+            } else {
+              this.frsSocket.emit(
+                'moveResponse',
+                {
+                  robotSerial: global.robotSerial,
+                  data: {
+                    ...data,
+                    result: 'fail',
+                    message: 'SLAMNAV2 disconnected',
+                  },
                 },
-              },
-            );
-          }
+              );
+            }
+          }   
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS Move: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -539,16 +548,23 @@ export class SocketGateway
 
       this.frsSocket.on('load', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS load : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.emit('frs-load', data);
+
+          if(json.command == null || json.command == undefined || json.command == ""){
+            socketLogger.warn(`[COMMAND] FRS load : Command NULL`)
+            return;
           }
+            
+          socketLogger.debug(`[COMMAND] FRS Load: ${JSON.stringify(json)}`);
           if (this.slamnav) {
             this.slamnav.emit('load', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'loadResponse',
               {
                 robotSerial: global.robotSerial,
@@ -569,16 +585,22 @@ export class SocketGateway
 
       this.frsSocket.on('motor', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS motor : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.emit('frs-motor', data);
+
+          if(json.command == null || json.command == undefined || json.command == ""){
+            socketLogger.warn(`[COMMAND] FRS motor : Command NULL`)
+            return;
           }
+          socketLogger.debug(`[COMMAND] FRS motor: ${JSON.stringify(json)}`);
           if (this.slamnav) {
             this.slamnav.emit('motor', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'motorResponse',
               {
                 robotSerial: global.robotSerial,
@@ -599,18 +621,24 @@ export class SocketGateway
 
       this.frsSocket.on('localization', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS localization : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
+
+          if(json.command == null || json.command == undefined || json.command == ""){
+            socketLogger.warn(`[COMMAND] FRS localization : Command NULL`)
+            return;
+          }
           socketLogger.debug(
             `[COMMAND] FRS Localization: ${JSON.stringify(json)}`,
           );
-          if (this.debugMode) {
-            this.server.emit('frs-localization', data);
-          }
           if (this.slamnav) {
             this.slamnav.emit('localization', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'localizationResponse',
               {
                 robotSerial: global.robotSerial,
@@ -631,18 +659,24 @@ export class SocketGateway
 
       this.frsSocket.on('randomseq', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS randomseq : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
+
+          if(json.command == null || json.command == undefined || json.command == ""){
+            socketLogger.warn(`[COMMAND] FRS randomseq : Command NULL`)
+            return;
+          }
           socketLogger.debug(
             `[COMMAND] FRS randomseq: ${JSON.stringify(json)}`,
           );
-          if (this.debugMode) {
-            this.server.emit('frs-randomseq', data);
-          }
           if (this.slamnav) {
             this.slamnav.emit('randomseq', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'randomseqResponse',
               {
                 robotSerial: global.robotSerial,
@@ -663,16 +697,22 @@ export class SocketGateway
 
       this.frsSocket.on('mapping', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS mapping : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.emit('frs-mapping', data);
+
+          if(json.command == null || json.command == undefined || json.command == ""){
+            socketLogger.warn(`[COMMAND] FRS mapping : Command NULL`)
+            return;
           }
+          socketLogger.debug(`[COMMAND] FRS mapping: ${JSON.stringify(json)}`);
           if (this.slamnav) {
             this.slamnav.emit('mapping', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'mappingResponse',
               {
                 robotSerial: global.robotSerial,
@@ -693,16 +733,18 @@ export class SocketGateway
 
       this.frsSocket.on('dock', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS dock : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
+
           socketLogger.debug(`[COMMAND] FRS dock: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.emit('frs-dock', data);
-          }
           if (this.slamnav) {
             this.slamnav.emit('dock', stringifyAllValues(json));
           } else {
-            this.frsSocket.volatile.emit(
+            this.frsSocket.emit(
               'dockResponse',
               {
                 robotSerial: global.robotSerial,
@@ -723,16 +765,17 @@ export class SocketGateway
 
       this.frsSocket.on('lidarOnOff', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS lidarOnOff : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
             `[COMMAND] FRS lidarOnOff: ${JSON.stringify(json)}`,
           );
-          if (this.debugMode) {
-            this.server.volatile.emit('frs-lidarOnOff', data);
-          }
           if (this.slamnav) {
-            this.slamnav.volatile.emit('lidarOnOff', stringifyAllValues(json));
+            this.slamnav.emit('lidarOnOff', stringifyAllValues(json));
           }
         } catch (error) {
           socketLogger.error(
@@ -743,14 +786,15 @@ export class SocketGateway
 
       this.frsSocket.on('led', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS led : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(`[COMMAND] FRS led: ${JSON.stringify(json)}`);
-          if (this.debugMode) {
-            this.server.volatile.emit('frs-led', data);
-          }
           if (this.slamnav) {
-            this.slamnav.volatile.emit('led', stringifyAllValues(json));
+            this.slamnav.emit('led', stringifyAllValues(json));
           }
         } catch (error) {
           socketLogger.error(
@@ -761,16 +805,17 @@ export class SocketGateway
 
       this.frsSocket.on('pathOnOff', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS pathOnOff : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
           socketLogger.debug(
             `[COMMAND] FRS pathOnOff: ${JSON.stringify(json)}`,
           );
-          if (this.debugMode) {
-            this.server.volatile.emit('frs-pathOnOff', data);
-          }
           if (this.slamnav) {
-            this.slamnav.volatile.emit('pathOnOff', stringifyAllValues(json));
+            this.slamnav.emit('pathOnOff', stringifyAllValues(json));
           }
         } catch (error) {
           socketLogger.error(
@@ -781,10 +826,20 @@ export class SocketGateway
 
       this.frsSocket.on('path', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS path : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
+
+          if(isEqual(json,this.lastFRSPath)){
+            socketLogger.warn(`[COMMAND] FRS path : Equal lastFRSPath`)
+            return;
+          }
+          this.lastFRSPath = json;
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
-          this.server.volatile.emit('path', stringifyAllValues(json));
+          this.slamnav.emit('path', stringifyAllValues(json));
         } catch (error) {
           console.error(error);
           socketLogger.error(
@@ -795,12 +850,20 @@ export class SocketGateway
 
       this.frsSocket.on('vobsRobots', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS vobsRobots : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          // socketLogger.debug(
-          //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
-          // );
-          this.server.volatile.emit('vobsRobots', stringifyAllValues(json));
+
+          if(isEqual(json,this.lastFRSVobsRobot)){
+            socketLogger.warn(`[COMMAND] FRS vobsRobots : Equal lastFRSVobsRobot`)
+            return;
+          }
+          this.lastFRSVobsRobot = json;
+          socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
+          this.slamnav.emit('vobsRobots', stringifyAllValues(json));
         } catch (error) {
           // socketLogger.error(
           //   `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -810,12 +873,20 @@ export class SocketGateway
 
       this.frsSocket.on('vobsClosures', (_data) => {
         try {
+          if(_data == null || _data == undefined ){
+            socketLogger.warn(`[COMMAND] FRS vobsClosures : NULL`)
+            return;
+          }
           const data = _data;
           const json = JSON.parse(data);
-          socketLogger.debug(
-            `[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`,
-          );
-          this.server.volatile.emit('vobsClosures', stringifyAllValues(json));
+
+          if(isEqual(json,this.lastFRSVobsClosure)){
+            socketLogger.warn(`[COMMAND] FRS vobsClosures : Equal lastFRSVobsClosure`)
+            return;
+          }
+          this.lastFRSVobsClosure = json;
+          socketLogger.debug(`[COMMAND] FRS vobsClosures: ${JSON.stringify(json)}`);
+          this.slamnav.emit('vobsClosures', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
             `[COMMAND] FRS vobsClosures: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -839,14 +910,15 @@ export class SocketGateway
         time: Date.now().toString(),
       },
     };
-    this.server?.volatile.emit('programStatus', statusData.data);
+
+    this.server?.emit('programStatus', statusData.data);
+
     if (this.frsSocket?.connected && global.robotSerial != '') {
-      // socketLogger.debug(
-      // `[CONNECT] FRS emit Status : ${global.robotSerial}, ${this.robotState.time}`,
-      // );
-      this.frsSocket.volatile.emit('programStatus',statusData);
+      this.frsSocket.emit('programStatus',statusData);
     }
-  }, 1000);
+
+  //interval changed (25-05-07 for traffic test)
+  }, 5000);
 
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
@@ -879,7 +951,7 @@ export class SocketGateway
 
     if (client.handshake.query.name == 'slamnav') {
       if (this.moveState.result == 'accept') {
-        this.server.volatile.emit('moveResponse', {
+        this.server.emit('moveResponse', {
           robotSerial: global.robotSerial,
           data: {
             ...this.moveState,
@@ -888,10 +960,12 @@ export class SocketGateway
           },
         });
       }
+
       if (this.tcpClient) {
         socketLogger.debug(`[CONNECT] Send TCP : disconnected`);
         this.tcpClient.write('disconnected');
       }
+
       this.slamnav = null;
       this.moveState = {
         command: '',
@@ -904,10 +978,12 @@ export class SocketGateway
         method: undefined,
         result: undefined,
       };
+
       //TaskStop
       if (this.taskState.running) {
-        this.server.volatile.emit('taskStop', 'disconnected');
+        this.server.emit('taskStop', 'disconnected');
       }
+
     } else if (client.handshake.query.name == 'taskman') {
       this.taskState = {
         connection: false,
@@ -1014,10 +1090,20 @@ export class SocketGateway
   @SubscribeMessage('move')
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[COMMAND] Move: NULL`);
+        return;
+      }
+
       const json = JSON.parse(JSON.stringify(payload));
-      this.server.to('slamnav').emit('move', json);
+      // if(isEqual(json,this.lastMoveRequest)){
+      //   socketLogger.warn(`[COMMAND] Move: Equal lastMoveRequest`);
+      //   return;
+      // }
+      // this.lastMoveRequest = json;
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
+      this.slamnav.emit('move', stringifyAllValues(json));
     } catch (error) {
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
       throw error();
@@ -1032,46 +1118,76 @@ export class SocketGateway
   @SubscribeMessage('moveCommand')
   async handleMoveCommandMessage2(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[COMMAND] Move: NULL`);
+        return;
+      }
+
       const json = JSON.parse(JSON.stringify(payload));
-      this.server.to('slamnav').emit('move', json);
+      // if(isEqual(json,this.lastMoveRequest)){
+      //   socketLogger.warn(`[COMMAND] Move: Equal lastMoveRequest`);
+      //   return;
+      // }
+      // this.lastMoveRequest = json;
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
+      this.slamnav.emit('move', stringifyAllValues(json));
     } catch (error) {
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
       throw error();
     }
   }
+
   @SubscribeMessage('status')
   async handleStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.volatile.emit('status', json);
+    try{
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[STATUS] Status: NULL`);
+        return;
+      }
 
-    if (this.frsSocket?.connected) {
-      this.frsSocket.volatile.emit(
-        'status',
-        { robotSerial: global.robotSerial, data: json },
-      );
+      const json = JSON.parse(payload);
+      if(isEqual(json,this.lastStatus)){
+        return;
+      }
+      this.lastStatus = json;
+
+      this.server.emit('status', json);
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit('status',{ robotSerial: global.robotSerial, data: json });
+      }
+
+      this.robotState = { ...this.robotState, ...json };
+    }catch(error){
+      socketLogger.error(`[STATUS] status : ${errorToJson(error)}`)
     }
 
-    // this.influxService.writeStatus(json);
-
-    this.robotState = { ...this.robotState, ...json };
   }
 
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(@MessageBody() payload: string) {
-    const json = JSON.parse(payload);
-    this.server.volatile.emit('moveStatus', json);
-    if (this.frsSocket?.connected) {
-      this.frsSocket.volatile.emit(
-        'moveStatus',
-        { robotSerial: global.robotSerial, data: json },
-      );
-    }
+    try{
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[STATUS] MoveStatus: NULL`);
+        return;
+      }
+
+      const json = JSON.parse(payload);
+      if(isEqual(json,this.lastMoveStatus)){
+        return;
+      }
+      this.lastMoveStatus = json;
+
+      this.server.volatile.emit('moveStatus', json);
+      if (this.frsSocket?.connected) {
+        this.frsSocket.volatile.emit('moveStatus',{ robotSerial: global.robotSerial, data: json });
+      }
 
     // this.influxService.writeMoveStatus(json);
-    // console.log(payload.length, JSON.stringify(json).length,msgpack.encode(json).length);//, pako.gzip(json).length)
-    this.robotState = { ...this.robotState, ...json };
+      this.robotState = { ...this.robotState, ...json };
+    }catch(error){
+      socketLogger.error(`[STATUS] MoveStatus : ${errorToJson(error)}`)
+    }
   }
 
   /**
@@ -1082,11 +1198,22 @@ export class SocketGateway
   @SubscribeMessage('moveResponse')
   async handleMoveReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('moveResponse', json);
+
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] moveResponse: Command NULL`);
+        return;
+      }
+
+      this.server.emit('moveResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'moveResponse',
           { robotSerial: global.robotSerial, data: json },
         );
@@ -1096,6 +1223,7 @@ export class SocketGateway
         socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
         this.tcpClient.write(json.result);
       }
+
       this.moveState = json;
 
       socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
@@ -1108,19 +1236,32 @@ export class SocketGateway
   @SubscribeMessage('loadResponse')
   async handleLoadReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] loadResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('loadResponse', json);
+      
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] loadResponse: Command NULL`);
+        return;
+      }
+
+      this.server.emit('loadResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'loadResponse',
           { robotSerial: global.robotSerial, data: json },
         );
       }
+
       if (this.tcpClient) {
         socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
         this.tcpClient.write(json.result);
       }
+
       socketLogger.debug(
         `[RESPONSE] SLAMNAV loadResponse: ${JSON.stringify(json)}`,
       );
@@ -1134,15 +1275,27 @@ export class SocketGateway
   @SubscribeMessage('mappingResponse')
   async handleMappingReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] mappingResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('mappingResponse', json);
+
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] mappingResponse: Command NULL`);
+        return;
+      }
+
+      this.server.emit('mappingResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'mappingResponse',
           { robotSerial: global.robotSerial, data: json },
         );
       }
+
       socketLogger.debug(
         `[RESPONSE] SLAMNAV mappingResponse: ${JSON.stringify(json)}`,
       );
@@ -1151,7 +1304,7 @@ export class SocketGateway
         socketLogger.info(
           `[RESPONSE] SLAMNAV mappingResponse -> auto map load ${json.name}`,
         );
-        this.slamnav.volatile.emit('load', {
+        this.slamnav.emit('load', {
           command: 'mapload',
           name: json.name,
           time: Date.now().toString(),
@@ -1164,18 +1317,31 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('localizationResponse')
   async handleLocalizationReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] localizationResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('localizationResponse', json);
+
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] localizationResponse: Command NULL`);
+        return;
+      }
+      
+      this.server.emit('localizationResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'localizationResponse',
           { robotSerial: global.robotSerial, data: json },
         );
       }
+
       if (this.tcpClient) {
         socketLogger.debug(`[CONNECT] Send TCP : ${json.result}`);
         this.tcpClient.write(json.result);
@@ -1190,14 +1356,25 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('randomseqResponse')
   async handleRandomseqReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] randomseqResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('randomseqResponse', json);
+
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] randomseqResponse: Command NULL`);
+        return;
+      }
+      this.server.emit('randomseqResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'randomseqResponse',
           { robotSerial: global.robotSerial, data: json },
         );
@@ -1215,11 +1392,22 @@ export class SocketGateway
   @SubscribeMessage('dockResponse')
   async handleDockReponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] dockResponse: NULL`);
+        return;
+      }
+
       const json = JSON.parse(payload);
-      this.server.volatile.emit('dockResponse', json);
+
+      if(json.command == null || json.command == undefined || json.command == ""){
+        socketLogger.warn(`[RESPONSE] dockResponse: Command NULL`);
+        return;
+      }
+
+      this.server.emit('dockResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'dockResponse',
           { robotSerial: global.robotSerial, data: json },
         );
@@ -1242,11 +1430,22 @@ export class SocketGateway
   @SubscribeMessage('lidarCloud')
   async handleLidarCloudMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('lidarCloud', payload);
-      if (this.frsSocket?.connected) {
-        // this.frsSocket.volatile.emit('lidarCloud',msgpack.encode({robotSerial:global.robotSerial,data:payload}))
+      if(payload == null || payload == undefined || payload.length == 0){
+        socketLogger.warn(`[STATUS] lidarCloud: NULL`);
+        return;
       }
-      this.lidarCloud = payload;
+
+      if(isEqual(payload,this.lastLidarCloud)){
+        socketLogger.warn(`[STATUS] lidarCloud: Equal lastLidarCloud`);
+        return;
+      }
+      this.lastLidarCloud = payload;
+
+      this.server.emit('lidarCloud', payload);
+
+      if (this.frsSocket?.connected) {
+        // this.frsSocket.emit('lidarCloud',msgpack.encode({robotSerial:global.robotSerial,data:payload}))
+      }
     } catch (error) {
       socketLogger.error(`[STATUS] Lidar: ${errorToJson(error)}`);
       throw error();
@@ -1256,7 +1455,18 @@ export class SocketGateway
   @SubscribeMessage('mappingCloud')
   async handleMappingCloudMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('mappingCloud', payload);
+      if(payload == null || payload == undefined || payload.length == 0){
+        socketLogger.warn(`[STATUS] mappingCloud: NULL`);
+        return;
+      }
+
+      if(isEqual(payload,this.lastMappingCloud)){
+        socketLogger.warn(`[STATUS] mappingCloud: Equal lastMappingCloud`);
+        return;
+      }
+      this.lastMappingCloud = payload;
+
+      this.server.emit('mappingCloud', payload);
     } catch (error) {
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
@@ -1266,14 +1476,27 @@ export class SocketGateway
   @SubscribeMessage('localPath')
   async handleLocalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('localPath', payload);
+      if(payload == null || payload == undefined || payload.length == 0){
+        socketLogger.warn(`[STATUS] localPath: NULL`);
+        return;
+      }
+
+      if(isEqual(payload,this.lastLocalPath)){
+        socketLogger.warn(`[STATUS] localPath: Equal lastLidarCloud`);
+        return;
+      }
+      this.lastLocalPath = payload;
+
+      this.server.emit('localPath', payload);
+
       if (this.frsSocket?.connected && global.robotSerial != '') {
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.volatile.emit('localPath', sendData);
+        this.frsSocket.emit('localPath', sendData);
       }
+
     } catch (error) {
       socketLogger.error(`[STATUS] localPath: ${errorToJson(error)}`);
       throw error();
@@ -1282,14 +1505,26 @@ export class SocketGateway
   @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      this.server.volatile.emit('globalPath', payload);
-      socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`);
+      if(payload == null || payload == undefined || payload.length == 0){
+        socketLogger.warn(`[STATUS] globalPath: NULL`);
+        return;
+      }
+
+      if(isEqual(payload,this.lastGlobalPath)){
+        socketLogger.warn(`[STATUS] globalPath: Equal lastGlobalPath`);
+        return;
+      }
+      this.lastGlobalPath = payload;
+
+      this.server.emit('globalPath', payload);
+      socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`
+    );
       if (this.frsSocket?.connected && global.robotSerial != '') {
         const sendData = {
           robotSerial: global.robotSerial,
           data: payload,
         };
-        this.frsSocket.volatile.emit('globalPath', sendData);
+        this.frsSocket.emit('globalPath', sendData);
       }
     } catch (error) {
       socketLogger.error(`[STATUS] globalPath: ${errorToJson(error)}`);
@@ -1311,7 +1546,7 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[INIT] Task Init: ${JSON.stringify(payload)}`);
-      this.server.volatile.emit('taskInit', this.taskState);
+      this.server.emit('taskInit', this.taskState);
     } catch (error) {
       socketLogger.error(`[INIT] Task Init: ${errorToJson(error)}`);
       throw error();
@@ -1323,7 +1558,7 @@ export class SocketGateway
     try {
       this.taskState.variables = payload;
       socketLogger.debug(`[INIT] Task Variables: ${JSON.stringify(payload)}`);
-      this.server.volatile.emit('taskVariables', payload);
+      this.server.emit('taskVariables', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Task Variables:  ${errorToJson(error)}`);
       throw error();
@@ -1334,7 +1569,7 @@ export class SocketGateway
   async handleTaskDockMessage() {
     try {
       socketLogger.debug(`[COMMAND] Task Dock`);
-      this.slamnav.volatile.emit('dock', {
+      this.slamnav.emit('dock', {
         command: 'dock',
         time: Date.now().toString(),
       });
@@ -1348,7 +1583,7 @@ export class SocketGateway
   async handleTaskUnDockMessage() {
     try {
       socketLogger.debug(`[COMMAND] Task UnDock`);
-      this.slamnav.volatile.emit('dock', {
+      this.slamnav.emit('dock', {
         command: 'undock',
         time: Date.now().toString(),
       });
@@ -1361,9 +1596,13 @@ export class SocketGateway
   @SubscribeMessage('motion')
   async handleMotionMessage(@MessageBody() payload: string) {
     try {
-      const json = JSON.parse(JSON.stringify(payload));
-      this.server.to('slamnav').volatile.emit('motion', json);
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[COMMAND] motion: NULL`);
+        return;
+      }
 
+      const json = JSON.parse(JSON.stringify(payload));
+      this.slamnav.emit('motion', json);
       socketLogger.debug(`[COMMAND] Motion: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[INIT] Motion:  ${errorToJson(error)}`);
@@ -1374,11 +1613,15 @@ export class SocketGateway
   @SubscribeMessage('motionResponse')
   async handleMotionResponseMessage(@MessageBody() payload: string) {
     try {
+      if(payload == null || payload == undefined){
+        socketLogger.warn(`[RESPONSE] motionResponse: NULL`);
+        return;
+      }
       const json = JSON.parse(payload);
-      this.server.volatile.emit('motionResponse', json);
+      this.server.emit('motionResponse', json);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit(
+        this.frsSocket.emit(
           'motionResponse',
           { robotSerial: global.robotSerial, data: json },
         );
@@ -1412,7 +1655,7 @@ export class SocketGateway
       };
 
       socketLogger.debug(`[INIT] Web Init : ${JSON.stringify(payload)}`);
-      this.server.volatile.emit('Webinit', payload);
+      this.server.emit('Webinit', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
       throw error();

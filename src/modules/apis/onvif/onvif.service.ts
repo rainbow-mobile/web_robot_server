@@ -24,7 +24,8 @@ export class OnvifDeviceService implements OnModuleInit {
   private service: any;
 
   async onModuleInit() {
-    this.server = dgram.createSocket('udp4');
+    console.log("Onvif Init!!!!!!!!!!!!!!!!")
+    this.server = dgram.createSocket({type:'udp4',reuseAddr:true});
     this.getVariables();
     this.server.on('message', (msg, rinfo) => {
       try {
@@ -32,6 +33,7 @@ export class OnvifDeviceService implements OnModuleInit {
           explicitArray: false,
           tagNameProcessors: [xml2js.processors.stripPrefix],
         });
+        console.log("message in");
         parser.parseString(msg, (err, result) => {
           if (err) {
             console.log('Error parsing XML:', err);
@@ -63,6 +65,7 @@ export class OnvifDeviceService implements OnModuleInit {
 
     // Multicast 그룹에 가입하여 요청을 대기
     this.server.bind(PORT, () => {
+      console.log("Onvif bind");
       this.server.setMulticastLoopback(false);
       this.server.addMembership(MULTICAST_ADDRESS);
       console.log(`ONVIF server listening on ${MULTICAST_ADDRESS}:${PORT}`);
