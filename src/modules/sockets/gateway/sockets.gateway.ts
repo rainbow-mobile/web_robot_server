@@ -1171,9 +1171,9 @@ export class SocketGateway
       }
       this.lastMoveStatus = json;
 
-      this.server.volatile.emit('moveStatus', json);
+      this.server.emit('moveStatus', json);
       if (this.frsSocket?.connected) {
-        this.frsSocket.volatile.emit('moveStatus',{ robotSerial: global.robotSerial, data: json });
+        this.frsSocket.emit('moveStatus',{ robotSerial: global.robotSerial, data: json });
       }
 
     // this.influxService.writeMoveStatus(json);
