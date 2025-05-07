@@ -573,7 +573,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -609,7 +609,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -647,7 +647,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -685,7 +685,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -721,7 +721,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -753,7 +753,7 @@ export class SocketGateway
                   message: 'SLAMNAV2 disconnected',
                 },
               },
-            });
+            );
           }
         } catch (error) {
           socketLogger.error(
@@ -1204,7 +1204,8 @@ export class SocketGateway
       }
 
       this.server.emit('moveResponse', json);
-
+      socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+      
       if (this.frsSocket?.connected) {
         this.frsSocket.emit(
           'moveResponse',
@@ -1212,15 +1213,7 @@ export class SocketGateway
         );
       }
 
-        socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
-      } else {
-        socketLogger.warn(`[GATEWAY] moveResponse null`);
-      }
-
       this.moveState = json;
-
-      socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
-
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
