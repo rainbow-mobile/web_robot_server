@@ -22,7 +22,7 @@ import { KafkaClientService } from '@sockets/kafka/kafka.service';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as net from 'net';
-import isEqual from 'lodash/isEqual';
+import { isEqual } from 'lodash';
 import {
   MotionCommand,
   MotionMethod,
