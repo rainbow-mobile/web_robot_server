@@ -839,7 +839,7 @@ export class SocketGateway
           }
           this.lastFRSPath = json;
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
-          this.slamnav.emit('path', stringifyAllValues(json));
+          this.slamnav?.emit('path', stringifyAllValues(json));
         } catch (error) {
           console.error(error);
           socketLogger.error(
@@ -1540,7 +1540,7 @@ export class SocketGateway
       }
 
       if(isEqual(payload,this.lastGlobalPath)){
-        socketLogger.warn(`[STATUS] globalPath: Equal lastGlobalPath`);
+        // socketLogger.warn(`[STATUS] globalPath: Equal lastGlobalPath`);
         return;
       }
       this.lastGlobalPath = payload;
