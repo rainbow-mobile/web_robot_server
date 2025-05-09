@@ -1152,7 +1152,7 @@ export class SocketGateway
   async handleStatusMessage(@MessageBody() payload: string,
   @ConnectedSocket() client: Socket) {
     try{
-      if(this.slamnav && client.id == this.slamnav.id){
+      if(client.id == this.slamnav?.id){
         if(payload == null || payload == undefined){
           socketLogger.warn(`[STATUS] Status: NULL`);
           return;
@@ -1171,7 +1171,7 @@ export class SocketGateway
   
         this.robotState = { ...this.robotState, ...json };
       }else{
-        socketLogger.warn(`[STATUS] another slamnav status ${this.slamnav.id}, ${client.id}`)
+        socketLogger.warn(`[STATUS] another slamnav status ${this.slamnav?.id}, ${client.id}`)
       }
     }catch(error){
       socketLogger.error(`[STATUS] status : ${errorToJson(error)}`)
@@ -1183,7 +1183,7 @@ export class SocketGateway
   async handleWorkingStatusMessage(@MessageBody() payload: string,
   @ConnectedSocket() client: Socket) {
     try{
-      if(this.slamnav && client.id == this.slamnav.id){
+      if(client.id == this.slamnav?.id){
         if(payload == null || payload == undefined){
           socketLogger.warn(`[STATUS] MoveStatus: NULL`);
           return;
@@ -1220,7 +1220,7 @@ export class SocketGateway
   async handleMoveReponseMessage(@MessageBody() payload: string,
     @ConnectedSocket() client: Socket) {
     try {
-      if(this.slamnav && client.id == this.slamnav.id){
+      if(client.id == this.slamnav?.id){
         if(payload == null || payload == undefined){
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
           return;
@@ -1245,7 +1245,7 @@ export class SocketGateway
   
         this.moveState = json;
       }else{
-        socketLogger.warn(`[RESPONSE] another slamnav moveResponse ${this.slamnav.id}, ${client.id}`)
+        socketLogger.warn(`[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`)
       }
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
@@ -1257,7 +1257,7 @@ export class SocketGateway
   async handleLoadReponseMessage(@MessageBody() payload: string,
     @ConnectedSocket() client: Socket) {
     try {
-      if(this.slamnav && client.id == this.slamnav.id){
+      if(client.id == this.slamnav?.id){
         if(payload == null || payload == undefined){
           socketLogger.warn(`[RESPONSE] loadResponse: NULL`);
           return;
@@ -1288,7 +1288,7 @@ export class SocketGateway
           `[RESPONSE] SLAMNAV loadResponse: ${JSON.stringify(json)}`,
         );
       }else{
-        socketLogger.warn(`[RESPONSE] another slamnav loadResponse ${this.slamnav.id}, ${client.id}`)
+        socketLogger.warn(`[RESPONSE] another slamnav loadResponse ${this.slamnav?.id}, ${client.id}`)
       }
     } catch (error) {
       socketLogger.error(
@@ -1301,7 +1301,7 @@ export class SocketGateway
   async handleMappingReponseMessage(@MessageBody() payload: string,
     @ConnectedSocket() client: Socket) {
     try {
-      if(this.slamnav && client.id == this.slamnav.id){
+      if(client.id == this.slamnav?.id){
         if(payload == null || payload == undefined){
           socketLogger.warn(`[RESPONSE] mappingResponse: NULL`);
           return;
