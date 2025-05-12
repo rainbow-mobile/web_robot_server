@@ -16,7 +16,7 @@ import { TaskPayload } from '@common/interface/robot/task.interface';
 import { MovePayload } from '@common/interface/robot/move.interface';
 import { StatusPayload } from '@common/interface/robot/status.interface';
 import { stringifyAllValues } from '@common/util/network.util';
-import { Global, OnModuleDestroy } from '@nestjs/common';
+import { Global, OnModuleDestroy, Param, Query } from '@nestjs/common';
 import { MqttClientService } from '@sockets/mqtt/mqtt.service';
 import { errorToJson } from '@common/util/error.util';
 import { KafkaClientService } from '@sockets/kafka/kafka.service';
@@ -29,6 +29,7 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
+import { SubscribeDto } from '@sockets/dto/subscribe.dto';
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -1013,6 +1014,43 @@ export class SocketGateway
     client.leave(client.handshake.query.name as string);
   }
 
+
+  // 클라이언트가 해당 토픽 구독
+  @SubscribeMessage('subscribe')
+  async handelSubscribe(@MessageBody() dto:SubscribeDto , @ConnectedSocket() client: Socket){
+    try{
+      if (client.rooms.has(dto.topic)) {
+        client.join(dto.topic);
+        socketLogger.warn(`[SUB] Client Subscribe ${client.id} already in room ${dto.topic}`)
+        return 'already in room';
+      }else{
+        client.join(dto.topic);
+        socketLogger.info(`[SUB] Client Subscribe ${client.id}, ${dto.topic}`)
+        return 'success';
+      }
+    }catch(error){
+      socketLogger.error(`[SUB] Client Subscribe ${client.id}, ${dto.topic} -> ${errorToJson(error)}`);
+    }
+  }
+
+  // 클라이언트가 해당 토픽 구독해제
+  @SubscribeMessage('unsubscribe')
+  async handelUnsubscribe(@MessageBody() dto:SubscribeDto , @ConnectedSocket() client: Socket){
+    try{
+      if (!client.rooms.has(dto.topic)) {
+        client.leave(dto.topic);
+        socketLogger.warn(`[SUB] Client Unsubscribe ${client.id} not in room ${dto.topic}`)
+        return 'not in room';
+      }else{
+        client.leave(dto.topic);
+        socketLogger.info(`[SUB] Client Unsubscribe ${client.id}, ${dto.topic}`)
+        return 'success';
+      }
+    }catch(error){
+      socketLogger.error(`[SUB] Client Unsubscribe ${client.id}, ${dto.topic} -> ${errorToJson(error)}`);
+    }
+  }
+
   /**
    * @description 태스크 시작/종료/에러 메시지를 처리하는 함수
    * @param socket
@@ -1197,7 +1235,8 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
   
-        this.server.emit('moveStatus', json);
+        this.server.to('moveStatus').emit('moveStatus',json);
+        // this.server.emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveStatus',{ robotSerial: global.robotSerial, data: json });
