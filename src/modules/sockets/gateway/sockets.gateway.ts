@@ -1036,19 +1036,33 @@ export class SocketGateway
   @SubscribeMessage('unsubscribe')
   async handelUnsubscribe(@MessageBody() dto:SubscribeDto , @ConnectedSocket() client: Socket){
     try{
-      if (!client.rooms.has(dto.topic)) {
-        client.leave(dto.topic);
-        socketLogger.warn(`[SUB] Client Unsubscribe ${client.id} not in room ${dto.topic}`)
-        return 'not in room';
-      }else{
-        client.leave(dto.topic);
-        socketLogger.info(`[SUB] Client Unsubscribe ${client.id}, ${dto.topic}`)
+      if(dto.topic == 'all'){
+        socketLogger.info(`[SUB] Client Unsubscribe ${client.id} all : rooms size is ${client.rooms.size - 1}`)
+        for (const room of client.rooms) {
+          // client.id는 고유한 기본 room이므로 제외
+          if (room !== client.id) {
+            client.leave(room);
+          }
+        }
         return 'success';
+      }else{
+        if (!client.rooms.has(dto.topic)) {
+          client.leave(dto.topic);
+          socketLogger.warn(`[SUB] Client Unsubscribe ${client.id} not in room ${dto.topic}`)
+          return 'not in room';
+        }else{
+          client.leave(dto.topic);
+          socketLogger.info(`[SUB] Client Unsubscribe ${client.id}, ${dto.topic}`)
+          return 'success';
+        }
       }
+
     }catch(error){
       socketLogger.error(`[SUB] Client Unsubscribe ${client.id}, ${dto.topic} -> ${errorToJson(error)}`);
     }
   }
+
+
 
   /**
    * @description 태스크 시작/종료/에러 메시지를 처리하는 함수
