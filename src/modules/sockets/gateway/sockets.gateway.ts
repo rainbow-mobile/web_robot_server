@@ -1242,6 +1242,7 @@ export class SocketGateway
         }
   
         const json = JSON.parse(payload);
+        socketLogger.debug(`[STATUS] moveStatus in : ${json}`)
         // delete json.time;
         if(isEqual(json,this.lastMoveStatus)){
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
