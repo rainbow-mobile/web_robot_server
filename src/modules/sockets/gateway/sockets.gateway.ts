@@ -210,6 +210,7 @@ export class SocketGateway
   lastGlobalPath:any;
 
   //lastInputValue - FRS to RRS
+  lastFRSVobs:any;
   lastFRSVobsRobot:any;
   lastFRSVobsClosure:any;
   lastFRSPath:any;
@@ -848,24 +849,24 @@ export class SocketGateway
         }
       });
 
-      this.frsSocket.on('vobsRobots', (_data) => {
+      this.frsSocket.on('vobs', (_data) => {
         try {
           if(_data == null || _data == undefined ){
-            socketLogger.warn(`[COMMAND] FRS vobsRobots : NULL`)
+            socketLogger.warn(`[COMMAND] FRS vobs : NULL`)
             return;
           }
           const data = _data;
           const json = JSON.parse(data);
-          if(isEqual(json,this.lastFRSVobsRobot)){
-            socketLogger.warn(`[COMMAND] FRS vobsRobots : Equal lastFRSVobsRobot`)
+          if(isEqual(json,this.lastFRSVobs)){
+            socketLogger.warn(`[COMMAND] FRS vobs : Equal lastFRSvobs`)
             return;
           }
-          this.lastFRSVobsRobot = json;
-          socketLogger.debug(`[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`);
-          this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
+          this.lastFRSVobs = json;
+          socketLogger.debug(`[COMMAND] FRS vobs: ${JSON.stringify(json)}`);
+          this.slamnav?.emit('vobs', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
-            `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+            `[COMMAND] FRS vobs: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
           );
         }
       });
