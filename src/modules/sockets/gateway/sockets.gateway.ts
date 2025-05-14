@@ -1019,13 +1019,14 @@ export class SocketGateway
   @SubscribeMessage('subscribe')
   async handelSubscribe(@MessageBody() dto:SubscribeDto , @ConnectedSocket() client: Socket){
     try{
+        socketLogger.info(`[SUB] Client Subscribe ${client.id}, ${dto.topic}`)
+      
       if (client.rooms.has(dto.topic)) {
         client.join(dto.topic);
         socketLogger.warn(`[SUB] Client Subscribe ${client.id} already in room ${dto.topic}`)
         return 'already in room';
       }else{
         client.join(dto.topic);
-        socketLogger.info(`[SUB] Client Subscribe ${client.id}, ${dto.topic}`)
         return 'success';
       }
     }catch(error){
@@ -1242,7 +1243,7 @@ export class SocketGateway
         }
   
         const json = JSON.parse(payload);
-        socketLogger.debug(`[STATUS] moveStatus in : ${json}`)
+        socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`)
         // delete json.time;
         if(isEqual(json,this.lastMoveStatus)){
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
