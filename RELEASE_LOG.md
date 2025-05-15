@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250515155215] - 2025-05-15
+- [RRS] Branch: main, Version: rrs-20250515155215] release 배포
+
+
 ## [rrs-20250515154423] - 2025-05-15
 - [RRS] Branch: main, Version: rrs-20250515154423] release 배포
 
