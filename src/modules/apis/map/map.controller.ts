@@ -131,7 +131,7 @@ export class MapController {
       res.send(response);
 
       httpLogger.info(`[MAP] saveCloud -> auto map load ${mapNm}`);
-      this.socketGateway.slamnav.emit('load', {
+      this.socketGateway.slamnav?.emit('load', {
         command: 'mapload',
         name: mapNm,
         time: Date.now().toString(),
@@ -192,7 +192,7 @@ export class MapController {
       res.send(response);
 
       httpLogger.info(`[MAP] saveTopology -> auto map load ${mapNm}`);
-      this.socketGateway.slamnav.emit('load', {
+      this.socketGateway.slamnav?.emit('load', {
         command: 'mapload',
         name: mapNm,
         time: Date.now().toString(),
