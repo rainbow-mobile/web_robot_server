@@ -73,7 +73,7 @@ jobs:
           
       - name: Copy and commit dist files
         env:
-          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.COMMON_RAINBOW_TOKEN }}
         run: |
           cd rainbow-release-apps
           APP_DIR="web_robot_server"
@@ -111,6 +111,8 @@ jobs:
 
       - name: Delete release tag
         if: always()
+        env:
+          GH_TOKEN: ${{ secrets.COMMON_RAINBOW_TOKEN }}
         run: |
           cd $GITHUB_WORKSPACE
           
