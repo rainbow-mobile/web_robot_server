@@ -8,6 +8,7 @@ import {
   OnModuleInit,
   Post,
   Param,
+  HttpException,
 } from '@nestjs/common';
 import httpLogger from '@common/logger/http.logger';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -218,14 +219,18 @@ export class SocketsController implements OnModuleInit {
   })
   async lidarOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
-      httpLogger.info(
-        `[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`,
-      );
-      this.socketGateway.slamnav.emit(
-        'lidarOnOff',
-        JSON.stringify({ ...data, time: Date.now().toString() }),
-      );
-      res.send();
+      if(this.socketGateway.slamnav){
+        httpLogger.info(
+          `[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`,
+        );
+        this.socketGateway.slamnav?.emit(
+          'lidarOnOff',
+          JSON.stringify({ ...data, time: Date.now().toString() }),
+        );
+        res.send();
+      }else{
+        throw new HttpException('SLAMNAV가 연결되지 않았습니다.',HttpStatus.BAD_GATEWAY);
+      }
     } catch (error) {
       httpLogger.error(`[SOCKET] lidar OnOff: ${errorToJson(error)}`);
     }
@@ -238,14 +243,18 @@ export class SocketsController implements OnModuleInit {
   })
   async pathOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
-      httpLogger.info(
-        `[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`,
-      );
-      this.socketGateway.slamnav.emit(
-        'pathOnOff',
-        JSON.stringify({ ...data, time: Date.now().toString() }),
-      );
-      res.send();
+      if(this.socketGateway.slamnav){
+        httpLogger.info(
+          `[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`,
+        );
+        this.socketGateway.slamnav?.emit(
+          'pathOnOff',
+          JSON.stringify({ ...data, time: Date.now().toString() }),
+        );
+        res.send();
+      }else{
+        throw new HttpException('SLAMNAV가 연결되지 않았습니다.',HttpStatus.BAD_GATEWAY);
+      }
     } catch (error) {
       httpLogger.error(`[SOCKET] path OnOff: ${errorToJson(error)}`);
     }
