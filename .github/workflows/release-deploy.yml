@@ -6,6 +6,8 @@ on:
       - 'release/**'
       - 'release_hotfix/**'
 
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: self-hosted
