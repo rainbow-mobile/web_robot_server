@@ -111,8 +111,6 @@ jobs:
 
       - name: Delete release tag
         if: always()
-        env:
-          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
           cd $GITHUB_WORKSPACE
           
