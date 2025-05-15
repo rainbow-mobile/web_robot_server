@@ -122,16 +122,6 @@ function update_release_log() {
     git push origin $current_branch
 }
 
-# mf_deploy_time.json 파일 생성
-function create_deploy_time_file() {
-    local timestamp=$1
-    local deploy_time_file="mf_deploy_time.json"
-
-    echo "{" > $deploy_time_file
-    echo "  \"deployTime\": \"$timestamp\"" >> $deploy_time_file
-    echo "}" >> $deploy_time_file
-}
-
 # 완료 메시지 출력
 function print_completion_message() {
     local version=$1
@@ -152,8 +142,6 @@ last_git_work_status="normal"
 
 timestamp=$(date +%Y%m%d%H%M%S)
 current_branch=$(git rev-parse --abbrev-ref HEAD)
-
-create_deploy_time_file "$timestamp"
 
 # 브랜치 검증
 # if [[ "$current_branch" != "main" ]]; then
