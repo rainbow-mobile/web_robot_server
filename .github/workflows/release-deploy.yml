@@ -48,11 +48,17 @@ jobs:
 
       - name: Compress dist directory
         run: |
-          cd dist
-         
+          TEMP_DIR="temp_release_${{ env.VERSION }}"
+          mkdir -p $TEMP_DIR
+          
+          cp -r dist $TEMP_DIR/
+          cp -r node_modules $TEMP_DIR/
+          
+          cd $TEMP_DIR
           zip -r "../${{ env.VERSION }}.zip" .
-
+          
           cd $GITHUB_WORKSPACE
+          rm -rf $TEMP_DIR
 
       - name: Clone release apps repository
         env:
