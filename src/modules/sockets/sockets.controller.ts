@@ -45,6 +45,8 @@ export class SocketsController implements OnModuleInit {
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
+    global.apiUri = await this.variableService.getVariable('apiUri');
+    global.socketUri = await this.variableService.getVariable('socketUri');
   }
 
   async conSocket() {
