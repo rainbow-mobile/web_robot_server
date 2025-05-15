@@ -171,9 +171,14 @@ fi
 # 릴리즈 메시지 생성
 release_message="[RRS] Branch: ${current_branch}, Version: ${new_version}] release 배포"
 
+# node_modules 폴더 압축
+zip -r node_modules.zip node_modules
+
 # Git 작업 실행
 git_tag_work "$current_branch" "$new_version" "$tag_version" "$release_message" || last_git_work_status="bad"
 
+# node_modules 폴더 압축 제거
+rm -rf node_modules.zip
 
 # RELEASE_LOG 업데이트
 if [ "$last_git_work_status" = "normal" ]; then

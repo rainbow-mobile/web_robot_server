@@ -39,21 +39,20 @@ jobs:
           VERSION=$(echo $TAG_NAME | cut -d'/' -f3)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Check App Directory and dist file
+      - name: Check dist file
         run: |
           if [ ! -d "dist" ]; then
             echo "Error: 'dist' directory not found"
             exit 1
           fi
-
       - name: Compress dist directory
         run: |
           TEMP_DIR="temp_release_${{ env.VERSION }}"
           mkdir -p $TEMP_DIR
           
           cp -r dist $TEMP_DIR/
-          cp -r node_modules $TEMP_DIR/
-          
+          cp -r node_modules.zip $TEMP_DIR/
+
           cd $TEMP_DIR
           zip -r "../${{ env.VERSION }}.zip" .
           
