@@ -73,7 +73,7 @@ jobs:
           
       - name: Copy and commit dist files
         env:
-          GH_TOKEN: ${{ secrets.COMMON_RAINBOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
           cd rainbow-release-apps
           APP_DIR="web_robot_server"
@@ -102,8 +102,8 @@ jobs:
           mv ../${{ env.VERSION }}.zip "$APP_DIR/"
           
           # 새 버전 배포
-          git config --global user.email "rainbow.mobilerobot@gmail.com"
-          git config --global user.name "rainbow-mobile-robot"
+          git config --global user.email "dfd1123@naver.com"
+          git config --global user.name "dfd1123"
           git add .
           git commit -m "Release Branch:${{ env.BRANCH_NAME }}, Version: ${{ env.VERSION }}"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
@@ -112,7 +112,7 @@ jobs:
       - name: Delete release tag
         if: always()
         env:
-          GH_TOKEN: ${{ secrets.COMMON_RAINBOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
           cd $GITHUB_WORKSPACE
           
