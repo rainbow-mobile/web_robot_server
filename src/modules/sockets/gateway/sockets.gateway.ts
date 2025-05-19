@@ -212,6 +212,9 @@ export class SocketGateway
   lastFRSVobsClosure: any;
   lastFRSPath: any;
 
+  //Test Techtaka (lastGoalMove)
+  lastGoal: string;
+
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
     this.tcpServer = net.createServer((socket) => {
@@ -478,6 +481,12 @@ export class SocketGateway
           `[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`,
         );
         global.frsConnect = false;
+
+        //Test Techtaka (stop)
+        this.lastGoal = this.lastMoveStatus.goal_node.id;
+        const newData = { command: 'stop', time: Date.now().toString() };
+        socketLogger.info(`[TEST] Frs disconnected and Move Stop`)
+        this.slamnav?.emit('move',stringifyAllValues(newData));
       });
 
       this.frsSocket.on('error', (error) => {
@@ -497,6 +506,20 @@ export class SocketGateway
               `[INIT] Get Robot Info from FRS: SerialNumber(${json.robotSerial}), ip(${json.robotIpAdrs}), name(${json.robotNm})`,
             );
             global.robotNm = json.robotNm;
+          }
+
+          //Test Techtaka (moveLastGoal)
+          if(this.lastGoal){
+            const newData = { 
+              command: 'goal', 
+              goal_id: this.lastGoal, 
+              preset: '0',
+              method: 'pp',
+              time: Date.now().toString() 
+            };
+            this.slamnav?.emit('move',stringifyAllValues(newData));
+            this.lastGoal = undefined;
+            socketLogger.info(`[TEST] Frs connected and Move lastGoal : ${this.lastGoal}`)
           }
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
