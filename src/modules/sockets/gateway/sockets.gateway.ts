@@ -472,6 +472,10 @@ export class SocketGateway
           socketUri: global.socketUri ?? '',
         };
 
+        const newData = { command: 'resume', time: Date.now().toString() };
+        socketLogger.info(`[TEST] Frs connected and Move Resume`);
+        this.slamnav?.emit('move', stringifyAllValues(newData));
+
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('init', sendData);
       });
@@ -484,9 +488,9 @@ export class SocketGateway
 
         //Test Techtaka (stop)
         this.lastGoal = this.lastMoveStatus.goal_node.id;
-        const newData = { command: 'stop', time: Date.now().toString() };
-        socketLogger.info(`[TEST] Frs disconnected and Move Stop`)
-        this.slamnav?.emit('move',stringifyAllValues(newData));
+        const newData = { command: 'pause', time: Date.now().toString() };
+        socketLogger.info(`[TEST] Frs disconnected and Move Pause`);
+        this.slamnav?.emit('move', stringifyAllValues(newData));
       });
 
       this.frsSocket.on('error', (error) => {
@@ -509,17 +513,19 @@ export class SocketGateway
           }
 
           //Test Techtaka (moveLastGoal)
-          if(this.lastGoal){
-            const newData = { 
-              command: 'goal', 
-              goal_id: this.lastGoal, 
+          if (this.lastGoal) {
+            const newData = {
+              command: 'goal',
+              goal_id: this.lastGoal,
               preset: '0',
               method: 'pp',
-              time: Date.now().toString() 
+              time: Date.now().toString(),
             };
-            this.slamnav?.emit('move',stringifyAllValues(newData));
+            this.slamnav?.emit('move', stringifyAllValues(newData));
             this.lastGoal = undefined;
-            socketLogger.info(`[TEST] Frs connected and Move lastGoal : ${this.lastGoal}`)
+            socketLogger.info(
+              `[TEST] Frs connected and Move lastGoal : ${this.lastGoal}`,
+            );
           }
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
@@ -874,7 +880,6 @@ export class SocketGateway
         }
       });
 
-
       this.frsSocket.on('vobs', (_data) => {
         try {
           if (_data == null || _data == undefined) {
@@ -884,15 +889,11 @@ export class SocketGateway
           const data = _data;
           const json = JSON.parse(data);
           if (isEqual(json, this.lastFRSVobs)) {
-            socketLogger.warn(
-              `[COMMAND] FRS vobs : Equal lastFRSVobs`,
-            );
+            socketLogger.warn(`[COMMAND] FRS vobs : Equal lastFRSVobs`);
             return;
           }
           this.lastFRSVobs = json;
-          socketLogger.debug(
-            `[COMMAND] FRS vobs: ${JSON.stringify(json)}`,
-          );
+          socketLogger.debug(`[COMMAND] FRS vobs: ${JSON.stringify(json)}`);
           this.slamnav?.emit('vobs', stringifyAllValues(json));
         } catch (error) {
           socketLogger.error(
