@@ -208,6 +208,7 @@ export class SocketGateway
 
   //lastInputValue - FRS to RRS
   lastFRSVobsRobot: any;
+  lastFRSVobs: any;
   lastFRSVobsClosure: any;
   lastFRSPath: any;
 
@@ -846,6 +847,33 @@ export class SocketGateway
           console.error(error);
           socketLogger.error(
             `[COMMAND] FRS path: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+          );
+        }
+      });
+
+
+      this.frsSocket.on('vobs', (_data) => {
+        try {
+          if (_data == null || _data == undefined) {
+            socketLogger.warn(`[COMMAND] FRS vobs : NULL`);
+            return;
+          }
+          const data = _data;
+          const json = JSON.parse(data);
+          if (isEqual(json, this.lastFRSVobs)) {
+            socketLogger.warn(
+              `[COMMAND] FRS vobs : Equal lastFRSVobs`,
+            );
+            return;
+          }
+          this.lastFRSVobs = json;
+          socketLogger.debug(
+            `[COMMAND] FRS vobs: ${JSON.stringify(json)}`,
+          );
+          this.slamnav?.emit('vobs', stringifyAllValues(json));
+        } catch (error) {
+          socketLogger.error(
+            `[COMMAND] FRS vobs: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
           );
         }
       });
