@@ -46,6 +46,10 @@ function git_tag_work() {
     if [ -d "dist" ]; then
         git add -f "dist" || { print_string "error" "Git add dist 실패"; return 1; }
     fi
+
+    if [ -f "node_modules.zip" ]; then
+        git add -f "node_modules.zip" || { print_string "error" "Git add node_modules.zip 실패"; return 1; }
+    fi
     
     # 태그용 임시 커밋 생성
     git commit --allow-empty -m "chore: Release ${new_version}" || { print_string "error" "Git commit 실패"; return 1; }
@@ -61,6 +65,10 @@ function git_tag_work() {
     # dist 파일을 스테이징에서 제거
     if [ -d "dist" ]; then
         git rm -r --cached "dist" || { print_string "error" "Git rm dist 실패"; return 1; }
+    fi
+
+    if [ -f "node_modules.zip" ]; then
+        git rm -r --cached "node_modules.zip" || { print_string "error" "Git rm node_modules.zip 실패"; return 1; }
     fi
 
     git commit --allow-empty -m "chore: dist 폴더 Git 추적 제거" || { print_string "error" "Git commit 실패"; return 1; }
