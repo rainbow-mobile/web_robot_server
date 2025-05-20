@@ -1259,10 +1259,10 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
 
-        this.server.emit('moveStatus', json);
+        this.server.volatile.emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
-          this.frsSocket.emit('moveStatus', {
+          this.frsSocket.volatile.emit('moveStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
