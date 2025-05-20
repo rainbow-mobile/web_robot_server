@@ -27,13 +27,9 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
-
-const PING_INTERVAL = 5000 + Math.floor(Math.random() * 500);
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
-  pingTimeout: 10000,
-  pingInterval: PING_INTERVAL,
   cors: {
     origin: ['*', 'https://admin.socket.io'],
     credentials: true,
@@ -219,7 +215,7 @@ export class SocketGateway
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
 
-  intervalTime = 5000 + Math.floor(Math.random() * 500);
+  intervalTime = 500 + Math.floor(Math.random() * 500);
 
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
@@ -1263,10 +1259,10 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
 
-        this.server.volatile.emit('moveStatus', json);
+        this.server.emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
-          this.frsSocket.volatile.emit('moveStatus', {
+          this.frsSocket.emit('moveStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
