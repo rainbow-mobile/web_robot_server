@@ -27,9 +27,13 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
+
+const PING_INTERVAL = 5000 + Math.floor(Math.random() * 500);
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
+  pingTimeout: 10000,
+  pingInterval: PING_INTERVAL,
   cors: {
     origin: ['*', 'https://admin.socket.io'],
     credentials: true,
@@ -214,6 +218,8 @@ export class SocketGateway
 
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
+
+  intervalTime = 5000 + Math.floor(Math.random() * 500);
 
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
@@ -489,8 +495,8 @@ export class SocketGateway
         //Test Techtaka (pause)
         this.lastGoal = this.lastMoveStatus.goal_node.id;
         const newData = { command: 'pause', time: Date.now().toString() };
-        socketLogger.info(`[TEST] Frs disconnected and Move Pause`)
-        this.slamnav?.emit('move',stringifyAllValues(newData));
+        socketLogger.info(`[TEST] Frs disconnected and Move Pause`);
+        this.slamnav?.emit('move', stringifyAllValues(newData));
       });
 
       this.frsSocket.on('error', (error) => {
@@ -513,11 +519,12 @@ export class SocketGateway
           }
 
           //Test Techtaka (resume)
-          const newData = { 
-            command: 'resume', time: Date.now().toString() 
+          const newData = {
+            command: 'resume',
+            time: Date.now().toString(),
           };
-          this.slamnav?.emit('move',stringifyAllValues(newData));
-          socketLogger.info(`[TEST] Frs connected and Resume`)
+          this.slamnav?.emit('move', stringifyAllValues(newData));
+          socketLogger.info(`[TEST] Frs connected and Resume`);
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
           // this.kafakService.connect();
@@ -970,7 +977,7 @@ export class SocketGateway
     }
 
     //interval changed (25-05-07 for traffic test)
-  }, 5000);
+  }, this.intervalTime);
 
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
@@ -1256,10 +1263,10 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
 
-        this.server.emit('moveStatus', json);
+        this.server.volatile.emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
-          this.frsSocket.emit('moveStatus', {
+          this.frsSocket.volatile.emit('moveStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
