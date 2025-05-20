@@ -21,12 +21,15 @@ import { errorToJson } from '@common/util/error.util';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as net from 'net';
-import { isEqual } from 'lodash';
 import {
   MotionCommand,
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
+
+const isEqual = (a: any, b: any) => {
+  return JSON.stringify(a) === JSON.stringify(b);
+};
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
