@@ -869,6 +869,7 @@ export class SocketGateway
           this.lastFRSPath = json;
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.slamnav?.emit('path', stringifyAllValues(json));
+          this.frsSocket?.emit('pathResponse', stringifyAllValues(json));
         } catch (error) {
           console.error(error);
           socketLogger.error(
@@ -1262,10 +1263,10 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
 
-        this.server.volatile.emit('moveStatus', json);
+        this.server.emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
-          this.frsSocket.volatile.emit('moveStatus', {
+          this.frsSocket.emit('moveStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
