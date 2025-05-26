@@ -15,6 +15,7 @@ import * as bodyParser from 'body-parser';
 import * as xmlParser from 'express-xml-bodyparser';
 import * as express from 'express';
 import { join } from 'path';
+
 // import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
@@ -55,6 +56,13 @@ async function bootstrap() {
   // app.use(morgan('dev'));
   app.use(loggerMiddleware);
   app.useWebSocketAdapter(new IoAdapter(app));
+
+  // const redisUrl = 'redis://127.0.0.1:6379';
+  // const redisIoAdapter = new RedisIoAdapter(app);
+  // await redisIoAdapter.connectToRedis(redisUrl);
+
+  // app.useWebSocketAdapter(redisIoAdapter);
+
   app.useGlobalFilters(new ExceptionFilterMiddleware());
 
   const swaggerConfig = new DocumentBuilder()

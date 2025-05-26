@@ -15,10 +15,8 @@ import { LogModule } from './modules/apis/log/log.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
-import { SSHModule } from './modules/apis/ssh/ssh.module';
-import { InfluxDBModule } from './modules/apis/influx/influx.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
-import { MotionModule } from './modules/apis/motion/motion.module';
+
 // import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
   imports: [
@@ -57,7 +55,9 @@ import { MotionModule } from './modules/apis/motion/motion.module';
     UploadModule,
     SoundModule,
     // MotionModule,
-    OnvifDeviceModule,
+    ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
+      ? [OnvifDeviceModule]
+      : []),
   ],
   providers: [],
   controllers: [],
