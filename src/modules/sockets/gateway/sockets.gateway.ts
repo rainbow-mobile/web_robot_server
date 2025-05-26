@@ -26,10 +26,12 @@ import {
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
+import { SubscribeDto } from '@sockets/dto/subscribe.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
 };
+
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -210,15 +212,15 @@ export class SocketGateway
   lastGlobalPath: any;
 
   //lastInputValue - FRS to RRS
-  lastFRSVobsRobot: any;
   lastFRSVobs: any;
+  lastFRSVobsRobot: any;
   lastFRSVobsClosure: any;
   lastFRSPath: any;
 
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
 
-  intervalTime = 500 + Math.floor(Math.random() * 500);
+  intervalTime = 500 + Math.floor(Math.random() * 500
 
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
@@ -473,8 +475,6 @@ export class SocketGateway
         global.frsConnect = true;
         const sendData = {
           robotSerial: global.robotSerial,
-          apiUri: global.apiUri ?? '',
-          socketUri: global.socketUri ?? '',
         };
 
         const newData = { command: 'resume', time: Date.now().toString() };
@@ -887,7 +887,7 @@ export class SocketGateway
           const data = _data;
           const json = JSON.parse(data);
           if (isEqual(json, this.lastFRSVobs)) {
-            socketLogger.warn(`[COMMAND] FRS vobs : Equal lastFRSVobs`);
+            socketLogger.warn(`[COMMAND] FRS vobs : Equal lastFRSvobs`);
             return;
           }
           this.lastFRSVobs = json;
@@ -970,7 +970,9 @@ export class SocketGateway
       },
     };
 
-    this.server?.emit('programStatus', statusData.data);
+    this.server
+      .to(['programStatus', 'all', 'allStatus'])
+      .emit('programStatus', statusData.data);
 
     if (this.frsSocket?.connected && global.robotSerial != '') {
       this.frsSocket.emit('programStatus', statusData);
@@ -1017,14 +1019,16 @@ export class SocketGateway
       if (this.slamnav) {
         if (this.slamnav.id === client.id) {
           if (this.moveState.result == 'accept') {
-            this.server.emit('moveResponse', {
-              robotSerial: global.robotSerial,
-              data: {
-                ...this.moveState,
-                result: 'fail',
-                message: 'disconnected',
-              },
-            });
+            this.server
+              .to(['moveResponse', 'all', 'move'])
+              .emit('moveResponse', {
+                robotSerial: global.robotSerial,
+                data: {
+                  ...this.moveState,
+                  result: 'fail',
+                  message: 'disconnected',
+                },
+              });
           }
 
           if (this.tcpClient) {
@@ -1049,7 +1053,9 @@ export class SocketGateway
 
           //TaskStop
           if (this.taskState.running) {
-            this.server.emit('taskStop', 'disconnected');
+            this.server
+              .to(['taskStop', 'all', 'task'])
+              .emit('taskStop', 'disconnected');
           }
         } else {
           socketLogger.warn(
@@ -1071,6 +1077,72 @@ export class SocketGateway
     client.leave(client.handshake.query.name as string);
   }
 
+  // 클라이언트가 해당 토픽 구독
+  @SubscribeMessage('subscribe')
+  async handelSubscribe(
+    @MessageBody() dto: SubscribeDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      socketLogger.info(`[SUB] Client Subscribe ${client.id}, ${dto.topic}`);
+
+      if (client.rooms.has(dto.topic)) {
+        client.join(dto.topic);
+        socketLogger.warn(
+          `[SUB] Client Subscribe ${client.id} already in room ${dto.topic}`,
+        );
+        return 'already in room';
+      } else {
+        client.join(dto.topic);
+        return 'success';
+      }
+    } catch (error) {
+      socketLogger.error(
+        `[SUB] Client Subscribe ${client.id}, ${dto.topic} -> ${errorToJson(error)}`,
+      );
+    }
+  }
+
+  // 클라이언트가 해당 토픽 구독해제
+  @SubscribeMessage('unsubscribe')
+  async handelUnsubscribe(
+    @MessageBody() dto: SubscribeDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      if (dto.topic == 'all') {
+        socketLogger.info(
+          `[SUB] Client Unsubscribe ${client.id} all : rooms size is ${client.rooms.size - 1}`,
+        );
+        for (const room of client.rooms) {
+          // client.id는 고유한 기본 room이므로 제외
+          if (room !== client.id) {
+            client.leave(room);
+          }
+        }
+        return 'success';
+      } else {
+        if (!client.rooms.has(dto.topic)) {
+          client.leave(dto.topic);
+          socketLogger.warn(
+            `[SUB] Client Unsubscribe ${client.id} not in room ${dto.topic}`,
+          );
+          return 'not in room';
+        } else {
+          client.leave(dto.topic);
+          socketLogger.info(
+            `[SUB] Client Unsubscribe ${client.id}, ${dto.topic}`,
+          );
+          return 'success';
+        }
+      }
+    } catch (error) {
+      socketLogger.error(
+        `[SUB] Client Unsubscribe ${client.id}, ${dto.topic} -> ${errorToJson(error)}`,
+      );
+    }
+  }
+
   /**
    * @description 태스크 시작/종료/에러 메시지를 처리하는 함수
    * @param socket
@@ -1086,11 +1158,12 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[RESPONSE] Task Start: ${JSON.stringify(payload)}`);
-      this.server.emit('taskStart', payload);
+      this.server.to(['taskStart', 'all', 'task']).emit('taskStart', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Start: ${errorToJson(error)}`);
     }
   }
+
   @SubscribeMessage('taskDone')
   async handleTaskDoneMessage(
     @MessageBody()
@@ -1101,11 +1174,12 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[RESPONSE] Task Done : ${JSON.stringify(payload)}`);
-      this.server.emit('taskDone', payload);
+      this.server.to(['taskDone', 'all', 'task']).emit('taskDone', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
+
   @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload: TaskPayload) {
     try {
@@ -1113,7 +1187,7 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[RESPONSE] Task Load : ${JSON.stringify(payload)}`);
-      this.server.emit('taskLoad', payload);
+      this.server.to(['taskLoad', 'all', 'task']).emit('taskLoad', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Load: ${errorToJson(error)}`);
     }
@@ -1129,7 +1203,7 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[RESPONSE] Task Error : ${JSON.stringify(payload)}`);
-      this.server.emit('taskError', payload);
+      this.server.to(['taskError', 'all', 'task']).emit('taskError', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Error: ${errorToJson(error)}`);
       throw error();
@@ -1148,7 +1222,7 @@ export class SocketGateway
         `[RESPONSE] Task Id Change : ${JSON.stringify(payload)}`,
       );
       this.taskState.id = payload;
-      this.server.emit('taskId', payload);
+      this.server.to(['taskId', 'all', 'task']).emit('taskId', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Id Change: ${errorToJson(error)}`);
       throw error();
@@ -1224,7 +1298,7 @@ export class SocketGateway
         }
         this.lastStatus = json;
 
-        this.server.emit('status', json);
+        this.server.to(['status', 'all', 'allStatus']).emit('status', json);
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('status', {
             robotSerial: global.robotSerial,
@@ -1256,6 +1330,7 @@ export class SocketGateway
         }
 
         const json = JSON.parse(payload);
+        socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
         // delete json.time;
         if (isEqual(json, this.lastMoveStatus)) {
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
@@ -1263,7 +1338,9 @@ export class SocketGateway
         }
         this.lastMoveStatus = json;
 
-        this.server.emit('moveStatus', json);
+        this.server
+          .to(['moveStatus', 'all', 'allStatus'])
+          .emit('moveStatus', json);
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveStatus', {
@@ -1308,7 +1385,9 @@ export class SocketGateway
           return;
         }
 
-        this.server.emit('moveResponse', json);
+        this.server
+          .to(['moveResponse', 'all', 'move'])
+          .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
 
         if (this.frsSocket?.connected) {
@@ -1353,7 +1432,7 @@ export class SocketGateway
           return;
         }
 
-        this.server.emit('loadResponse', json);
+        this.server.to(['loadResponse', 'all']).emit('loadResponse', json);
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('loadResponse', {
@@ -1405,7 +1484,9 @@ export class SocketGateway
           return;
         }
 
-        this.server.emit('mappingResponse', json);
+        this.server
+          .to(['mappingResponse', 'all', 'mapping'])
+          .emit('mappingResponse', json);
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('mappingResponse', {
@@ -1455,7 +1536,9 @@ export class SocketGateway
         return;
       }
 
-      this.server.emit('localizationResponse', json);
+      this.server
+        .to(['localizationResponse', 'all'])
+        .emit('localizationResponse', json);
 
       if (this.frsSocket?.connected) {
         this.frsSocket.emit('localizationResponse', {
@@ -1497,7 +1580,9 @@ export class SocketGateway
         socketLogger.warn(`[RESPONSE] randomseqResponse: Command NULL`);
         return;
       }
-      this.server.emit('randomseqResponse', json);
+      this.server
+        .to(['randomseqResponse', 'all'])
+        .emit('randomseqResponse', json);
 
       if (this.frsSocket?.connected) {
         this.frsSocket.emit('randomseqResponse', {
@@ -1534,7 +1619,7 @@ export class SocketGateway
         return;
       }
 
-      this.server.emit('dockResponse', json);
+      this.server.to(['dockResponse', 'all']).emit('dockResponse', json);
 
       if (this.frsSocket?.connected) {
         this.frsSocket.emit('dockResponse', {
@@ -1571,7 +1656,7 @@ export class SocketGateway
       }
       this.lastLidarCloud = payload;
 
-      this.server.emit('lidarCloud', payload);
+      this.server.to(['lidarCloud', 'all']).emit('lidarCloud', payload);
 
       if (this.frsSocket?.connected) {
         // this.frsSocket.emit('lidarCloud',msgpack.encode({robotSerial:global.robotSerial,data:payload}))
@@ -1596,7 +1681,7 @@ export class SocketGateway
       }
       this.lastMappingCloud = payload;
 
-      this.server.emit('mappingCloud', payload);
+      this.server.to(['mappingCloud', 'all']).emit('mappingCloud', payload);
     } catch (error) {
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
@@ -1617,7 +1702,7 @@ export class SocketGateway
       }
       this.lastLocalPath = payload;
 
-      this.server.emit('localPath', payload);
+      this.server.to(['localPath', 'all', 'path']).emit('localPath', payload);
 
       // if (this.frsSocket?.connected && global.robotSerial != '') {
       //   const sendData = {
@@ -1645,7 +1730,7 @@ export class SocketGateway
       }
       this.lastGlobalPath = payload;
 
-      this.server.emit('globalPath', payload);
+      this.server.to(['globalPath', 'all', 'path']).emit('globalPath', payload);
       // socketLogger.debug(`[STATUS] globalPath: ${JSON.stringify(payload)}`
       // );
       // if (this.frsSocket?.connected && global.robotSerial != '') {
@@ -1675,7 +1760,9 @@ export class SocketGateway
       this.taskState.id = payload.id;
       this.taskState.running = payload.running;
       socketLogger.debug(`[INIT] Task Init: ${JSON.stringify(payload)}`);
-      this.server.emit('taskInit', this.taskState);
+      this.server
+        .to(['taskInit', 'all', 'task'])
+        .emit('taskInit', this.taskState);
     } catch (error) {
       socketLogger.error(`[INIT] Task Init: ${errorToJson(error)}`);
       throw error();
@@ -1687,7 +1774,9 @@ export class SocketGateway
     try {
       this.taskState.variables = payload;
       socketLogger.debug(`[INIT] Task Variables: ${JSON.stringify(payload)}`);
-      this.server.emit('taskVariables', payload);
+      this.server
+        .to(['taskVariables', 'all', 'task'])
+        .emit('taskVariables', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Task Variables:  ${errorToJson(error)}`);
       throw error();
@@ -1747,7 +1836,9 @@ export class SocketGateway
         return;
       }
       const json = JSON.parse(payload);
-      this.server.emit('motionResponse', json);
+      this.server
+        .to(['motionResponse', 'all', 'motion'])
+        .emit('motionResponse', json);
 
       if (this.frsSocket?.connected) {
         this.frsSocket.emit('motionResponse', {
@@ -1784,7 +1875,7 @@ export class SocketGateway
       };
 
       socketLogger.debug(`[INIT] Web Init : ${JSON.stringify(payload)}`);
-      this.server.emit('Webinit', payload);
+      this.server.to(['Webinit', 'all']).emit('Webinit', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
       throw error();
