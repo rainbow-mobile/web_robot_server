@@ -1109,6 +1109,7 @@ export class SocketGateway
       socketLogger.error(`[RESPONSE] Task Start: ${errorToJson(error)}`);
     }
   }
+
   @SubscribeMessage('taskDone')
   async handleTaskDoneMessage(
     @MessageBody()
@@ -1124,6 +1125,7 @@ export class SocketGateway
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
+  
   @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload: TaskPayload) {
     try {
