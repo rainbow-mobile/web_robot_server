@@ -868,7 +868,7 @@ export class SocketGateway implements
           this.lastFRSPath = json;
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.slamnav?.emit('path', stringifyAllValues(json));
-          this.frsSocket?.emit('pathResponse', stringifyAllValues(json));
+          // this.frsSocket?.emit('pathResponse', stringifyAllValues(json));
         } catch (error) {
           console.error(error);
           socketLogger.error(
@@ -1685,6 +1685,20 @@ export class SocketGateway implements
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
       throw error();
     }
+  }
+
+  @SubscribeMessage('pathResponse')
+  async handlePathResponse(@MessageBody() payload: {time:string}){
+    if(payload == null || payload == undefined || payload.time == null || payload.time == undefined || payload.time == ""){
+        socketLogger.warn(`[STATUS] pathResponse: NULL`);
+        return;
+    }
+    
+    const sendData = {
+      robotSerial: global.robotSerial,
+      data: payload,
+    };
+    this.frsSocket?.emit('pathResponse',sendData);
   }
 
   @SubscribeMessage('localPath')

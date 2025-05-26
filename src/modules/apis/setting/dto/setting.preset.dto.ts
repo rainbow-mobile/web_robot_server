@@ -40,6 +40,17 @@ export class PresetDto {
   @IsString()
   @Length(1,50)
   @ApiProperty({
+    description: '선 가속도 제한(DCC)',
+    example: '0.5',
+    required: true
+  })
+  @Expose()
+  LIMIT_V_DCC: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1,50)
+  @ApiProperty({
     description: '각 가속도 제한',
     example: '90.0',
     required: true
