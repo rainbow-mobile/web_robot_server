@@ -1,0 +1,127 @@
+name: release-deploy
+
+on:
+  push:
+    tags:
+      - 'release/**'
+      - 'release_hotfix/**'
+
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get Hotfix Flag
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          RELEASE_TYPE=$(echo $TAG_NAME | cut -d'/' -f1)
+          echo "RELEASE_TYPE=$RELEASE_TYPE" >> $GITHUB_ENV
+          if [ "$RELEASE_TYPE" == "release_hotfix" ]; then
+            echo "HOTFIX=true" >> $GITHUB_ENV
+          else
+            echo "HOTFIX=false" >> $GITHUB_ENV
+          fi
+
+      - name: Get Branch Name
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f2)
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Get Release Version
+        id: get_release_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=$(echo $TAG_NAME | cut -d'/' -f3)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Check dist file
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Error: 'dist' directory not found"
+            exit 1
+          fi
+      - name: Compress dist directory
+        run: |
+          TEMP_DIR="temp_release_${{ env.VERSION }}"
+          mkdir -p $TEMP_DIR
+          
+          cp -r dist $TEMP_DIR/
+          cp -r node_modules.zip $TEMP_DIR/
+
+          cd $TEMP_DIR
+          zip -r "../${{ env.VERSION }}.zip" .
+          
+          cd $GITHUB_WORKSPACE
+          rm -rf $TEMP_DIR
+
+      - name: Clone release apps repository
+        env:
+          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+        run: |
+          git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git rainbow-release-apps
+          cd rainbow-release-apps
+          
+          # 원하는 브랜치가 있는지 확인하고 없으면 empty 브랜치에서 생성
+          if ! git ls-remote --heads origin ${{ env.BRANCH_NAME }} | grep ${{ env.BRANCH_NAME }}; then
+            echo "Branch ${{ env.BRANCH_NAME }} not found, creating from empty branch"
+            git checkout empty
+            git checkout -b ${{ env.BRANCH_NAME }}
+            git push origin ${{ env.BRANCH_NAME }}
+          else
+            git checkout ${{ env.BRANCH_NAME }}
+          fi
+          
+          cd ..
+          
+      - name: Copy and commit dist files
+        env:
+          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+        run: |
+          cd rainbow-release-apps
+          APP_DIR="web_robot_server"
+          
+          # 디렉토리가 존재하는지 확인하고 생성
+          mkdir -p "$APP_DIR"
+
+          # hotfix 여부 확인
+          HOTFIX_LINE=""
+          if [ "${{ env.HOTFIX }}" == "true" ]; then
+            HOTFIX_LINE=", \"hotfix\": true"
+          fi
+
+           # version.json 파일 생성/갱신
+          echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > "$APP_DIR/version.json"
+          
+          # 현재 버전 디렉토리 수 확인 및 정리
+          DIR_COUNT=$(ls -1 "$APP_DIR" | wc -l)
+          if [ "$DIR_COUNT" -ge 10 ]; then
+            OLDEST_DIR=$(ls -1 "$APP_DIR" | sort -V | head -n 1)
+            rm -rf "$APP_DIR/$OLDEST_DIR"
+          fi
+
+          # 압축파일 이동
+          mkdir -p "$APP_DIR/${{ env.VERSION }}"
+          mv ../${{ env.VERSION }}.zip "$APP_DIR/"
+          
+          # 새 버전 배포
+          git config --global user.email "dfd1123@naver.com"
+          git config --global user.name "dfd1123"
+          git add .
+          git commit -m "Release Branch:${{ env.BRANCH_NAME }}, Version: ${{ env.VERSION }}"
+          git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
+          git push origin ${{ env.BRANCH_NAME }}
+
+      - name: Delete release tag
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+        run: |
+          cd $GITHUB_WORKSPACE
+          
+          # 태그 삭제
+          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"

@@ -46,6 +46,8 @@ export class SocketsController implements OnModuleInit {
     global.frs_socket = await this.variableService.getVariable('frs_socket');
     global.frs_api = await this.variableService.getVariable('frs_api');
     global.frs_url = await this.variableService.getVariable('frs_url');
+    global.apiUri = await this.variableService.getVariable('apiUri');
+    global.socketUri = await this.variableService.getVariable('socketUri');
   }
 
   async conSocket() {
@@ -217,7 +219,7 @@ export class SocketsController implements OnModuleInit {
   })
   async lidarOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
-      if(this.socketGateway.slamnav){
+      if (this.socketGateway.slamnav) {
         httpLogger.info(
           `[SOCKET] lidar OnOff: ${data.command} -> ${data.frequency}`,
         );
@@ -226,8 +228,11 @@ export class SocketsController implements OnModuleInit {
           JSON.stringify({ ...data, time: Date.now().toString() }),
         );
         res.send();
-      }else{
-        throw new HttpException('SLAMNAV가 연결되지 않았습니다.',HttpStatus.BAD_GATEWAY);
+      } else {
+        throw new HttpException(
+          'SLAMNAV가 연결되지 않았습니다.',
+          HttpStatus.BAD_GATEWAY,
+        );
       }
     } catch (error) {
       httpLogger.error(`[SOCKET] lidar OnOff: ${errorToJson(error)}`);
@@ -241,7 +246,7 @@ export class SocketsController implements OnModuleInit {
   })
   async pathOn(@Body() data: EmitOnOffDto, @Res() res: Response) {
     try {
-      if(this.socketGateway.slamnav){
+      if (this.socketGateway.slamnav) {
         httpLogger.info(
           `[SOCKET] path OnOff: ${data.command} -> ${data.frequency}`,
         );
@@ -250,8 +255,11 @@ export class SocketsController implements OnModuleInit {
           JSON.stringify({ ...data, time: Date.now().toString() }),
         );
         res.send();
-      }else{
-        throw new HttpException('SLAMNAV가 연결되지 않았습니다.',HttpStatus.BAD_GATEWAY);
+      } else {
+        throw new HttpException(
+          'SLAMNAV가 연결되지 않았습니다.',
+          HttpStatus.BAD_GATEWAY,
+        );
       }
     } catch (error) {
       httpLogger.error(`[SOCKET] path OnOff: ${errorToJson(error)}`);

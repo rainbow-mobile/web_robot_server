@@ -21,13 +21,17 @@ import { errorToJson } from '@common/util/error.util';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
 import * as net from 'net';
-import { isEqual } from 'lodash';
 import {
   MotionCommand,
   MotionMethod,
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
 import { SubscribeDto } from '@sockets/dto/subscribe.dto';
+
+const isEqual = (a: any, b: any) => {
+  return JSON.stringify(a) === JSON.stringify(b);
+};
+
 @Global()
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
@@ -212,6 +216,11 @@ export class SocketGateway
   lastFRSVobsRobot: any;
   lastFRSVobsClosure: any;
   lastFRSPath: any;
+
+  //Test Techtaka (lastGoalMove)
+  lastGoal: string;
+
+  intervalTime = 500 + Math.floor(Math.random() * 500
 
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
@@ -468,6 +477,10 @@ export class SocketGateway
           robotSerial: global.robotSerial,
         };
 
+        const newData = { command: 'resume', time: Date.now().toString() };
+        socketLogger.info(`[TEST] Frs connected and Move Resume`);
+        this.slamnav?.emit('move', stringifyAllValues(newData));
+
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('init', sendData);
       });
@@ -477,6 +490,12 @@ export class SocketGateway
           `[CONNECT] FRS Socket disconnected: ${errorToJson(data)}`,
         );
         global.frsConnect = false;
+
+        //Test Techtaka (pause)
+        this.lastGoal = this.lastMoveStatus.goal_node.id;
+        const newData = { command: 'pause', time: Date.now().toString() };
+        socketLogger.info(`[TEST] Frs disconnected and Move Pause`);
+        this.slamnav?.emit('move', stringifyAllValues(newData));
       });
 
       this.frsSocket.on('error', (error) => {
@@ -497,6 +516,14 @@ export class SocketGateway
             );
             global.robotNm = json.robotNm;
           }
+
+          //Test Techtaka (resume)
+          const newData = {
+            command: 'resume',
+            time: Date.now().toString(),
+          };
+          this.slamnav?.emit('move', stringifyAllValues(newData));
+          socketLogger.info(`[TEST] Frs connected and Resume`);
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
           // this.kafakService.connect();
@@ -842,6 +869,7 @@ export class SocketGateway
           this.lastFRSPath = json;
           socketLogger.debug(`[COMMAND] FRS path: ${JSON.stringify(json)}`);
           this.slamnav?.emit('path', stringifyAllValues(json));
+          this.frsSocket?.emit('pathResponse', stringifyAllValues(json));
         } catch (error) {
           console.error(error);
           socketLogger.error(
@@ -880,14 +908,13 @@ export class SocketGateway
           }
           const data = _data;
           const json = JSON.parse(data);
-
           if (isEqual(json, this.lastFRSVobsRobot)) {
             socketLogger.warn(
               `[COMMAND] FRS vobsRobots : Equal lastFRSVobsRobot`,
             );
             return;
           }
-          this.lastFRSVobsClosure = json;
+          this.lastFRSVobsRobot = json;
           socketLogger.debug(
             `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
           );
@@ -952,7 +979,7 @@ export class SocketGateway
     }
 
     //interval changed (25-05-07 for traffic test)
-  }, 5000);
+  }, this.intervalTime);
 
   onModuleDestroy() {
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
