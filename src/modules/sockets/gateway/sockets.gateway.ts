@@ -872,6 +872,33 @@ export class SocketGateway
         }
       });
 
+      this.frsSocket.on('vobsRobots', (_data) => {
+        try {
+          if (_data == null || _data == undefined) {
+            socketLogger.warn(`[COMMAND] FRS vobsRobots : NULL`);
+            return;
+          }
+          const data = _data;
+          const json = JSON.parse(data);
+
+          if (isEqual(json, this.lastFRSVobsRobot)) {
+            socketLogger.warn(
+              `[COMMAND] FRS vobsRobots : Equal lastFRSVobsRobot`,
+            );
+            return;
+          }
+          this.lastFRSVobsClosure = json;
+          socketLogger.debug(
+            `[COMMAND] FRS vobsRobots: ${JSON.stringify(json)}`,
+          );
+          this.slamnav?.emit('vobsRobots', stringifyAllValues(json));
+        } catch (error) {
+          socketLogger.error(
+            `[COMMAND] FRS vobsRobots: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+          );
+        }
+      });
+
       this.frsSocket.on('vobsClosures', (_data) => {
         try {
           if (_data == null || _data == undefined) {
@@ -1125,7 +1152,7 @@ export class SocketGateway
       socketLogger.error(`[RESPONSE] Task Done: ${errorToJson(error)}`);
     }
   }
-  
+
   @SubscribeMessage('taskLoad')
   async handleTaskLoadMessage(@MessageBody() payload: TaskPayload) {
     try {
