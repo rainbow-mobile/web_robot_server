@@ -41,8 +41,7 @@ const isEqual = (a: any, b: any) => {
   },
   host: '0.0.0.0',
 })
-export class SocketGateway
-  implements
+export class SocketGateway implements
     OnGatewayConnection,
     OnGatewayDisconnect,
     OnModuleDestroy,
@@ -220,7 +219,7 @@ export class SocketGateway
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
 
-  intervalTime = 500 + Math.floor(Math.random() * 500
+  intervalTime = 500 + Math.floor(Math.random() * 500);
 
   //disabled(25-05-07, for traffic test)
   TCP_Open() {
