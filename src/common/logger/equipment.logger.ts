@@ -1,14 +1,14 @@
 import { homedir } from 'os';
 import path from 'path';
 import * as fs from 'fs';
-import { ManipulatorPositionPayload } from '@interface/system/manipulator.interface';
-import { TorsoPositionPayload } from '@interface/system/torso.interface';
 import {
   AmrDockingPrecisionPayload,
   AmrMovingPrecisionPayload,
   AmrObstaclePayload,
   AmrVelocityPayload,
-} from '@interface/system/amr.interface';
+  ManipulatorPositionPayload,
+  TorsoPositionPayload,
+} from '@interface/system/equipment.interface';
 
 function getCustomFilename(suffix: string) {
   const now = new Date();

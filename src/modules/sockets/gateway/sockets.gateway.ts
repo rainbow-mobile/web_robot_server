@@ -35,6 +35,11 @@ import {
   generateManipulatorLog,
   generateTorsoLog,
 } from '@common/logger/equipment.logger';
+import {
+  AmrLogType,
+  FormType,
+  ManipulatorType,
+} from '@common/enum/equipment.enum';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1924,8 +1929,8 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('formalLog')
-  async handleFormalLogMessage(
+  @SubscribeMessage('equipmentLog')
+  async handleEquipmentLogMessage(
     @MessageBody() payload: { form: FormType; data: string },
   ) {
     switch (payload.form) {
@@ -2079,22 +2084,4 @@ export class SocketGateway
 
     return parseData;
   }
-}
-
-export enum FormType {
-  MANIPULATOR = 'manipulator',
-  TORSO = 'torso',
-  AMR = 'amr',
-}
-
-export enum ManipulatorType {
-  LEFT = 'left',
-  RIGHT = 'right',
-}
-
-export enum AmrLogType {
-  VELOCITY = 'velocity',
-  OBSTACLE = 'obstacle',
-  DOCKING_PRECISION = 'docking_precision',
-  MOVING_PRECISION = 'moving_precision',
 }
