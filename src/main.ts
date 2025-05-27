@@ -115,6 +115,8 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs/api', app, swaggerDocument, swaggerCustomOptions);
 
+  app.enableShutdownHooks();
+
   const port = 11334;
   await app.listen(port);
 }

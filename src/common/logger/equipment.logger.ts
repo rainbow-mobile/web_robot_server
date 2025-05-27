@@ -9,6 +9,13 @@ import {
   ManipulatorPositionPayload,
   TorsoPositionPayload,
 } from '@interface/system/equipment.interface';
+import {
+  GeneralLogType,
+  GeneralOperationName,
+  GeneralOperationStatus,
+  GeneralScope,
+  GeneralStatus,
+} from '@common/enum/equipment.enum';
 
 function getCustomFilename(suffix: string) {
   const now = new Date();
@@ -26,11 +33,30 @@ function getCustomFilename(suffix: string) {
 
 function writeLog(filePath: string, header: string, row: string) {
   const logDir = path.dirname(filePath);
+
+  deleteOldLog(logDir, 30);
+
   if (!fs.existsSync(filePath)) {
     fs.mkdirSync(logDir, { recursive: true });
     fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
   }
   fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+}
+
+function deleteOldLog(baseDir: string, days: number = 30) {
+  const now = Date.now();
+  const cutoff = now - days * 24 * 60 * 60 * 1000;
+
+  if (!fs.existsSync(baseDir)) return;
+
+  fs.readdirSync(baseDir).forEach((file) => {
+    const filePath = path.join(baseDir, file);
+    const stats = fs.statSync(filePath);
+
+    if (stats.isFile() && stats.mtimeMs < cutoff) {
+      fs.unlinkSync(filePath);
+    }
+  });
 }
 
 export function generateManipulatorLog(
@@ -117,4 +143,37 @@ export function generateAmrMovingPrecisionLog(
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\t2D_Marker_Recognize_Position';
   const row = [data.dateTime, data.twoDMarkerRecognizePosition].join('\t');
   writeLog(getCustomFilename(suffix), header, row);
+}
+
+export function generateGeneralLog(param: {
+  dateTime?: string;
+  machineId?: string;
+  logType: GeneralLogType;
+  lotId?: string;
+  recipe?: string;
+  productId?: string;
+  status: GeneralStatus;
+  scope: GeneralScope;
+  operationName: GeneralOperationName;
+  operationStatus: GeneralOperationStatus;
+  data?: any;
+}) {
+  const header =
+    'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
+  const row = [
+    param.dateTime ??
+      new Date().toISOString().replace('T', ' ').substring(0, 23),
+    param.machineId ?? global.robotSerial ?? '-',
+    param.logType ?? '-',
+    param.lotId ?? '-',
+    param.recipe ?? '-',
+    param.productId ?? '-',
+    param.status ?? '-',
+    param.scope ?? '-',
+    param.operationName ?? '-',
+    param.operationStatus ?? '-',
+    typeof param.data === 'undefined' ? '' : param.data,
+  ].join('\t');
+
+  writeLog(getCustomFilename('ROBOT'), header, row);
 }
