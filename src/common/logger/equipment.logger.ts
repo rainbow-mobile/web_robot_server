@@ -24,109 +24,97 @@ function getCustomFilename(suffix: string) {
   );
 }
 
+function writeLog(filePath: string, header: string, row: string) {
+  const logDir = path.dirname(filePath);
+  if (!fs.existsSync(filePath)) {
+    fs.mkdirSync(logDir, { recursive: true });
+    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
+  }
+  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+}
+
 export function generateManipulatorLog(
   data: ManipulatorPositionPayload,
   suffix: string,
 ) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header =
-    'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\tZ\tRX\tRY\tRZ\tBase\tShoulder\tElbow\tWrist1\tWrist2\tWrist3';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.x.toFixed(2)}\t${data.y.toFixed(2)}\t${data.z.toFixed(2)}\t${data.rx.toFixed(2)}\t${data.ry.toFixed(2)}\t${data.rz.toFixed(2)}\t${data.base.toFixed(2)}\t${data.shoulder.toFixed(2)}\t${data.elbow.toFixed(2)}\t${data.wrist1.toFixed(2)}\t${data.wrist2.toFixed(2)}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+    'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\tZ\tRX\tRY\tRZ\tBase\tShoulder\tElbow\tWrist1\tWrist2';
+  const row = [
+    data.dateTime,
+    data.x.toFixed(2),
+    data.y.toFixed(2),
+    data.z.toFixed(2),
+    data.rx.toFixed(2),
+    data.ry.toFixed(2),
+    data.rz.toFixed(2),
+    data.base.toFixed(2),
+    data.shoulder.toFixed(2),
+    data.elbow.toFixed(2),
+    data.wrist1.toFixed(2),
+    data.wrist2.toFixed(2),
+  ].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
 
 export function generateTorsoLog(data: TorsoPositionPayload, suffix: string) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\tX\tZ\ttheta';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.x.toFixed(2)}\t${data.z.toFixed(2)}\t${data.theta.toFixed(2)}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  const row = [
+    data.dateTime,
+    data.x.toFixed(2),
+    data.z.toFixed(2),
+    data.theta.toFixed(2),
+  ].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
 
 export function generateAmrVelocityLog(
   data: AmrVelocityPayload,
   suffix: string,
 ) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\ttheta\tX_vel\tY_vel';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.x.toFixed(2)}\t${data.y.toFixed(2)}\t${data.theta.toFixed(2)}\t${data.xVel.toFixed(2)}\t${data.yVel.toFixed(2)}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  const row = [
+    data.dateTime,
+    data.x.toFixed(2),
+    data.y.toFixed(2),
+    data.theta.toFixed(2),
+    data.xVel.toFixed(2),
+    data.yVel.toFixed(2),
+  ].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
 
 export function generateAmrObstacleLog(
   data: AmrObstaclePayload,
   suffix: string,
 ) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tStatus_Front\tDistance_Front\tTheta_Front\tStatus_Back\tDistance_Back\tTheta_Back';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.statusFront}\t${data.distanceFront.toFixed(2)}\t${data.thetaFront.toFixed(2)}\t${data.statusBack}\t${data.distanceBack.toFixed(2)}\t${data.thetaBack.toFixed(2)}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  const row = [
+    data.dateTime,
+    data.statusFront,
+    data.distanceFront.toFixed(2),
+    data.thetaFront.toFixed(2),
+    data.statusBack,
+    data.distanceBack.toFixed(2),
+    data.thetaBack.toFixed(2),
+  ].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
 
 export function generateAmrDockingPrecisionLog(
   data: AmrDockingPrecisionPayload,
   suffix: string,
 ) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\t2D_Marker_Recognize_Position';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.twoDMarkerRecognizePosition}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  const row = [data.dateTime, data.twoDMarkerRecognizePosition].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
 
 export function generateAmrMovingPrecisionLog(
   data: AmrMovingPrecisionPayload,
   suffix: string,
 ) {
-  const filePath = getCustomFilename(suffix);
-  const logDir = path.dirname(filePath);
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\t2D_Marker_Recognize_Position';
-
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-
-  const row = `${data.dateTime}\t${data.twoDMarkerRecognizePosition}`;
-
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  const row = [data.dateTime, data.twoDMarkerRecognizePosition].join('\t');
+  writeLog(getCustomFilename(suffix), header, row);
 }
