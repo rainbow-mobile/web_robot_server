@@ -16,7 +16,12 @@ import { TaskPayload } from '@common/interface/robot/task.interface';
 import { MovePayload } from '@common/interface/robot/move.interface';
 import { StatusPayload } from '@common/interface/robot/status.interface';
 import { stringifyAllValues } from '@common/util/network.util';
-import { Global, OnModuleDestroy } from '@nestjs/common';
+import {
+  Global,
+  OnApplicationShutdown,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { errorToJson } from '@common/util/error.util';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
@@ -32,14 +37,22 @@ import {
   generateAmrMovingPrecisionLog,
   generateAmrObstacleLog,
   generateAmrVelocityLog,
+  generateGeneralLog,
   generateManipulatorLog,
   generateTorsoLog,
 } from '@common/logger/equipment.logger';
 import {
   AmrLogType,
   FormType,
+  GeneralLogType,
+  GeneralOperationName,
+  GeneralOperationStatus,
+  GeneralScope,
+  GeneralStatus,
   ManipulatorType,
 } from '@common/enum/equipment.enum';
+import { MoveStatusPayload } from '@interface/move/move.interface';
+import { AutoMoveType } from '@common/enum/move.enum';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -59,7 +72,9 @@ export class SocketGateway
     OnGatewayConnection,
     OnGatewayDisconnect,
     OnModuleDestroy,
-    OnGatewayInit
+    OnGatewayInit,
+    OnModuleInit,
+    OnApplicationShutdown
 {
   constructor(
     private readonly networkService: NetworkService,
@@ -996,8 +1011,40 @@ export class SocketGateway
     //interval changed (25-05-07 for traffic test)
   }, this.intervalTime);
 
+  onModuleInit() {
+    generateGeneralLog({
+      logType: GeneralLogType.MANUAL,
+      status: GeneralStatus.IDLE,
+      scope: GeneralScope.EVENT,
+      operationName: GeneralOperationName.PROGRAM_START,
+      operationStatus: GeneralOperationStatus.SET,
+    });
+  }
+
   onModuleDestroy() {
+    generateGeneralLog({
+      logType: GeneralLogType.MANUAL,
+      status: GeneralStatus.STOP,
+      scope: GeneralScope.EVENT,
+      operationName: GeneralOperationName.PROGRAM_END,
+      operationStatus: GeneralOperationStatus.SET,
+    });
+
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
+    this.frsSocket.disconnect();
+    clearInterval(this.interval_frs);
+  }
+
+  onApplicationShutdown(signal?: string): any {
+    generateGeneralLog({
+      logType: GeneralLogType.MANUAL,
+      status: GeneralStatus.STOP,
+      scope: GeneralScope.EVENT,
+      operationName: GeneralOperationName.PROGRAM_END,
+      operationStatus: GeneralOperationStatus.SET,
+    });
+
+    socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
     this.frsSocket.disconnect();
     clearInterval(this.interval_frs);
   }
@@ -1261,8 +1308,34 @@ export class SocketGateway
   @SubscribeMessage('move')
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.AUTORUN_START,
+        operationStatus: GeneralOperationStatus.SET,
+      });
       if (payload == null || payload == undefined) {
+        // TODO : 한번 더 봐라..
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.ERROR,
+          scope: GeneralScope.ERROR,
+          operationName: GeneralOperationName.AMR_SERVO_OFF,
+          operationStatus: GeneralOperationStatus.START,
+          data: `[COMMAND] Move: NULL`,
+        });
+
         socketLogger.warn(`[COMMAND] Move: NULL`);
+
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.ERROR,
+          scope: GeneralScope.ERROR,
+          operationName: GeneralOperationName.AMR_SERVO_OFF,
+          operationStatus: GeneralOperationStatus.END,
+          data: `[COMMAND] Move: NULL`,
+        });
         return;
       }
 
@@ -1271,7 +1344,26 @@ export class SocketGateway
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
     } catch (error) {
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.ERROR,
+        scope: GeneralScope.ERROR,
+        operationName: GeneralOperationName.AMR_SERVO_OFF,
+        operationStatus: GeneralOperationStatus.START,
+        data: `[COMMAND] Move: ${errorToJson(error)}`,
+      });
+
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
+
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.ERROR,
+        scope: GeneralScope.ERROR,
+        operationName: GeneralOperationName.AMR_SERVO_OFF,
+        operationStatus: GeneralOperationStatus.END,
+        data: `[COMMAND] Move: ${errorToJson(error)}`,
+      });
+
       throw error();
     }
   }
@@ -1353,7 +1445,57 @@ export class SocketGateway
           return;
         }
 
-        const json = JSON.parse(payload);
+        const json: MoveStatusPayload = JSON.parse(payload);
+        const autoMove = json.move_state.auto_move;
+
+        switch (autoMove) {
+          case AutoMoveType.MOVE:
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: GeneralOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.START,
+              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+            });
+
+            break;
+          case AutoMoveType.STOP:
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.STOP,
+              scope: GeneralScope.VEHICLE,
+              operationName: GeneralOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.SET,
+              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+            });
+
+            break;
+          case AutoMoveType.NOT_READY:
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.IDLE,
+              scope: GeneralScope.VEHICLE,
+              operationName: GeneralOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.SET,
+              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+            });
+
+            break;
+
+          case AutoMoveType.ERROR:
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.ERROR,
+              scope: GeneralScope.VEHICLE,
+              operationName: GeneralOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.SET,
+              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+            });
+
+            break;
+        }
+
         socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
         // delete json.time;
         if (isEqual(json, this.lastMoveStatus)) {
@@ -1378,6 +1520,15 @@ export class SocketGateway
       }
     } catch (error) {
       socketLogger.error(`[STATUS] MoveStatus : ${errorToJson(error)}`);
+
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.ERROR,
+        scope: GeneralScope.VEHICLE,
+        operationName: GeneralOperationName.MOVE,
+        operationStatus: GeneralOperationStatus.SET,
+        data: `[STATUS] MoveStatus : ${errorToJson(error)}`,
+      });
     }
   }
 
@@ -1392,9 +1543,37 @@ export class SocketGateway
     @ConnectedSocket() client: Socket,
   ) {
     try {
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.VEHICLE,
+        operationName: GeneralOperationName.AUTORUN_END,
+        operationStatus: GeneralOperationStatus.SET,
+      });
+
       if (client.id == this.slamnav?.id) {
         if (payload == null || payload == undefined) {
+          // TODO : 한번 더 봐라..
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.ERROR,
+            scope: GeneralScope.ERROR,
+            operationName: GeneralOperationName.AMR_SERVO_OFF,
+            operationStatus: GeneralOperationStatus.START,
+            data: `[RESPONSE] moveResponse: NULL`,
+          });
+
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
+
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.ERROR,
+            scope: GeneralScope.ERROR,
+            operationName: GeneralOperationName.AMR_SERVO_OFF,
+            operationStatus: GeneralOperationStatus.END,
+            data: `[RESPONSE] moveResponse: NULL`,
+          });
+
           return;
         }
 
@@ -1423,12 +1602,49 @@ export class SocketGateway
 
         this.moveState = json;
       } else {
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.ERROR,
+          scope: GeneralScope.ERROR,
+          operationName: GeneralOperationName.AMR_SERVO_OFF,
+          operationStatus: GeneralOperationStatus.START,
+          data: `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
+        });
+
         socketLogger.warn(
           `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
         );
+
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.ERROR,
+          scope: GeneralScope.ERROR,
+          operationName: GeneralOperationName.AMR_SERVO_OFF,
+          operationStatus: GeneralOperationStatus.END,
+          data: `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
+        });
       }
     } catch (error) {
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.ERROR,
+        scope: GeneralScope.ERROR,
+        operationName: GeneralOperationName.AMR_SERVO_OFF,
+        operationStatus: GeneralOperationStatus.START,
+        data: `[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`,
+      });
+
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
+
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.ERROR,
+        scope: GeneralScope.ERROR,
+        operationName: GeneralOperationName.AMR_SERVO_OFF,
+        operationStatus: GeneralOperationStatus.END,
+        data: `[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`,
+      });
+
       throw error();
     }
   }
@@ -1941,7 +2157,10 @@ export class SocketGateway
         if (parseManipulatorPosition.position === ManipulatorType.LEFT) {
           generateManipulatorLog(
             {
-              dateTime: parseManipulatorPosition.datetime.toISOString(),
+              dateTime: parseManipulatorPosition.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               x: parseManipulatorPosition.x,
               y: parseManipulatorPosition.y,
               z: parseManipulatorPosition.z,
@@ -1961,7 +2180,10 @@ export class SocketGateway
         ) {
           generateManipulatorLog(
             {
-              dateTime: parseManipulatorPosition.datetime.toISOString(),
+              dateTime: parseManipulatorPosition.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               x: parseManipulatorPosition.x,
               y: parseManipulatorPosition.y,
               z: parseManipulatorPosition.z,
@@ -1983,7 +2205,10 @@ export class SocketGateway
         const parseTorsoPosition = await this.parseTorsoPosition(payload.data);
         generateTorsoLog(
           {
-            dateTime: parseTorsoPosition.datetime.toISOString(),
+            dateTime: parseTorsoPosition.datetime
+              .toISOString()
+              .replace('T', ' ')
+              .substring(0, 23),
             x: parseTorsoPosition.x,
             z: parseTorsoPosition.z,
             theta: parseTorsoPosition.theta,
@@ -1997,7 +2222,10 @@ export class SocketGateway
         if (parseData.kind === AmrLogType.VELOCITY) {
           generateAmrVelocityLog(
             {
-              dateTime: parseData.datetime,
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               x: parseData.x,
               y: parseData.y,
               theta: parseData.theta,
@@ -2009,7 +2237,10 @@ export class SocketGateway
         } else if (parseData.kind === AmrLogType.OBSTACLE) {
           generateAmrObstacleLog(
             {
-              dateTime: parseData.datetime,
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               statusFront: parseData.statusFront,
               distanceFront: parseData.distanceFront,
               thetaFront: parseData.thetaFront,
@@ -2022,7 +2253,10 @@ export class SocketGateway
         } else if (parseData.kind === AmrLogType.DOCKING_PRECISION) {
           generateAmrDockingPrecisionLog(
             {
-              dateTime: parseData.datetime,
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               twoDMarkerRecognizePosition:
                 parseData.twoDMarkerRecognizePosition,
             },
@@ -2031,7 +2265,10 @@ export class SocketGateway
         } else if (parseData.kind === AmrLogType.MOVING_PRECISION) {
           generateAmrMovingPrecisionLog(
             {
-              dateTime: parseData.datetime,
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
               twoDMarkerRecognizePosition:
                 parseData.twoDMarkerRecognizePosition,
             },
