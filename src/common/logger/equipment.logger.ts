@@ -1,4 +1,5 @@
 import { homedir } from 'os';
+import os from 'os';
 import path from 'path';
 import * as fs from 'fs';
 import {
@@ -23,12 +24,15 @@ function getCustomFilename(suffix: string) {
   const MM = ('0' + (now.getMonth() + 1)).slice(-2);
   const DD = ('0' + now.getDate()).slice(-2);
   const HH = ('0' + now.getHours()).slice(-2);
-  return path.join(
-    homedir(),
-    'log',
-    'socket',
-    `${YYYY}${MM}${DD}${HH}_${suffix}.log`,
-  );
+
+  let baseLogDir: string;
+  if (os.platform() === 'win32') {
+    baseLogDir = path.join('D:\\Log');
+  } else {
+    baseLogDir = path.join(homedir(), 'log', 'samsung-em');
+  }
+
+  return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
 }
 
 function writeLog(filePath: string, header: string, row: string) {
