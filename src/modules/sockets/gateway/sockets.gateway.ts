@@ -1,12 +1,12 @@
 import {
-  WebSocketGateway,
-  WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
   OnGatewayInit,
-  MessageBody,
-  ConnectedSocket,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as ioClient from 'socket.io-client';
@@ -27,6 +27,14 @@ import {
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
 import { SubscribeDto } from '@sockets/dto/subscribe.dto';
+import {
+  generateAmrDockingPrecisionLog,
+  generateAmrMovingPrecisionLog,
+  generateAmrObstacleLog,
+  generateAmrVelocityLog,
+  generateManipulatorLog,
+  generateTorsoLog,
+} from '@common/logger/equipment.logger';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -41,7 +49,8 @@ const isEqual = (a: any, b: any) => {
   },
   host: '0.0.0.0',
 })
-export class SocketGateway implements
+export class SocketGateway
+  implements
     OnGatewayConnection,
     OnGatewayDisconnect,
     OnModuleDestroy,
@@ -71,6 +80,8 @@ export class SocketGateway implements
   slamnav: Socket;
   streaming: Socket;
   taskman: Socket;
+  manipulator: Socket;
+  torso: Socket;
 
   taskState: TaskPayload = {
     connection: false,
@@ -1004,6 +1015,10 @@ export class SocketGateway implements
       // this.taskman.emit('file')
     } else if (client.handshake.query.name == 'streaming') {
       this.streaming = client;
+    } else if (client.handshake.query.name == 'manipulator') {
+      this.manipulator = client;
+    } else if (client.handshake.query.name == 'torso') {
+      this.torso = client;
     }
     client.join(client.handshake.query.name);
   }
@@ -1072,7 +1087,12 @@ export class SocketGateway implements
         result: undefined,
       };
       this.taskman = null;
+    } else if (client.handshake.query.name == 'manipulator') {
+      this.manipulator = null;
+    } else if (client.handshake.query.name == 'torso') {
+      this.torso = null;
     }
+
     client.leave(client.handshake.query.name as string);
   }
 
@@ -1460,6 +1480,7 @@ export class SocketGateway implements
       throw error();
     }
   }
+
   @SubscribeMessage('mappingResponse')
   async handleMappingReponseMessage(
     @MessageBody() payload: string,
@@ -1599,6 +1620,7 @@ export class SocketGateway implements
       throw error();
     }
   }
+
   @SubscribeMessage('dockResponse')
   async handleDockReponseMessage(@MessageBody() payload: string) {
     try {
@@ -1688,17 +1710,23 @@ export class SocketGateway implements
   }
 
   @SubscribeMessage('pathResponse')
-  async handlePathResponse(@MessageBody() payload: {time:string}){
-    if(payload == null || payload == undefined || payload.time == null || payload.time == undefined || payload.time == ""){
-        socketLogger.warn(`[STATUS] pathResponse: NULL`);
-        return;
+  async handlePathResponse(@MessageBody() payload: { time: string }) {
+    if (
+      payload == null ||
+      payload == undefined ||
+      payload.time == null ||
+      payload.time == undefined ||
+      payload.time == ''
+    ) {
+      socketLogger.warn(`[STATUS] pathResponse: NULL`);
+      return;
     }
-    
+
     const sendData = {
       robotSerial: global.robotSerial,
       data: payload,
     };
-    this.frsSocket?.emit('pathResponse',sendData);
+    this.frsSocket?.emit('pathResponse', sendData);
   }
 
   @SubscribeMessage('localPath')
@@ -1729,6 +1757,7 @@ export class SocketGateway implements
       throw error();
     }
   }
+
   @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload: any[]) {
     try {
@@ -1895,6 +1924,122 @@ export class SocketGateway implements
     }
   }
 
+  @SubscribeMessage('formalLog')
+  async handleFormalLogMessage(
+    @MessageBody() payload: { form: FormType; data: string },
+  ) {
+    switch (payload.form) {
+      case FormType.MANIPULATOR:
+        const parseManipulatorPosition = await this.parseManipulatorPosition(
+          payload.data,
+        );
+        if (parseManipulatorPosition.position === ManipulatorType.LEFT) {
+          generateManipulatorLog(
+            {
+              dateTime: parseManipulatorPosition.datetime.toISOString(),
+              x: parseManipulatorPosition.x,
+              y: parseManipulatorPosition.y,
+              z: parseManipulatorPosition.z,
+              rx: parseManipulatorPosition.rx,
+              ry: parseManipulatorPosition.ry,
+              rz: parseManipulatorPosition.rz,
+              base: parseManipulatorPosition.base,
+              shoulder: parseManipulatorPosition.shoulder,
+              elbow: parseManipulatorPosition.elbow,
+              wrist1: parseManipulatorPosition.wrist1,
+              wrist2: parseManipulatorPosition.wrist2,
+            },
+            `${ManipulatorType.LEFT}_Manipulator_position`,
+          );
+        } else if (
+          parseManipulatorPosition.position === ManipulatorType.RIGHT
+        ) {
+          generateManipulatorLog(
+            {
+              dateTime: parseManipulatorPosition.datetime.toISOString(),
+              x: parseManipulatorPosition.x,
+              y: parseManipulatorPosition.y,
+              z: parseManipulatorPosition.z,
+              rx: parseManipulatorPosition.rx,
+              ry: parseManipulatorPosition.ry,
+              rz: parseManipulatorPosition.rz,
+              base: parseManipulatorPosition.base,
+              shoulder: parseManipulatorPosition.shoulder,
+              elbow: parseManipulatorPosition.elbow,
+              wrist1: parseManipulatorPosition.wrist1,
+              wrist2: parseManipulatorPosition.wrist2,
+            },
+            `${ManipulatorType.RIGHT}_Manipulator_Position`,
+          );
+        }
+
+        break;
+      case FormType.TORSO:
+        const parseTorsoPosition = await this.parseTorsoPosition(payload.data);
+        generateTorsoLog(
+          {
+            dateTime: parseTorsoPosition.datetime.toISOString(),
+            x: parseTorsoPosition.x,
+            z: parseTorsoPosition.z,
+            theta: parseTorsoPosition.theta,
+          },
+          `Torso_Position`,
+        );
+        break;
+      case FormType.AMR:
+        const parseData = JSON.parse(payload.data);
+
+        if (parseData.kind === AmrLogType.VELOCITY) {
+          generateAmrVelocityLog(
+            {
+              dateTime: parseData.datetime,
+              x: parseData.x,
+              y: parseData.y,
+              theta: parseData.theta,
+              xVel: parseData.xVel,
+              yVel: parseData.yVel,
+            },
+            `Mobile_Position_Velocity`,
+          );
+        } else if (parseData.kind === AmrLogType.OBSTACLE) {
+          generateAmrObstacleLog(
+            {
+              dateTime: parseData.datetime,
+              statusFront: parseData.statusFront,
+              distanceFront: parseData.distanceFront,
+              thetaFront: parseData.thetaFront,
+              statusBack: parseData.statusBack,
+              distanceBack: parseData.distanceBack,
+              thetaBack: parseData.thetaBack,
+            },
+            `Lidar_Recognize_Obstacle`,
+          );
+        } else if (parseData.kind === AmrLogType.DOCKING_PRECISION) {
+          generateAmrDockingPrecisionLog(
+            {
+              dateTime: parseData.datetime,
+              twoDMarkerRecognizePosition:
+                parseData.twoDMarkerRecognizePosition,
+            },
+            `Mobile_Charging_Docking_Precision`,
+          );
+        } else if (parseData.kind === AmrLogType.MOVING_PRECISION) {
+          generateAmrMovingPrecisionLog(
+            {
+              dateTime: parseData.datetime,
+              twoDMarkerRecognizePosition:
+                parseData.twoDMarkerRecognizePosition,
+            },
+            `Mobile_Moving_Precision`,
+          );
+        }
+
+        break;
+      default:
+        break;
+    }
+  }
+
   //****************************************************** functions */
   getConnection() {
     // console.log(this.slamnav, this.taskman);
@@ -1903,4 +2048,53 @@ export class SocketGateway implements
       TASK: this.taskman ? true : false,
     };
   }
+
+  private async parseManipulatorPosition(data: string) {
+    const parseData: {
+      position: ManipulatorType;
+      datetime: Date;
+      x: number;
+      y: number;
+      z: number;
+      rx: number;
+      ry: number;
+      rz: number;
+      base: number;
+      shoulder: number;
+      elbow: number;
+      wrist1: number;
+      wrist2: number;
+    } = JSON.parse(data);
+
+    return parseData;
+  }
+
+  private async parseTorsoPosition(data: string) {
+    const parseData: {
+      datetime: Date;
+      x: number;
+      z: number;
+      theta: number;
+    } = JSON.parse(data);
+
+    return parseData;
+  }
+}
+
+export enum FormType {
+  MANIPULATOR = 'manipulator',
+  TORSO = 'torso',
+  AMR = 'amr',
+}
+
+export enum ManipulatorType {
+  LEFT = 'left',
+  RIGHT = 'right',
+}
+
+export enum AmrLogType {
+  VELOCITY = 'velocity',
+  OBSTACLE = 'obstacle',
+  DOCKING_PRECISION = 'docking_precision',
+  MOVING_PRECISION = 'moving_precision',
 }
