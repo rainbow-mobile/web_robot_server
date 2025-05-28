@@ -1,4 +1,3 @@
-
 export const create_curversion = `CREATE TABLE curversion(
 	program varchar(32) not null primary key,
 	date datetime(3) not null default now(3) on update now(3),
