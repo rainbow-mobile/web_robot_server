@@ -7,5 +7,5 @@ export class CommandDto {
     description: '',
     example: 'ifconfig',
   })
-  command:string;
+  command: string;
 }

@@ -41,7 +41,8 @@ const isEqual = (a: any, b: any) => {
   },
   host: '0.0.0.0',
 })
-export class SocketGateway implements
+export class SocketGateway
+  implements
     OnGatewayConnection,
     OnGatewayDisconnect,
     OnModuleDestroy,
@@ -970,8 +971,8 @@ export class SocketGateway implements
     };
 
     this.server
-      .to(['programStatus', 'all', 'allStatus'])
-      .emit('programStatus', statusData.data);
+      ?.to(['programStatus', 'all', 'allStatus'])
+      ?.emit('programStatus', statusData.data);
 
     if (this.frsSocket?.connected && global.robotSerial != '') {
       this.frsSocket.emit('programStatus', statusData);
@@ -1688,17 +1689,23 @@ export class SocketGateway implements
   }
 
   @SubscribeMessage('pathResponse')
-  async handlePathResponse(@MessageBody() payload: {time:string}){
-    if(payload == null || payload == undefined || payload.time == null || payload.time == undefined || payload.time == ""){
-        socketLogger.warn(`[STATUS] pathResponse: NULL`);
-        return;
+  async handlePathResponse(@MessageBody() payload: { time: string }) {
+    if (
+      payload == null ||
+      payload == undefined ||
+      payload.time == null ||
+      payload.time == undefined ||
+      payload.time == ''
+    ) {
+      socketLogger.warn(`[STATUS] pathResponse: NULL`);
+      return;
     }
-    
+
     const sendData = {
       robotSerial: global.robotSerial,
       data: payload,
     };
-    this.frsSocket?.emit('pathResponse',sendData);
+    this.frsSocket?.emit('pathResponse', sendData);
   }
 
   @SubscribeMessage('localPath')

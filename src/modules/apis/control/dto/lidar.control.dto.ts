@@ -1,14 +1,21 @@
-import { IsArray, IsNumber, IsOptional, IsString, Length, ValidateIf } from 'class-validator';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  ValidateIf,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {Expose} from 'class-transformer'
+import { Expose } from 'class-transformer';
 
 export class LidarControlDto {
   @IsString()
-  @Length(1,50)
+  @Length(1, 50)
   @ApiProperty({
     description: 'on/off',
     example: 'on',
-    required: true
+    required: true,
   })
   @Expose()
   command: string;
@@ -17,7 +24,7 @@ export class LidarControlDto {
   @ApiProperty({
     description: '전송 주기(Hz)',
     example: 1,
-    required: true
+    required: true,
   })
   @Expose()
   frequency: number;

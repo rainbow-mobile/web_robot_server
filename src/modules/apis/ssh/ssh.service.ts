@@ -11,5 +11,4 @@ import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 @Injectable()
 export class SSHService {
   constructor(private readonly socketGateway: SocketGateway) {}
-  
 }

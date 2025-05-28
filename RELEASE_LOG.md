@@ -1,5 +1,37 @@
 # Release log
 
+## [rrs-20250527015710] - 2025-05-27
+- [RRS] Branch: develop, Version: rrs-20250527015710] release 배포
+
+
+## [rrs-20250527015332] - 2025-05-27
+- [RRS] Branch: develop, Version: rrs-20250527015332] release 배포
+
+
+## [rrs-20250527014448] - 2025-05-27
+- [RRS] Branch: develop, Version: rrs-20250527014448] release 배포
+
+
+## [rrs-20250527011611] - 2025-05-27
+- [RRS] Branch: develop, Version: rrs-20250527011611] release 배포
+
+
+## [rrs-20250526165053] - 2025-05-26
+- [RRS] Branch: develop, Version: rrs-20250526165053] release 배포
+
+
+## [rrs-20250526164202] - 2025-05-26
+- [RRS] Branch: develop, Version: rrs-20250526164202] release 배포
+
+
+## [rrs-20250526163509] - 2025-05-26
+- [RRS] Branch: develop, Version: rrs-20250526163509] release 배포
+
+
+## [rrs-20250526163147] - 2025-05-26
+- [RRS] Branch: develop, Version: rrs-20250526163147] release 배포
+
+
 ## [rrs-20250526161832] - 2025-05-26
 - [RRS] Branch: main, Version: rrs-20250526161832] release 배포
 
