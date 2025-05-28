@@ -9,16 +9,16 @@ import { SocketsModule } from '@sockets/sockets.module';
 import { SystemLogEntity } from './entity/system.entity';
 
 @Module({
-  imports:[
+  imports: [
     TypeOrmModule.forFeature([
       StateLogEntity,
       PowerLogEntity,
       StatusLogEntity,
-      SystemLogEntity
-    ])
+      SystemLogEntity,
+    ]),
   ],
   controllers: [LogController],
   providers: [LogService],
-  exports: [LogService]
+  exports: [LogService],
 })
 export class LogModule {}
