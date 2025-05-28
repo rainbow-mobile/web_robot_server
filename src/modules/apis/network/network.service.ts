@@ -26,13 +26,11 @@ export class NetworkService {
   private isPlatformMac = false;
   private isPlatformWindows = false;
 
-  async NetworkInit(){
-    try{
+  async NetworkInit() {
+    try {
       await this.wifiScan();
       await this.getNetwork();
-    }catch(error){
-
-    }
+    } catch (error) {}
   }
   async wifiScan() {
     return new Promise(async (resolve, reject) => {
@@ -50,9 +48,9 @@ export class NetworkService {
               this.scanWifiNetworks(resolve, reject);
             },
           );
-        } else if(this.isPlatformWindows){
+        } else if (this.isPlatformWindows) {
           reject('windows');
-        }else {
+        } else {
           exec('nmcli dev wifi rescan', (err) => {
             if (err) {
               httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
@@ -181,7 +179,7 @@ export class NetworkService {
             }
           },
         );
-      } else if(this.isPlatformWindows){
+      } else if (this.isPlatformWindows) {
         reject('windows');
       } else {
         exec('nmcli device show', async (err, stdout) => {

@@ -7,7 +7,7 @@ import { homedir } from 'os';
 // multer 설정
 const upload = multer({
   storage: diskStorage({
-    destination: homedir()+'/upload/', // 파일 저장 폴더
+    destination: homedir() + '/upload/', // 파일 저장 폴더
     filename: (req, file, callback) => {
       callback(null, `${file.originalname}`);
     },
@@ -18,7 +18,7 @@ const upload = multer({
 // multer 설정
 const upload_sound = multer({
   storage: diskStorage({
-    destination: homedir()+'/sounds/', // 파일 저장 폴더
+    destination: homedir() + '/sounds/', // 파일 저장 폴더
     filename: (req, file, callback) => {
       callback(null, `${file.originalname}`);
     },
