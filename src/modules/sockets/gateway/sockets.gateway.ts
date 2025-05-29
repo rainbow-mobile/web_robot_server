@@ -203,6 +203,8 @@ export class SocketGateway
   lidarCloud: any[] = [];
   debugMode: boolean = false;
 
+  lastData: Record<string, object | string> = {};
+
   //lastInputValue - SLAMNAV to RRS
   lastStatus: any;
   lastMoveStatus: any;
@@ -1314,6 +1316,55 @@ export class SocketGateway
       }
     } catch (error) {
       socketLogger.error(`[STATUS] status : ${errorToJson(error)}`);
+    }
+  }
+
+  @SubscribeMessage('system_status')
+  async handleSystemStatusMessage(
+    @MessageBody() payload: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      if (client.id == this.slamnav?.id) {
+        if (payload == null || payload == undefined) {
+          socketLogger.warn(`[STATUS] System Status: NULL`);
+          return;
+        }
+
+        const json = JSON.parse(payload);
+        const compareJson = { ...json };
+
+        // time을 제거하지 않으면 어차피 밑에서 비교했을때 이전 값과 무조건 다름!!
+        delete compareJson.time;
+
+        // isEqual 대신 JSON.stringify 사용하여 CPU 사용량 줄임
+        if (
+          JSON.stringify(compareJson) ===
+          JSON.stringify(this.lastData['system_status'])
+        ) {
+          return;
+        }
+
+        // 이전 값을 하나의 객체에 키값으로 여러 값들을 관리 가능!
+        this.lastData['system_status'] = compareJson;
+
+        this.server
+          .to(['system_status', 'all', 'allStatus'])
+          .emit('system_status', json);
+
+        if (this.frsSocket?.connected) {
+          this.frsSocket.emit('system_status', {
+            robotSerial: global.robotSerial,
+            data: json,
+          });
+        }
+      } else {
+        socketLogger.warn(
+          `[STATUS] another slamnav system status ${this.slamnav?.id}, ${client.id}`,
+        );
+      }
+    } catch (error) {
+      socketLogger.error(`[STATUS] system status : ${errorToJson(error)}`);
     }
   }
 
