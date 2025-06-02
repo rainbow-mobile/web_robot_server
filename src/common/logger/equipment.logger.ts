@@ -1,6 +1,5 @@
-import { homedir } from 'os';
-import os from 'os';
-import path from 'path';
+import * as os from 'os';
+import * as path from 'path';
 import * as fs from 'fs';
 import {
   AmrDockingPrecisionPayload,
@@ -29,7 +28,7 @@ function getCustomFilename(suffix: string) {
   if (os.platform() === 'win32') {
     baseLogDir = path.join('D:\\Log');
   } else {
-    baseLogDir = path.join(homedir(), 'log', 'samsung-em');
+    baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
   }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);

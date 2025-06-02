@@ -73,8 +73,7 @@ export class SocketGateway
     OnGatewayDisconnect,
     OnModuleDestroy,
     OnGatewayInit,
-    OnModuleInit,
-    OnApplicationShutdown
+    OnModuleInit
 {
   constructor(
     private readonly networkService: NetworkService,
@@ -1035,19 +1034,19 @@ export class SocketGateway
     clearInterval(this.interval_frs);
   }
 
-  onApplicationShutdown(signal?: string): any {
-    generateGeneralLog({
-      logType: GeneralLogType.MANUAL,
-      status: GeneralStatus.STOP,
-      scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.PROGRAM_END,
-      operationStatus: GeneralOperationStatus.SET,
-    });
-
-    socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
-    this.frsSocket.disconnect();
-    clearInterval(this.interval_frs);
-  }
+  // onApplicationShutdown(signal?: string): any {
+  //   generateGeneralLog({
+  //     logType: GeneralLogType.MANUAL,
+  //     status: GeneralStatus.STOP,
+  //     scope: GeneralScope.EVENT,
+  //     operationName: GeneralOperationName.PROGRAM_END,
+  //     operationStatus: GeneralOperationStatus.SET,
+  //   });
+  //
+  //   socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
+  //   this.frsSocket.disconnect();
+  //   clearInterval(this.interval_frs);
+  // }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
   handleConnection(client: Socket) {
