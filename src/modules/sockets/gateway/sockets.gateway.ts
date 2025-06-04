@@ -1343,6 +1343,9 @@ export class SocketGateway
 
       const json = JSON.parse(JSON.stringify(payload));
 
+      console.log(`아아아아아아아아아악!!!! ${json}`);
+      console.log(`!!!!아아아아아아아아아악!!!! ${json.command}`);
+
       if (json.command == 'goal') {
         generateGeneralLog({
           logType: GeneralLogType.AUTO,
