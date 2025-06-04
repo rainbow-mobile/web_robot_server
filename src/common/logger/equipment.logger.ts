@@ -170,7 +170,7 @@ export function generateGeneralLog(param: {
     'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
   const row = [
     param.dateTime ??
-      new Date().toISOString().replace('T', ' ').substring(0, 23),
+      `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
     param.machineId ?? global.robotSerial ?? '-',
     param.logType ?? '-',
     param.lotId ?? '-',
