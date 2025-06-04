@@ -2143,15 +2143,9 @@ export class SocketGateway
   async handleEquipmentLogMessage(
     @MessageBody() payload: { form: FormType; data: any },
   ) {
-    console.log(`[INIT] Equipment Log: ${payload}`);
-    console.log(`[INIT] Equipment Log: ${JSON.stringify(payload)}`);
-    console.log(`아아아악!@!! ${payload.form}`);
-
     if (typeof payload === 'string') {
       payload = JSON.parse(payload);
     }
-
-    console.log(`뜨아아아악!@!! ${payload.form}`);
 
     switch (payload.form) {
       case FormType.MANIPULATOR:
@@ -2237,9 +2231,6 @@ export class SocketGateway
         break;
       case FormType.AMR:
         const parseData = payload.data;
-
-        console.log(`AMR!!!!!!!! ${parseData}`);
-
         if (parseData.kind === AmrLogType.VELOCITY) {
           generateAmrVelocityLog(
             {
