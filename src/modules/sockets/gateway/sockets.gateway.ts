@@ -1511,7 +1511,7 @@ export class SocketGateway
         //     break;
         // }
 
-        socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
+        // socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
         // delete json.time;
         if (isEqual(json, this.lastMoveStatus)) {
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
