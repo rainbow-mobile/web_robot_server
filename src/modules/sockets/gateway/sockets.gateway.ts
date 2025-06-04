@@ -47,7 +47,6 @@ import {
   ManipulatorType,
 } from '@common/enum/equipment.enum';
 import { MoveStatusPayload } from '@interface/move/move.interface';
-import { AutoMoveType } from '@common/enum/move.enum';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1006,21 +1005,35 @@ export class SocketGateway
   }, this.intervalTime);
 
   onModuleInit() {
+    // generateGeneralLog({
+    //   logType: GeneralLogType.MANUAL,
+    //   status: GeneralStatus.IDLE,
+    //   scope: GeneralScope.EVENT,
+    //   operationName: GeneralOperationName.PROGRAM_START,
+    //   operationStatus: GeneralOperationStatus.SET,
+    // });
     generateGeneralLog({
-      logType: GeneralLogType.MANUAL,
-      status: GeneralStatus.IDLE,
+      logType: GeneralLogType.AUTO,
+      status: GeneralStatus.RUN,
       scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.PROGRAM_START,
+      operationName: GeneralOperationName.AUTORUN_START,
       operationStatus: GeneralOperationStatus.SET,
     });
   }
 
   onModuleDestroy() {
+    // generateGeneralLog({
+    //   logType: GeneralLogType.MANUAL,
+    //   status: GeneralStatus.STOP,
+    //   scope: GeneralScope.EVENT,
+    //   operationName: GeneralOperationName.PROGRAM_END,
+    //   operationStatus: GeneralOperationStatus.SET,
+    // });
     generateGeneralLog({
-      logType: GeneralLogType.MANUAL,
+      logType: GeneralLogType.AUTO,
       status: GeneralStatus.STOP,
       scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.PROGRAM_END,
+      operationName: GeneralOperationName.AUTORUN_END,
       operationStatus: GeneralOperationStatus.SET,
     });
 
@@ -1305,10 +1318,11 @@ export class SocketGateway
       generateGeneralLog({
         logType: GeneralLogType.AUTO,
         status: GeneralStatus.RUN,
-        scope: GeneralScope.EVENT,
-        operationName: GeneralOperationName.AUTORUN_START,
-        operationStatus: GeneralOperationStatus.SET,
+        scope: GeneralScope.VEHICLE,
+        operationName: GeneralOperationName.MOVE,
+        operationStatus: GeneralOperationStatus.START,
       });
+
       if (payload == null || payload == undefined) {
         // TODO : 한번 더 봐라..
         generateGeneralLog({
@@ -1541,8 +1555,8 @@ export class SocketGateway
         logType: GeneralLogType.AUTO,
         status: GeneralStatus.RUN,
         scope: GeneralScope.VEHICLE,
-        operationName: GeneralOperationName.AUTORUN_END,
-        operationStatus: GeneralOperationStatus.SET,
+        operationName: GeneralOperationName.MOVE,
+        operationStatus: GeneralOperationStatus.END,
       });
 
       if (client.id == this.slamnav?.id) {
