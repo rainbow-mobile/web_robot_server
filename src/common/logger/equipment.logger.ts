@@ -17,7 +17,7 @@ import {
   GeneralStatus,
 } from '@common/enum/equipment.enum';
 
-function getCustomFilename(suffix: string) {
+function getCustomFilenameWithDate(suffix: string) {
   const now = new Date();
   const YYYY = now.getFullYear();
   const MM = ('0' + (now.getMonth() + 1)).slice(-2);
@@ -32,6 +32,22 @@ function getCustomFilename(suffix: string) {
   }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
+}
+
+function getCustomFilenameWithoutDate(suffix: string) {
+  const now = new Date();
+  const YYYY = now.getFullYear();
+  const MM = ('0' + (now.getMonth() + 1)).slice(-2);
+  const DD = ('0' + now.getDate()).slice(-2);
+
+  let baseLogDir: string;
+  if (os.platform() === 'win32') {
+    baseLogDir = path.join('D:\\Log');
+  } else {
+    baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
+  }
+
+  return path.join(baseLogDir, `${YYYY}${MM}${DD}_${suffix}.log`);
 }
 
 function writeLog(filePath: string, header: string, row: string) {
@@ -82,7 +98,7 @@ export function generateManipulatorLog(
     data.wrist1.toFixed(2),
     data.wrist2.toFixed(2),
   ].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateTorsoLog(data: TorsoPositionPayload, suffix: string) {
@@ -93,7 +109,7 @@ export function generateTorsoLog(data: TorsoPositionPayload, suffix: string) {
     data.z.toFixed(2),
     data.theta.toFixed(2),
   ].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateAmrVelocityLog(
@@ -114,7 +130,7 @@ export function generateAmrVelocityLog(
     data.xVel,
     data.yVel,
   ].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateAmrObstacleLog(
@@ -132,7 +148,7 @@ export function generateAmrObstacleLog(
     data.distanceBack.toFixed(2),
     data.thetaBack.toFixed(2),
   ].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateAmrDockingPrecisionLog(
@@ -141,7 +157,7 @@ export function generateAmrDockingPrecisionLog(
 ) {
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\t2D_Marker_Recognize_Position';
   const row = [data.dateTime, data.twoDMarkerRecognizePosition].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateAmrMovingPrecisionLog(
@@ -150,7 +166,7 @@ export function generateAmrMovingPrecisionLog(
 ) {
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\t2D_Marker_Recognize_Position';
   const row = [data.dateTime, data.twoDMarkerRecognizePosition].join('\t');
-  writeLog(getCustomFilename(suffix), header, row);
+  writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
 export function generateGeneralLog(param: {
@@ -183,5 +199,5 @@ export function generateGeneralLog(param: {
     typeof param.data === 'undefined' ? '' : param.data,
   ].join('\t');
 
-  writeLog(getCustomFilename('ROBOT'), header, row);
+  writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
 }
