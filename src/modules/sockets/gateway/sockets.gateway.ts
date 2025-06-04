@@ -1343,7 +1343,7 @@ export class SocketGateway
 
       const json = JSON.parse(JSON.stringify(payload));
 
-      if (json.command == 'move') {
+      if (json.command == 'goal') {
         generateGeneralLog({
           logType: GeneralLogType.AUTO,
           status: GeneralStatus.RUN,
@@ -1597,7 +1597,7 @@ export class SocketGateway
           .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
 
-        if (json.result === 'success') {
+        if (json.result === 'success' || json.result === 'fail') {
           generateGeneralLog({
             logType: GeneralLogType.AUTO,
             status: GeneralStatus.RUN,
