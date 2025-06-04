@@ -103,11 +103,16 @@ export function generateAmrVelocityLog(
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\ttheta\tX_vel\tY_vel';
   const row = [
     data.dateTime,
-    data.x.toFixed(2),
-    data.y.toFixed(2),
-    data.theta.toFixed(2),
-    data.xVel.toFixed(2),
-    data.yVel.toFixed(2),
+    // data.x.toFixed(2),
+    // data.y.toFixed(2),
+    // data.theta.toFixed(2),
+    // data.xVel.toFixed(2),
+    // data.yVel.toFixed(2),
+    data.x,
+    data.y,
+    data.theta,
+    data.xVel,
+    data.yVel,
   ].join('\t');
   writeLog(getCustomFilename(suffix), header, row);
 }
