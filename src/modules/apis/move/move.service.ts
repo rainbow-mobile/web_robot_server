@@ -24,6 +24,7 @@ export class MoveService {
           scope: GeneralScope.VEHICLE,
           operationName: GeneralOperationName.MOVE,
           operationStatus: GeneralOperationStatus.START,
+          data: `목표노드 : ${data.goal_name}`,
         });
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
 
@@ -31,13 +32,13 @@ export class MoveService {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
           );
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.VEHICLE,
-            operationName: GeneralOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.END,
-          });
+          // generateGeneralLog({
+          //   logType: GeneralLogType.AUTO,
+          //   status: GeneralStatus.RUN,
+          //   scope: GeneralScope.VEHICLE,
+          //   operationName: GeneralOperationName.MOVE,
+          //   operationStatus: GeneralOperationStatus.END,
+          // });
           resolve(data2);
           clearTimeout(timeoutId);
         });
