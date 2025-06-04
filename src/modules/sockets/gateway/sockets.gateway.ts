@@ -1317,14 +1317,6 @@ export class SocketGateway
   @SubscribeMessage('move')
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope: GeneralScope.VEHICLE,
-        operationName: GeneralOperationName.MOVE,
-        operationStatus: GeneralOperationStatus.START,
-      });
-
       if (payload == null || payload == undefined) {
         // TODO : 한번 더 봐라..
         generateGeneralLog({
@@ -1350,6 +1342,16 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
+
+      if (json.command == 'move') {
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.VEHICLE,
+          operationName: GeneralOperationName.MOVE,
+          operationStatus: GeneralOperationStatus.START,
+        });
+      }
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
@@ -1553,14 +1555,6 @@ export class SocketGateway
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope: GeneralScope.VEHICLE,
-        operationName: GeneralOperationName.MOVE,
-        operationStatus: GeneralOperationStatus.END,
-      });
-
       if (client.id == this.slamnav?.id) {
         if (payload == null || payload == undefined) {
           // TODO : 한번 더 봐라..
@@ -1602,6 +1596,16 @@ export class SocketGateway
           .to(['moveResponse', 'all', 'move'])
           .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+
+        if (json.result === 'success') {
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.RUN,
+            scope: GeneralScope.VEHICLE,
+            operationName: GeneralOperationName.MOVE,
+            operationStatus: GeneralOperationStatus.END,
+          });
+        }
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveResponse', {
