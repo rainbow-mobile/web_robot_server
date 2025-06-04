@@ -24,7 +24,6 @@ export class MoveService {
           scope: GeneralScope.VEHICLE,
           operationName: GeneralOperationName.MOVE,
           operationStatus: GeneralOperationStatus.START,
-          data: `목표노드 : ${data.goal_name}`,
         });
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
 
