@@ -1343,18 +1343,15 @@ export class SocketGateway
 
       const json = JSON.parse(JSON.stringify(payload));
 
-      console.log(`아아아아아아아아아악!!!! ${json}`);
-      console.log(`!!!!아아아아아아아아아악!!!! ${json.command}`);
-
-      if (json.command == 'goal') {
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.VEHICLE,
-          operationName: GeneralOperationName.MOVE,
-          operationStatus: GeneralOperationStatus.START,
-        });
-      }
+      // if (json.command == 'goal') {
+      //   generateGeneralLog({
+      //     logType: GeneralLogType.AUTO,
+      //     status: GeneralStatus.RUN,
+      //     scope: GeneralScope.VEHICLE,
+      //     operationName: GeneralOperationName.MOVE,
+      //     operationStatus: GeneralOperationStatus.START,
+      //   });
+      // }
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
@@ -1600,15 +1597,15 @@ export class SocketGateway
           .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
 
-        if (json.result === 'success' || json.result === 'fail') {
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.VEHICLE,
-            operationName: GeneralOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.END,
-          });
-        }
+        // if (json.result === 'success' || json.result === 'fail') {
+        //   generateGeneralLog({
+        //     logType: GeneralLogType.AUTO,
+        //     status: GeneralStatus.RUN,
+        //     scope: GeneralScope.VEHICLE,
+        //     operationName: GeneralOperationName.MOVE,
+        //     operationStatus: GeneralOperationStatus.END,
+        //   });
+        // }
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveResponse', {
