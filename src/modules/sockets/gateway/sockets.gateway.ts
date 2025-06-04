@@ -1012,13 +1012,6 @@ export class SocketGateway
     //   operationName: GeneralOperationName.PROGRAM_START,
     //   operationStatus: GeneralOperationStatus.SET,
     // });
-    generateGeneralLog({
-      logType: GeneralLogType.AUTO,
-      status: GeneralStatus.RUN,
-      scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.AUTORUN_START,
-      operationStatus: GeneralOperationStatus.SET,
-    });
   }
 
   onModuleDestroy() {
@@ -1029,13 +1022,6 @@ export class SocketGateway
     //   operationName: GeneralOperationName.PROGRAM_END,
     //   operationStatus: GeneralOperationStatus.SET,
     // });
-    generateGeneralLog({
-      logType: GeneralLogType.AUTO,
-      status: GeneralStatus.STOP,
-      scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.AUTORUN_END,
-      operationStatus: GeneralOperationStatus.SET,
-    });
 
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
     this.frsSocket.disconnect();
@@ -1067,6 +1053,14 @@ export class SocketGateway
       } else {
         this.slamnav = client;
         this.frsSocket?.emit('slamRegist');
+
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.EVENT,
+          operationName: GeneralOperationName.AUTORUN_START,
+          operationStatus: GeneralOperationStatus.SET,
+        });
       }
     } else if (client.handshake.query.name == 'taskman') {
       this.taskman = client;
@@ -1111,6 +1105,14 @@ export class SocketGateway
 
           this.frsSocket?.emit('slamUnregist');
           this.slamnav = null;
+
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.STOP,
+            scope: GeneralScope.EVENT,
+            operationName: GeneralOperationName.AUTORUN_END,
+            operationStatus: GeneralOperationStatus.SET,
+          });
 
           this.moveState = {
             command: '',
