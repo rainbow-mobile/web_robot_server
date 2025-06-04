@@ -55,9 +55,9 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     UploadModule,
     SoundModule,
     // MotionModule,
-    ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
-      ? [OnvifDeviceModule]
-      : []),
+    // ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
+    //   ? [OnvifDeviceModule]
+    //   : []),
   ],
   providers: [],
   controllers: [],

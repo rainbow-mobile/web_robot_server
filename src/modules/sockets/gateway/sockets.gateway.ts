@@ -16,12 +16,7 @@ import { TaskPayload } from '@common/interface/robot/task.interface';
 import { MovePayload } from '@common/interface/robot/move.interface';
 import { StatusPayload } from '@common/interface/robot/status.interface';
 import { stringifyAllValues } from '@common/util/network.util';
-import {
-  Global,
-  OnApplicationShutdown,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Global, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { errorToJson } from '@common/util/error.util';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
@@ -1445,55 +1440,55 @@ export class SocketGateway
         }
 
         const json: MoveStatusPayload = JSON.parse(payload);
-        const autoMove = json.move_state.auto_move;
+        // const autoMove = json.move_state.auto_move;
 
-        switch (autoMove) {
-          case AutoMoveType.MOVE:
-            generateGeneralLog({
-              logType: GeneralLogType.AUTO,
-              status: GeneralStatus.RUN,
-              scope: GeneralScope.VEHICLE,
-              operationName: GeneralOperationName.MOVE,
-              operationStatus: GeneralOperationStatus.START,
-              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-            });
-
-            break;
-          case AutoMoveType.STOP:
-            generateGeneralLog({
-              logType: GeneralLogType.AUTO,
-              status: GeneralStatus.STOP,
-              scope: GeneralScope.VEHICLE,
-              operationName: GeneralOperationName.MOVE,
-              operationStatus: GeneralOperationStatus.SET,
-              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-            });
-
-            break;
-          case AutoMoveType.NOT_READY:
-            generateGeneralLog({
-              logType: GeneralLogType.AUTO,
-              status: GeneralStatus.IDLE,
-              scope: GeneralScope.VEHICLE,
-              operationName: GeneralOperationName.MOVE,
-              operationStatus: GeneralOperationStatus.SET,
-              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-            });
-
-            break;
-
-          case AutoMoveType.ERROR:
-            generateGeneralLog({
-              logType: GeneralLogType.AUTO,
-              status: GeneralStatus.ERROR,
-              scope: GeneralScope.VEHICLE,
-              operationName: GeneralOperationName.MOVE,
-              operationStatus: GeneralOperationStatus.SET,
-              data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-            });
-
-            break;
-        }
+        // switch (autoMove) {
+        //   case AutoMoveType.MOVE:
+        //     generateGeneralLog({
+        //       logType: GeneralLogType.AUTO,
+        //       status: GeneralStatus.RUN,
+        //       scope: GeneralScope.VEHICLE,
+        //       operationName: GeneralOperationName.MOVE,
+        //       operationStatus: GeneralOperationStatus.START,
+        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+        //     });
+        //
+        //     break;
+        //   case AutoMoveType.STOP:
+        //     generateGeneralLog({
+        //       logType: GeneralLogType.AUTO,
+        //       status: GeneralStatus.STOP,
+        //       scope: GeneralScope.VEHICLE,
+        //       operationName: GeneralOperationName.MOVE,
+        //       operationStatus: GeneralOperationStatus.SET,
+        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+        //     });
+        //
+        //     break;
+        //   case AutoMoveType.NOT_READY:
+        //     generateGeneralLog({
+        //       logType: GeneralLogType.AUTO,
+        //       status: GeneralStatus.IDLE,
+        //       scope: GeneralScope.VEHICLE,
+        //       operationName: GeneralOperationName.MOVE,
+        //       operationStatus: GeneralOperationStatus.SET,
+        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+        //     });
+        //
+        //     break;
+        //
+        //   case AutoMoveType.ERROR:
+        //     generateGeneralLog({
+        //       logType: GeneralLogType.AUTO,
+        //       status: GeneralStatus.ERROR,
+        //       scope: GeneralScope.VEHICLE,
+        //       operationName: GeneralOperationName.MOVE,
+        //       operationStatus: GeneralOperationStatus.SET,
+        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
+        //     });
+        //
+        //     break;
+        // }
 
         socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
         // delete json.time;
@@ -1520,14 +1515,14 @@ export class SocketGateway
     } catch (error) {
       socketLogger.error(`[STATUS] MoveStatus : ${errorToJson(error)}`);
 
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.ERROR,
-        scope: GeneralScope.VEHICLE,
-        operationName: GeneralOperationName.MOVE,
-        operationStatus: GeneralOperationStatus.SET,
-        data: `[STATUS] MoveStatus : ${errorToJson(error)}`,
-      });
+      // generateGeneralLog({
+      //   logType: GeneralLogType.AUTO,
+      //   status: GeneralStatus.ERROR,
+      //   scope: GeneralScope.VEHICLE,
+      //   operationName: GeneralOperationName.MOVE,
+      //   operationStatus: GeneralOperationStatus.SET,
+      //   data: `[STATUS] MoveStatus : ${errorToJson(error)}`,
+      // });
     }
   }
 
@@ -2146,20 +2141,44 @@ export class SocketGateway
 
   @SubscribeMessage('equipmentLog')
   async handleEquipmentLogMessage(
-    @MessageBody() payload: { form: FormType; data: string },
+    @MessageBody() payload: { form: FormType; data: any },
   ) {
+    console.log(`[INIT] Equipment Log: ${payload}`);
+    console.log(`[INIT] Equipment Log: ${JSON.stringify(payload)}`);
+    console.log(`아아아악!@!! ${payload.form}`);
+
+    if (typeof payload === 'string') {
+      payload = JSON.parse(payload);
+    }
+
+    console.log(`뜨아아아악!@!! ${payload.form}`);
+
     switch (payload.form) {
       case FormType.MANIPULATOR:
-        const parseManipulatorPosition = await this.parseManipulatorPosition(
-          payload.data,
-        );
+        // const parseManipulatorPosition = await this.parseManipulatorPosition(
+        //   payload.data,
+        // );
+
+        const parseManipulatorPosition: {
+          position: ManipulatorType;
+          datetime: string;
+          x: number;
+          y: number;
+          z: number;
+          rx: number;
+          ry: number;
+          rz: number;
+          base: number;
+          shoulder: number;
+          elbow: number;
+          wrist1: number;
+          wrist2: number;
+        } = payload.data;
+
         if (parseManipulatorPosition.position === ManipulatorType.LEFT) {
           generateManipulatorLog(
             {
-              dateTime: parseManipulatorPosition.datetime
-                .toISOString()
-                .replace('T', ' ')
-                .substring(0, 23),
+              dateTime: parseManipulatorPosition.datetime,
               x: parseManipulatorPosition.x,
               y: parseManipulatorPosition.y,
               z: parseManipulatorPosition.z,
@@ -2179,10 +2198,7 @@ export class SocketGateway
         ) {
           generateManipulatorLog(
             {
-              dateTime: parseManipulatorPosition.datetime
-                .toISOString()
-                .replace('T', ' ')
-                .substring(0, 23),
+              dateTime: parseManipulatorPosition.datetime,
               x: parseManipulatorPosition.x,
               y: parseManipulatorPosition.y,
               z: parseManipulatorPosition.z,
@@ -2201,13 +2217,17 @@ export class SocketGateway
 
         break;
       case FormType.TORSO:
-        const parseTorsoPosition = await this.parseTorsoPosition(payload.data);
+        // const parseTorsoPosition = await this.parseTorsoPosition(payload.data);
+        const parseTorsoPosition: {
+          datetime: string;
+          x: number;
+          z: number;
+          theta: number;
+        } = payload.data;
+
         generateTorsoLog(
           {
-            dateTime: parseTorsoPosition.datetime
-              .toISOString()
-              .replace('T', ' ')
-              .substring(0, 23),
+            dateTime: parseTorsoPosition.datetime,
             x: parseTorsoPosition.x,
             z: parseTorsoPosition.z,
             theta: parseTorsoPosition.theta,
@@ -2216,15 +2236,14 @@ export class SocketGateway
         );
         break;
       case FormType.AMR:
-        const parseData = JSON.parse(payload.data);
+        const parseData = payload.data;
+
+        console.log(`AMR!!!!!!!! ${parseData}`);
 
         if (parseData.kind === AmrLogType.VELOCITY) {
           generateAmrVelocityLog(
             {
-              dateTime: parseData.datetime
-                .toISOString()
-                .replace('T', ' ')
-                .substring(0, 23),
+              dateTime: parseData.datetime,
               x: parseData.x,
               y: parseData.y,
               theta: parseData.theta,
