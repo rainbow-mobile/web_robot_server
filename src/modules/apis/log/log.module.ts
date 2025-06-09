@@ -7,6 +7,8 @@ import { PowerLogEntity } from './entity/power.entity';
 import { StatusLogEntity } from './entity/status.entity';
 import { SocketsModule } from '@sockets/sockets.module';
 import { SystemLogEntity } from './entity/system.entity';
+import { AlarmEntity } from './entity/alarm.entity';
+import { AlarmLogEntity } from './entity/alarmlog.entity';
 
 @Module({
   imports:[
@@ -14,7 +16,9 @@ import { SystemLogEntity } from './entity/system.entity';
       StateLogEntity,
       PowerLogEntity,
       StatusLogEntity,
-      SystemLogEntity
+      SystemLogEntity,
+      AlarmEntity,
+      AlarmLogEntity
     ])
   ],
   controllers: [LogController],
