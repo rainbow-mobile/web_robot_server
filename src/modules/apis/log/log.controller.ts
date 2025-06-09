@@ -116,6 +116,36 @@ export class LogController {
     }
   }
 
+  @Get('alarm')
+  @ApiOperation({
+    summary: 'Alarm 리스트 조회'
+  })
+  async getAlarms(@Res() res: Response) {
+    try {
+      const response = await this.logService.getAlarms();
+      res.send(response);
+    } catch (error) {
+      res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('alarmLog')
+  @ApiOperation({
+    summary: 'Alarm Log 조회'
+  })
+  async getAlarmLogs(@Query() param: LogReadDto, @Res() res: Response) {
+    try {
+      httpLogger.debug(`[LOG] getAlarmLogs: ${JSON.stringify(param)}`);
+      const response = await this.logService.getAlarmLog(param);
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[LOG] getAlarmLogs: ${JSON.stringify(param)}, ${errorToJson(error)}`,
+      );
+      res.status(error.status).send(error.data);
+    }
+  }
+
   @Get('slamnav')
   async getSlamnavLog(@Query() param: LogReadDto, @Res() res: Response) {
     try {

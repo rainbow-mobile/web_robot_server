@@ -47,6 +47,9 @@ import {
   ManipulatorType,
 } from '@common/enum/equipment.enum';
 import { MoveStatusPayload } from '@interface/move/move.interface';
+import { LogService } from 'src/modules/apis/log/log.service';
+import { MessagePattern } from '@nestjs/microservices';
+import { AlarmDto } from '@sockets/dto/alarm.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -71,6 +74,7 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
+    private readonly logService: LogService
     // private readonly influxService: InfluxDBService,
     // private readonly mqttService: MqttClientService,
     // private readonly kafakService: KafkaClientService,
@@ -993,9 +997,7 @@ export class SocketGateway
       },
     };
 
-    this.server
-      .to(['programStatus', 'all', 'allStatus'])
-      .emit('programStatus', statusData.data);
+    this.server.to(['programStatus', 'all', 'allStatus']).emit('programStatus', statusData.data);
 
     if (this.frsSocket?.connected && global.robotSerial != '') {
       this.frsSocket.emit('programStatus', statusData);
@@ -2155,6 +2157,21 @@ export class SocketGateway
       this.server.to(['Webinit', 'all']).emit('Webinit', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('alarm')
+  async handleAlarmLogMessage(@MessageBody() payload:AlarmDto){
+    try{
+      if(payload.state){
+        this.server.to(["alarm"]).emit('alarm',payload);
+      }else{
+        this.server.to(["alarm","alarmClear"]).emit('alarmClear',payload);
+      }
+      this.logService.writeAlarmLog(payload.alarmCode,payload.alarmDetail,payload.state);
+    }catch(error){
+      socketLogger.error(`[LOG] alarmLog: ${errorToJson(error)}`);
       throw error();
     }
   }

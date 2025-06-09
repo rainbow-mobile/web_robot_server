@@ -28,6 +28,9 @@ import {
 } from '@common/interface/system/usage.interface';
 import { execSync } from 'child_process';
 import { SystemLogEntity } from './entity/system.entity';
+import { AlarmEntity } from './entity/alarm.entity';
+import { AlarmLogEntity } from './entity/alarmlog.entity';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class LogService {
@@ -37,6 +40,12 @@ export class LogService {
 
     @InjectRepository(SystemLogEntity)
     private readonly systemRepository: Repository<SystemLogEntity>,
+
+    @InjectRepository(AlarmLogEntity)
+    private readonly alarmLogRepository: Repository<AlarmLogEntity>,
+    
+    @InjectRepository(AlarmEntity)
+    private readonly alarmRepository: Repository<AlarmEntity>,
 
     private readonly dataSource: DataSource,
   ) {
@@ -52,6 +61,7 @@ export class LogService {
     await this.checkTables('variables', Query.create_variables);
     this.checkTables('status', Query.create_status);
     this.checkTables('system', Query.create_system);
+    this.generateAlarmDB();
   }
 
   private systemUsage = null;
@@ -332,6 +342,492 @@ export class LogService {
         category: category ? category : '',
         text,
       };
+    }
+  }
+
+  async writeAlarmLog(alarmCode: string, alarmDetail: string | undefined, state: boolean){
+    console.log("writeAlarmLog : ",alarmCode, state);
+
+    try{
+      const alarm = await this.getAlarm(alarmCode);
+      console.log("writeAlarmLog : ",alarm.alarmDescription);
+      this.alarmLogRepository.save({
+        alarmCode:alarm.alarmCode,
+        alarmDetail:alarmDetail,
+        state:state
+      });
+    }catch(error){
+      console.error(error);
+    }
+  }
+
+  async getAlarm(errorCode: string):Promise<AlarmEntity>{
+    const queryBuilder = this.alarmRepository.createQueryBuilder();
+    const result = await queryBuilder.andWhere("errorCode = :errorCode",{errorCode}).getMany();
+
+    console.log("getAlarm: ",errorCode,result[0]);
+
+    if(result.length > 0){
+      return result[0];
+    }else{
+      throw new RpcException(`Not Found errorCode ${errorCode}`)
+    }
+  }
+
+  async getAlarms():Promise<AlarmEntity[]>{
+    return this.alarmRepository.createQueryBuilder().getMany();
+  }
+
+  async generateAlarmDB(){
+    let entity:AlarmEntity;
+    entity = {
+      alarmCode:'2000',
+      alarmDetail:'',
+      alarmDescription:'프로그램 시작을 실패했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'2001',
+      alarmDetail:'',
+      alarmDescription:'초기 위치를 찾지 못했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'2002',
+      alarmDetail:'',
+      alarmDescription:'지도 가져오기를 실패했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2003',
+      alarmDetail:'',
+      alarmDescription:'지도 데이터가 없습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2004',
+      alarmDetail:'',
+      alarmDescription:'지도 데이터의 형식이 불일치합니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+
+    entity = {
+      alarmCode:'2005',
+      alarmDetail:'',
+      alarmDescription:'경로를 이탈했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2006',
+      alarmDetail:'',
+      alarmDescription:'이동 중 위치를 잃었습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2007',
+      alarmDetail:'',
+      alarmDescription:'도킹에 실패했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2016',
+      alarmDetail:'',
+      alarmDescription:'ACS와 연결이 끊어졌습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2017',
+      alarmDetail:'',
+      alarmDescription:'Bridge와 연결이 끊어졌습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2018',
+      alarmDetail:'',
+      alarmDescription:'경로가 생성되지 않았습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2019',
+      alarmDetail:'',
+      alarmDescription:'드라이버가 시작되지 않았습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2020',
+      alarmDetail:'',
+      alarmDescription:'위치추정 모듈이 시작되지 않았습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2021',
+      alarmDetail:'',
+      alarmDescription:'도착 실패했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2024',
+      alarmDetail:'',
+      alarmDescription:'ACS 도킹 명령이 잘못되었습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2200',
+      alarmDetail:'',
+      alarmDescription:'PLC 통신에 문제가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2202',
+      alarmDetail:'',
+      alarmDescription:'LOAD 중 오류가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2208',
+      alarmDetail:'',
+      alarmDescription:'작업 중 도킹이 해제 됐습니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'2215',
+      alarmDetail:'',
+      alarmDescription:'CHARGE명령을 받았지만 수행하지 못했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'3000',
+      alarmDetail:'',
+      alarmDescription:'EMS 버튼이 눌렸습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'3001',
+      alarmDetail:'',
+      alarmDescription:'전면 범퍼에 충돌이 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'3002',
+      alarmDetail:'',
+      alarmDescription:'후면 범퍼에 충돌이 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3003',
+      alarmDetail:'',
+      alarmDescription:'라이트 커튼이 감지 됐습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3004',
+      alarmDetail:'',
+      alarmDescription:'전방에 물체가 감지되었습니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3005',
+      alarmDetail:'',
+      alarmDescription:'전방 물체 감지로 이동 불가합니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3006',
+      alarmDetail:'',
+      alarmDescription:'후방에 물체가 감지되었습니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3007',
+      alarmDetail:'',
+      alarmDescription:'후방 물체 감지로 이동 불가합니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'3008',
+      alarmDetail:'',
+      alarmDescription:'전장부의 문이 열렸습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'3009',
+      alarmDetail:'',
+      alarmDescription:'배터리의 문이 열렸습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4000',
+      alarmDetail:'',
+      alarmDescription:'배터리 저전압 이상입니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4001',
+      alarmDetail:'',
+      alarmDescription:'배터리 충전 이상입니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4002',
+      alarmDetail:'',
+      alarmDescription:'배터리 부족으로 충전이 필요합니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4003',
+      alarmDetail:'',
+      alarmDescription:'배터리 방전으로 충전이 필요합니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4004',
+      alarmDetail:'',
+      alarmDescription:'모터 전원 문제로 차단기가 내려갔습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4006',
+      alarmDetail:'',
+      alarmDescription:'세이프티 전원 문제로 차단기가 내려갔습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4007',
+      alarmDetail:'',
+      alarmDescription:'레이저 전원 문제로 차단기가 내려갔습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'4008',
+      alarmDetail:'',
+      alarmDescription:'PC 전원 문제로 차단기가 내려갔습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4009',
+      alarmDetail:'',
+      alarmDescription:'충전 문제로 차단기가 내려갔습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4500',
+      alarmDetail:'',
+      alarmDescription:'모터 전류가 너무 높습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4501',
+      alarmDetail:'',
+      alarmDescription:'파워 모듈 고장으로 교체 바랍니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4505',
+      alarmDetail:'',
+      alarmDescription:'내부 온도가 높습니다.',
+      isError: false
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4506',
+      alarmDetail:'',
+      alarmDescription:'통신 상태 확인 바랍니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4512',
+      alarmDetail:'',
+      alarmDescription:'Encoder 위치 편차가 큽니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4514',
+      alarmDetail:'',
+      alarmDescription:'왼쪽 모터에 이상이 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4515',
+      alarmDetail:'',
+      alarmDescription:'오른쪽 모터에 이상이 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'4517',
+      alarmDetail:'',
+      alarmDescription:'모터가 연결되지 않았습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'5100',
+      alarmDetail:'',
+      alarmDescription:'전방 LiDAR 통신에 문제가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'5101',
+      alarmDetail:'',
+      alarmDescription:'후방 LiDAR 통신에 문제가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode:'5103',
+      alarmDetail:'',
+      alarmDescription:'라이다 센서에 오염이 감지되었습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'5200',
+      alarmDetail:'',
+      alarmDescription:'전방 카메라 통신에 문제가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+    entity = {
+      alarmCode:'5201',
+      alarmDetail:'',
+      alarmDescription:'후방 카메라 통신에 문제가 발생했습니다.',
+      isError: true
+    }
+    await this.alarmRepository.save(entity);
+    
+  }
+
+  async getAlarmLog(param: LogReadDto):Promise<PaginationResponse<AlarmLogEntity>>{
+    try{
+      const queryBuilder = this.alarmLogRepository.createQueryBuilder();
+      const dateStart = new Date(param.startDt);
+      const dateEnd = new Date(param.endDt);
+
+      dateStart.setHours(0, 0, 0, 0);
+      dateEnd.setHours(23, 59, 59, 999);
+
+      if (param.startDt) {
+        queryBuilder.andWhere('time >= :startDt', {
+          startDt: dateStart,
+        });
+      }
+
+      if (param.endDt) {
+        queryBuilder.andWhere('time <= :endDt', {
+          endDt: dateEnd,
+        });
+      }
+
+      const logs = await queryBuilder
+        .skip(param.getOffset())
+        .take(param.getLimit())
+        .getMany();
+
+      const count = await queryBuilder.getCount();
+
+      // const sanitizeLogs = logs.map((log) => ({
+      //   ...log,
+      //   time: DateUtil.formatDateYYYYMMbDDsHHcMIcSSZZZ(log.time),
+      // }));
+
+      return new PaginationResponse(count, param.getLimit(), logs);
+    } catch (error) {
+      httpLogger.error(`[LOG] getSystemProcess Error : ${errorToJson(error)}`);
+      return;
     }
   }
 
