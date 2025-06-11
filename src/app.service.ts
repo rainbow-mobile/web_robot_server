@@ -10,12 +10,12 @@ export class AppService implements OnApplicationShutdown {
   }
   onApplicationShutdown(signal?: string) {
     console.error(`Application 종료됨 : ${signal}`);  
-    generateGeneralLog({
-      logType: GeneralLogType.MANUAL,
-      status: GeneralStatus.STOP,
-      scope: GeneralScope.EVENT,
-      operationName: GeneralOperationName.PROGRAM_END,
-      operationStatus: GeneralOperationStatus.SET
-    });
+    // generateGeneralLog({
+    //   logType: GeneralLogType.MANUAL,
+    //   status: GeneralStatus.STOP,
+    //   scope: GeneralScope.EVENT,
+    //   operationName: GeneralOperationName.PROGRAM_END,
+    //   operationStatus: GeneralOperationStatus.SET
+    // });
   } 
 }
