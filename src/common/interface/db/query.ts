@@ -67,3 +67,17 @@ export const create_system = `CREATE TABLE system(
 	slamnav JSON,
 	taskman JSON
 );`;
+export const create_alarm = `CREATE TABLE alarm(
+	alarmCode varchar(32) not null primary key,
+	alarmDetail varchar(32),
+	operationName varchar(32),
+	alarmDescription varchar(255),
+	isError tinyint(1)
+);`;
+export const create_alarmLog = `CREATE TABLE alarmLog(
+	id uuid not null primary key,
+	alarmCode varchar(32) not null,
+	state tinyint(1),
+	emitFlag tinyint(1),
+    time timestamp(3) not null current_timestamp(3),
+);`;

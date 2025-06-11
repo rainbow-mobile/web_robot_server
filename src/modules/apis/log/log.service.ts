@@ -62,6 +62,8 @@ export class LogService {
     await this.checkTables('variables', Query.create_variables);
     this.checkTables('status', Query.create_status);
     this.checkTables('system', Query.create_system);
+    this.checkTables('alarm', Query.create_alarm);
+    this.checkTables('alarmLog', Query.create_alarmLog);
     this.generateAlarmDB();
   }
 
