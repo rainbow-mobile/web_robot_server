@@ -6,7 +6,7 @@ export class AlarmLogEntity{
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({name:'alramCode', type: 'varchar'})
+    @Column({name:'alarmCode', type: 'varchar'})
     alarmCode: string;
 
     @Column({name:'state'})
