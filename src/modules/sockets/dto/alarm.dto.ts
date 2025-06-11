@@ -12,7 +12,6 @@ export class AlarmDto{
     alarmCode: string;
 
     @IsString()
-    @Length(1,5)
     @ApiProperty({
         description: 'alarmDetail',
         example: '',

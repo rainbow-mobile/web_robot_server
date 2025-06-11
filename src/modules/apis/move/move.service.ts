@@ -1,14 +1,8 @@
+import { GeneralLogType, GeneralOperationStatus, GeneralScope, GeneralStatus, VehicleOperationName } from '@common/enum/equipment.enum';
+import { generateGeneralLog } from '@common/logger/equipment.logger';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
-import { generateGeneralLog } from '@common/logger/equipment.logger';
-import {
-  GeneralLogType,
-  GeneralOperationName,
-  GeneralOperationStatus,
-  GeneralScope,
-  GeneralStatus,
-} from '@common/enum/equipment.enum';
 
 @Injectable()
 export class MoveService {
@@ -18,26 +12,12 @@ export class MoveService {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
         this.socketGateway.server.to('slamnav').emit('move', data);
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.VEHICLE,
-          operationName: GeneralOperationName.MOVE,
-          operationStatus: GeneralOperationStatus.START,
-        });
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
 
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
           );
-          // generateGeneralLog({
-          //   logType: GeneralLogType.AUTO,
-          //   status: GeneralStatus.RUN,
-          //   scope: GeneralScope.VEHICLE,
-          //   operationName: GeneralOperationName.MOVE,
-          //   operationStatus: GeneralOperationStatus.END,
-          // });
           resolve(data2);
           clearTimeout(timeoutId);
         });

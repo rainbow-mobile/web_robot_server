@@ -35,6 +35,7 @@ import {
   generateGeneralLog,
   generateManipulatorLog,
   generateTorsoLog,
+  setAlarmGeneralLog
 } from '@common/logger/equipment.logger';
 import {
   AmrLogType,
@@ -45,11 +46,13 @@ import {
   GeneralScope,
   GeneralStatus,
   ManipulatorType,
+  VehicleOperationName,
 } from '@common/enum/equipment.enum';
 import { MoveStatusPayload } from '@interface/move/move.interface';
 import { LogService } from 'src/modules/apis/log/log.service';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { AlarmDto } from '@sockets/dto/alarm.dto';
+import { SequenceDto } from '@sockets/dto/sequence.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -97,8 +100,11 @@ export class SocketGateway
   slamnav: Socket;
   streaming: Socket;
   taskman: Socket;
-  manipulator: Socket;
-  torso: Socket;
+
+  //samsung
+  acs:Socket;
+  manipulator:Socket;
+  torso:Socket;
 
   taskState: TaskPayload = {
     connection: false,
@@ -246,7 +252,6 @@ export class SocketGateway
 
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
-
   intervalTime = 500 + Math.floor(Math.random() * 500);
 
   //disabled(25-05-07, for traffic test)
@@ -1007,42 +1012,27 @@ export class SocketGateway
   }, this.intervalTime);
 
   onModuleInit() {
-    // generateGeneralLog({
-    //   logType: GeneralLogType.MANUAL,
-    //   status: GeneralStatus.IDLE,
-    //   scope: GeneralScope.EVENT,
-    //   operationName: GeneralOperationName.PROGRAM_START,
-    //   operationStatus: GeneralOperationStatus.SET,
-    // });
   }
 
   onModuleDestroy() {
-    // generateGeneralLog({
-    //   logType: GeneralLogType.MANUAL,
-    //   status: GeneralStatus.STOP,
-    //   scope: GeneralScope.EVENT,
-    //   operationName: GeneralOperationName.PROGRAM_END,
-    //   operationStatus: GeneralOperationStatus.SET,
-    // });
+    generateGeneralLog({
+      logType: GeneralLogType.MANUAL,
+      status: GeneralStatus.STOP,
+      scope: GeneralScope.EVENT,
+      operationName: GeneralOperationName.PROGRAM_END,
+      operationStatus: GeneralOperationStatus.SET,
+    });
 
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
-    this.frsSocket.disconnect();
+    this.frsSocket?.disconnect();
     clearInterval(this.interval_frs);
   }
 
-  // onApplicationShutdown(signal?: string): any {
-  //   generateGeneralLog({
-  //     logType: GeneralLogType.MANUAL,
-  //     status: GeneralStatus.STOP,
-  //     scope: GeneralScope.EVENT,
-  //     operationName: GeneralOperationName.PROGRAM_END,
-  //     operationStatus: GeneralOperationStatus.SET,
-  //   });
-  //
-  //   socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
-  //   this.frsSocket.disconnect();
-  //   clearInterval(this.interval_frs);
-  // }
+  onApplicationShutdown(signal?: string): any {  
+    socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
+    this.frsSocket.disconnect();
+    clearInterval(this.interval_frs);
+  }
 
   // 클라이언트가 연결되면 룸에 join 시킬 수 있음
   handleConnection(client: Socket) {
@@ -1056,13 +1046,8 @@ export class SocketGateway
         this.slamnav = client;
         this.frsSocket?.emit('slamRegist');
 
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.EVENT,
-          operationName: GeneralOperationName.AUTORUN_START,
-          operationStatus: GeneralOperationStatus.SET,
-        });
+        //samsung
+        this.setAlarm
       }
     } else if (client.handshake.query.name == 'taskman') {
       this.taskman = client;
@@ -1107,14 +1092,6 @@ export class SocketGateway
 
           this.frsSocket?.emit('slamUnregist');
           this.slamnav = null;
-
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.STOP,
-            scope: GeneralScope.EVENT,
-            operationName: GeneralOperationName.AUTORUN_END,
-            operationStatus: GeneralOperationStatus.SET,
-          });
 
           this.moveState = {
             command: '',
@@ -1320,64 +1297,16 @@ export class SocketGateway
   async handleMoveCommandMessage(@MessageBody() payload: string) {
     try {
       if (payload == null || payload == undefined) {
-        // TODO : 한번 더 봐라..
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.ERROR,
-          scope: GeneralScope.ERROR,
-          operationName: GeneralOperationName.AMR_SERVO_OFF,
-          operationStatus: GeneralOperationStatus.START,
-          data: `[COMMAND] Move: NULL`,
-        });
-
         socketLogger.warn(`[COMMAND] Move: NULL`);
-
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.ERROR,
-          scope: GeneralScope.ERROR,
-          operationName: GeneralOperationName.AMR_SERVO_OFF,
-          operationStatus: GeneralOperationStatus.END,
-          data: `[COMMAND] Move: NULL`,
-        });
         return;
       }
 
       const json = JSON.parse(JSON.stringify(payload));
 
-      // if (json.command == 'goal') {
-      //   generateGeneralLog({
-      //     logType: GeneralLogType.AUTO,
-      //     status: GeneralStatus.RUN,
-      //     scope: GeneralScope.VEHICLE,
-      //     operationName: GeneralOperationName.MOVE,
-      //     operationStatus: GeneralOperationStatus.START,
-      //   });
-      // }
-
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
     } catch (error) {
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.ERROR,
-        scope: GeneralScope.ERROR,
-        operationName: GeneralOperationName.AMR_SERVO_OFF,
-        operationStatus: GeneralOperationStatus.START,
-        data: `[COMMAND] Move: ${errorToJson(error)}`,
-      });
-
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
-
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.ERROR,
-        scope: GeneralScope.ERROR,
-        operationName: GeneralOperationName.AMR_SERVO_OFF,
-        operationStatus: GeneralOperationStatus.END,
-        data: `[COMMAND] Move: ${errorToJson(error)}`,
-      });
-
       throw error();
     }
   }
@@ -1423,10 +1352,12 @@ export class SocketGateway
         }
 
         const json = JSON.parse(payload);
-        if (isEqual(json, this.lastStatus)) {
+        const tempjson = {...json};
+        delete tempjson.time;
+        if (isEqual(tempjson, this.lastStatus)) {
           return;
         }
-        this.lastStatus = json;
+        this.lastStatus = tempjson;
 
         this.server.to(['status', 'all', 'allStatus']).emit('status', json);
         if (this.frsSocket?.connected) {
@@ -1460,67 +1391,19 @@ export class SocketGateway
         }
 
         const json: MoveStatusPayload = JSON.parse(payload);
-        // const autoMove = json.move_state.auto_move;
-
-        // switch (autoMove) {
-        //   case AutoMoveType.MOVE:
-        //     generateGeneralLog({
-        //       logType: GeneralLogType.AUTO,
-        //       status: GeneralStatus.RUN,
-        //       scope: GeneralScope.VEHICLE,
-        //       operationName: GeneralOperationName.MOVE,
-        //       operationStatus: GeneralOperationStatus.START,
-        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-        //     });
-        //
-        //     break;
-        //   case AutoMoveType.STOP:
-        //     generateGeneralLog({
-        //       logType: GeneralLogType.AUTO,
-        //       status: GeneralStatus.STOP,
-        //       scope: GeneralScope.VEHICLE,
-        //       operationName: GeneralOperationName.MOVE,
-        //       operationStatus: GeneralOperationStatus.SET,
-        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-        //     });
-        //
-        //     break;
-        //   case AutoMoveType.NOT_READY:
-        //     generateGeneralLog({
-        //       logType: GeneralLogType.AUTO,
-        //       status: GeneralStatus.IDLE,
-        //       scope: GeneralScope.VEHICLE,
-        //       operationName: GeneralOperationName.MOVE,
-        //       operationStatus: GeneralOperationStatus.SET,
-        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-        //     });
-        //
-        //     break;
-        //
-        //   case AutoMoveType.ERROR:
-        //     generateGeneralLog({
-        //       logType: GeneralLogType.AUTO,
-        //       status: GeneralStatus.ERROR,
-        //       scope: GeneralScope.VEHICLE,
-        //       operationName: GeneralOperationName.MOVE,
-        //       operationStatus: GeneralOperationStatus.SET,
-        //       data: `[STATUS] moveStatus in : ${JSON.stringify(json)}`,
-        //     });
-        //
-        //     break;
-        // }
-
-        // socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
-        // delete json.time;
-        if (isEqual(json, this.lastMoveStatus)) {
+        const tempjson =  {...json};
+        delete tempjson.time;
+        if (isEqual(tempjson, this.lastMoveStatus)) {
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
           return;
         }
-        this.lastMoveStatus = json;
+        this.lastMoveStatus = tempjson;
+
 
         this.server
           .to(['moveStatus', 'all', 'allStatus'])
           .emit('moveStatus', json);
+
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveStatus', {
@@ -1530,7 +1413,7 @@ export class SocketGateway
         }
 
         // this.influxService.writeMoveStatus(json);
-        this.robotState = { ...this.robotState, ...json };
+        this.robotState = {...this.robotState,...json};
       }
     } catch (error) {
       socketLogger.error(`[STATUS] MoveStatus : ${errorToJson(error)}`);
@@ -1559,27 +1442,8 @@ export class SocketGateway
     try {
       if (client.id == this.slamnav?.id) {
         if (payload == null || payload == undefined) {
-          // TODO : 한번 더 봐라..
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.ERROR,
-            scope: GeneralScope.ERROR,
-            operationName: GeneralOperationName.AMR_SERVO_OFF,
-            operationStatus: GeneralOperationStatus.START,
-            data: `[RESPONSE] moveResponse: NULL`,
-          });
-
+          this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
-
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.ERROR,
-            scope: GeneralScope.ERROR,
-            operationName: GeneralOperationName.AMR_SERVO_OFF,
-            operationStatus: GeneralOperationStatus.END,
-            data: `[RESPONSE] moveResponse: NULL`,
-          });
-
           return;
         }
 
@@ -1590,6 +1454,7 @@ export class SocketGateway
           json.command == undefined ||
           json.command == ''
         ) {
+          this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: Command NULL`);
           return;
         }
@@ -1599,14 +1464,40 @@ export class SocketGateway
           .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
 
-        if (json.result === 'success' || json.result === 'fail') {
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.VEHICLE,
-            operationName: GeneralOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.END,
-          });
+        if(json.command === 'goal' || json.command === 'target'){
+          if (json.result === 'success' || json.result === 'fail') {
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.END,
+            });
+          }else if(json.result === 'accept'){
+            if(generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.READY,
+              operationStatus: GeneralOperationStatus.END,
+            })){
+              generateGeneralLog({
+                logType: GeneralLogType.AUTO,
+                status: GeneralStatus.RUN,
+                scope: GeneralScope.VEHICLE,
+                operationName: VehicleOperationName.MOVE,
+                operationStatus: GeneralOperationStatus.START,
+              });
+            }
+          }else if(json.result === 'reject'){
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.READY,
+              operationStatus: GeneralOperationStatus.END,
+            });
+          }
         }
 
         if (this.frsSocket?.connected) {
@@ -1618,51 +1509,103 @@ export class SocketGateway
 
         this.moveState = json;
       } else {
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.ERROR,
-          scope: GeneralScope.ERROR,
-          operationName: GeneralOperationName.AMR_SERVO_OFF,
-          operationStatus: GeneralOperationStatus.START,
-          data: `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
-        });
-
         socketLogger.warn(
           `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
         );
-
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.ERROR,
-          scope: GeneralScope.ERROR,
-          operationName: GeneralOperationName.AMR_SERVO_OFF,
-          operationStatus: GeneralOperationStatus.END,
-          data: `[RESPONSE] another slamnav moveResponse ${this.slamnav?.id}, ${client.id}`,
-        });
       }
     } catch (error) {
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.ERROR,
-        scope: GeneralScope.ERROR,
-        operationName: GeneralOperationName.AMR_SERVO_OFF,
-        operationStatus: GeneralOperationStatus.START,
-        data: `[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`,
-      });
-
+      this.setAlarmLog(10000);
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
-
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.ERROR,
-        scope: GeneralScope.ERROR,
-        operationName: GeneralOperationName.AMR_SERVO_OFF,
-        operationStatus: GeneralOperationStatus.END,
-        data: `[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`,
-      });
-
       throw error();
     }
+  }
+
+
+
+  async setSequence(data:SequenceDto, scope: string){
+    try{
+      /// 1) Dto 검사
+      if(scope === undefined || scope === ""){
+        throw new RpcException('scope 값이 없습니다.');
+      }
+      if(scope.toLowerCase() !== "manipulator" && scope.toLowerCase() !== "torso"){
+        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
+      }
+      if(data.operationName === undefined || data.operationName === ""){
+        throw new RpcException('operationName 값이 없습니다.');
+      }
+      if(data.operationStatus === undefined || data.operationStatus === ""){
+        throw new RpcException('operationStatus 값이 없습니다.');
+      }
+      if(!Object.values(GeneralOperationStatus).includes(data.operationStatus as GeneralOperationStatus)){
+        throw new RpcException('operationStatus 값이 형식과 일치하지 않습니다.');
+      }
+
+      /// 2) scope 설정
+      var _scope:GeneralScope;
+      if(scope.toLowerCase() == "manipulator"){
+        _scope = GeneralScope.MANIPULATOR;
+      }else if(scope.toLowerCase() == "torso"){
+        _scope = GeneralScope.TORSO;
+      }
+
+      /// 3) GeneralLog 저장
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope:_scope,
+        operationName: data.operationName,
+        operationStatus: data.operationStatus
+      })
+
+      return;
+    }catch(error){
+      socketLogger.error(`[LOG] setManipulatorSequence : ${errorToJson(error)}`)
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  async setAlarm(data: AlarmDto){
+    try{
+      /// 1) Get Alarm
+      /// 2) Check Before Alarm (중복 방지) 
+      const lastAlarm = await this.logService.getLastAlarm(data.alarmCode);
+      console.log("setAlarm : ", data, lastAlarm);
+      if(lastAlarm){
+        if(data.alarmCode === lastAlarm.alarmCode && data.state === lastAlarm.state){
+          socketLogger.warn(`[LOG] duplicate alarm : ${data.alarmCode}`)
+          return;
+        }
+      }else{
+        console.log("no alarm");
+      }
+
+      /// 3) Generate AlarmDto
+      const alarmDto = {alarmCode:data.alarmCode, alarmDetail:data.alarmDetail, emitFlag:false, state:data.state};
+
+      /// 4) Emit alarm
+      this.server.to(["alarm","all"]).emit("alarm", alarmDto);
+
+      /// 5) save log
+      this.logService.setAlarm(alarmDto);
+    }catch(error){
+      socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`)
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+
+
+  async setAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.SET);
+  }
+  async clearAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.END);
+  }
+  async startAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.START);
   }
 
   @SubscribeMessage('loadResponse')
@@ -2140,6 +2083,73 @@ export class SocketGateway
     }
   }
 
+
+  //samsung
+  @SubscribeMessage('acsStart')
+  async handleACSAutoRunStartMessage(){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.AUTORUN_START,
+        operationStatus: GeneralOperationStatus.SET,
+    })
+  }
+
+  @SubscribeMessage('acsEnd')
+  async handleACSAutoRunEndMessage(){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.AUTORUN_END,
+        operationStatus: GeneralOperationStatus.SET,
+    })
+  }
+
+  @SubscribeMessage('manipulatorResponse')
+  async handleManipulatorResponseMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.MANIPULATOR,
+        operationName: payload.operationName,
+        operationStatus: payload.operationStatus
+    })
+  }
+
+  @SubscribeMessage('torsoResponse')
+  async handleTorsoResponseMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: payload.operationName,
+        operationStatus: payload.operationStatus
+    })
+  }
+
+  // @SubscribeMessage('manipulatorError')
+  // async handleManipulatorErrorMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
+  //   generateGeneralLog({
+  //       logType: GeneralLogType.AUTO,
+  //       status: GeneralStatus.ERROR,
+  //       scope: GeneralScope.EVENT,
+  //       operationName: payload.operationName,
+  //       operationStatus: payload.operationStatus
+  //   })
+  // }
+
+  // @SubscribeMessage('torsoError')
+  // async handleTorsoErrorMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
+  //   generateGeneralLog({
+  //       logType: GeneralLogType.AUTO,
+  //       status: GeneralStatus.ERROR,
+  //       scope: GeneralScope.TORSO,
+  //       operationName: payload.operationName,
+  //       operationStatus: payload.operationStatus
+  //   })
+  // }
   /**
    * @description 웹 변수 초기화를 처리하는 함수
    * @param socket
@@ -2283,10 +2293,7 @@ export class SocketGateway
         } else if (parseData.kind === AmrLogType.OBSTACLE) {
           generateAmrObstacleLog(
             {
-              dateTime: parseData.datetime
-                .toISOString()
-                .replace('T', ' ')
-                .substring(0, 23),
+              dateTime: parseData.datetime,
               statusFront: parseData.statusFront,
               distanceFront: parseData.distanceFront,
               thetaFront: parseData.thetaFront,
@@ -2335,36 +2342,5 @@ export class SocketGateway
       SLAMNAV: this.slamnav ? true : false,
       TASK: this.taskman ? true : false,
     };
-  }
-
-  private async parseManipulatorPosition(data: string) {
-    const parseData: {
-      position: ManipulatorType;
-      datetime: Date;
-      x: number;
-      y: number;
-      z: number;
-      rx: number;
-      ry: number;
-      rz: number;
-      base: number;
-      shoulder: number;
-      elbow: number;
-      wrist1: number;
-      wrist2: number;
-    } = JSON.parse(data);
-
-    return parseData;
-  }
-
-  private async parseTorsoPosition(data: string) {
-    const parseData: {
-      datetime: Date;
-      x: number;
-      z: number;
-      theta: number;
-    } = JSON.parse(data);
-
-    return parseData;
   }
 }

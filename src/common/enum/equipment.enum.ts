@@ -26,10 +26,24 @@ export enum GeneralOperationName {
   LOT_SUMMARY = 'LOT_SUmmARY',
   BTN_CLICK = 'BTN_CLICK',
   USER_LOGIN = 'USER_LOGIN',
-  AMR_SERVO_OFF = 'AMR_SERVO_OFF',
-  MOVE = 'MOVE',
+  PARAMETER_CHANGE = 'PARAMETER_CHANGE',
 }
 
+export enum VehicleOperationName {
+  AMR_SERVO_OFF = 'AMR_SERVO_OFF',
+  MOVE = 'MOVE',
+  READY = 'READY'
+}
+
+export enum ManipulatoreOperationName {
+  MOVE = 'MOVE',
+  READY = 'READY'
+}
+
+export enum TorsoOperationName {
+  MOVE = 'MOVE',
+  READY = 'READY'
+}
 export enum GeneralLogType {
   AUTO = 'A',
   MANUAL = 'M',
@@ -44,8 +58,10 @@ export enum GeneralStatus {
 
 export enum GeneralScope {
   EVENT = 'EVENT',
-  VEHICLE = 'VEHICLE',
-  ERROR = 'ERROR',
+  VEHICLE = 'Vehicle',
+  MANIPULATOR = 'Manipulator',
+  TORSO = 'Torso',
+  // ERROR = 'ERROR',
   ALARM = 'ALARM',
 }
 

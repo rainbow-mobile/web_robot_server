@@ -16,6 +16,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
+import { AppService } from './app.service';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
 @Module({
@@ -54,12 +55,15 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     LogModule,
     UploadModule,
     SoundModule,
+    OnvifDeviceModule
     // MotionModule,
     // ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
     //   ? [OnvifDeviceModule]
     //   : []),
   ],
-  providers: [],
+  providers: [
+    AppService
+  ],
   controllers: [],
 })
 export class AppModule {}
