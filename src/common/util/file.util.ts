@@ -4,6 +4,7 @@ import httpLogger from '@common/logger/http.logger';
 import * as csv from 'csv';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { errorToJson } from './error.util';
+import { RpcException } from '@nestjs/microservices';
 
 export async function readJson(dir:string){
     return new Promise<any[]>(async(resolve,reject) => {
@@ -24,6 +25,7 @@ export async function readJson(dir:string){
         }
     })
 }
+
 
 export async function deleteFile(dir:string){
     return new Promise(async(resolve,reject) => {

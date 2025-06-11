@@ -19,6 +19,9 @@ import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { errorToJson } from '@common/util/error.util';
 import { RpcException } from '@nestjs/microservices';
+import { homedir } from 'os';
+import * as path from 'path';
+import { deleteFile } from '@common/util/file.util';
 
 @ApiTags('로그 관련 API (log)')
 @Controller('log')
@@ -137,7 +140,7 @@ export class LogController {
   })
   async getAlarms() {
     try {
-      httpLogger.debug(`[LOG] getAlarmLogs`);
+      httpLogger.debug(`[LOG] getAlarms`);
       const response = await this.logService.getAlarms();
       this.logService.setAlarmsFlag(response);
       const result = response.map(({emitFlag, ...alarm}) => alarm);
@@ -152,6 +155,25 @@ export class LogController {
     }
   }
 
+  @Get('alarm/all')
+  @ApiOperation({
+    summary: '알람 리스트(DB) 조회'
+  })
+  async getAlarmAll() {
+    try {
+      httpLogger.debug(`[LOG] getAlarmAll`);
+      const response = await this.logService.getAlarmsAll();
+      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      return result;
+    } catch (error) {
+      httpLogger.error(
+        `[LOG] getAlarmAll: ${errorToJson(error)}`,
+      );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+
+    }
+  }
   @Delete('alarm')
   async alarmReset(){
     try{
@@ -160,6 +182,34 @@ export class LogController {
       httpLogger.error(
         `[LOG] alarmReset: ${errorToJson(error)}`,
       );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  @Get('generalLog/:date')
+  async getGeneralLog(@Param('date') date: string){
+    try{
+      console.log("getGeneralLog : ", date);
+      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
+      console.log("path : ",_path);
+      return this.logService.readGeneralLog(_path);
+    }catch(error){
+      console.error(error);
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  @Delete('generalLog/:date')
+  async deleteGeneralLog(@Param('date') date: string){
+    try{
+      console.log("deleteGeneralLog : ", date);
+      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
+      console.log("path : ",_path);
+      return deleteFile(_path);
+    }catch(error){
+      console.error(error);
       if(error instanceof RpcException) throw error;
       throw new RpcException('서버에 에러가 발생했습니다.')
     }

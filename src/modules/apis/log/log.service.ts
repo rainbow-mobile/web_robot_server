@@ -349,11 +349,8 @@ export class LogService {
   }
 
   async writeAlarmLog(alarmCode: string, alarmDetail: string | undefined, state: boolean){
-    console.log("writeAlarmLog : ",alarmCode, state);
-
     try{
       const alarm = await this.getAlarmDetail(alarmCode);
-      console.log("writeAlarmLog : ",alarm.alarmDescription);
       this.alarmLogRepository.save({
         alarmCode:alarm.alarmCode,
         alarmDetail:alarmDetail,
@@ -369,11 +366,7 @@ export class LogService {
       alarmCode = alarmCode.toString();
     }
     const queryBuilder = this.alarmRepository.createQueryBuilder();
-    console.log("1");
     const result = await queryBuilder.andWhere("alarmCode = :alarmCode",{alarmCode}).getMany();
-    console.log("2");
-
-    console.log("getAlarm: ",alarmCode,result[0]);
 
     if(result.length > 0){
       return result[0];
@@ -732,34 +725,22 @@ export class LogService {
     await this.alarmRepository.save(entity);
   }
 
-  async getLastAlarmLog():Promise<AlarmLogEntity>{
-    try{
-      const lastLog = await this.alarmLogRepository
-        .createQueryBuilder('alarm')
-        .orderBy('alarm.time', 'DESC') 
-        .limit(1)
-        .getOne(); 
-
-      return lastLog;
-    } catch (error) {
-      httpLogger.error(`[LOG] getLastAlarmLog Error : ${errorToJson(error)}`);
-      throw new RpcException(`마지막 로그를 찾을 수 없습니다.`)
-    }
-  }
-
   async resetAlarms():Promise<void>{
     try{
       await this.alarmLogRepository.clear();
       return;
     }catch(error){
       httpLogger.error(`[LOG] resetAlarms Error : ${errorToJson(error)}`);
-      throw new RpcException(`알람로그를 삭제할 수 없습니다.`)
+      throw new RpcException(`알람로그를 삭제할 수 없습니다.`) 
     }
   }
   async getAlarmsAll():Promise<AlarmLogEntity[]>{
     try{
       /// 1) alarm 전부 리스트로 추출
-      const newAlarms = await this.alarmLogRepository.find();
+      const newAlarms = await this.alarmLogRepository.find({
+        order: { time: 'DESC' }, // 최신순 정렬
+      });
+      console.log(newAlarms)
       /// 2) alarm 리스트 반환
       return newAlarms;
     }catch(error){
@@ -772,7 +753,8 @@ export class LogService {
     try{
       /// 1) emitFlag가 false인 alarm만 리스트로 추출
       const newAlarms = await this.alarmLogRepository.find({
-        where: {emitFlag:false}
+        where: {emitFlag:false},
+        order: { time: 'DESC' }, // 최신순 정렬
       });
       /// 2) alarm 리스트 반환
       return newAlarms;
@@ -786,6 +768,7 @@ export class LogService {
     try{
       const allLogs = await this.alarmLogRepository.find({
         order: { time: 'DESC' }, // 최신순 정렬
+        where: {alarmCode: alarmCode}
       });
 
       const latestLogsByCode = new Map<string, AlarmLogEntity>();
@@ -870,6 +853,20 @@ export class LogService {
     }
   }
 
+  async readGeneralLog(dir:string){
+    try{
+        console.log("readGeneralLog : ", dir);
+        if(fs.openSync(dir,"r")){
+          const filecontent = fs.readFileSync(dir, "utf-8");
+          return filecontent;
+        }else{
+          throw new RpcException('파일이 없습니다.')
+        }
+    }catch(error){
+        httpLogger.error(`[FILE] readJson: ${dir}, ${errorToJson(error)}`);
+        throw new RpcException('로그를 읽을 수 없습니다.');
+    }
+  }
   async getLogs(
     type: string,
     param: LogReadDto,

@@ -3,8 +3,8 @@ import { Entity, Column, PrimaryColumn, CreateDateColumn, PrimaryGeneratedColumn
 
 @Entity('alarmLog')
 export class AlarmLogEntity{
-    // @PrimaryGeneratedColumn('uuid')
-    // id: string;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({name:'alramCode', type: 'varchar'})
     alarmCode: string;
@@ -15,6 +15,6 @@ export class AlarmLogEntity{
     @Column({name:'emitFlag'})
     emitFlag: boolean;
 
-    @PrimaryColumn({name:'time', type: 'timestamp', default:()=>'CURRENT_TIMESTAMP'})
+    @Column({name:'time', type: 'timestamp', default:()=>'CURRENT_TIMESTAMP'})
     time: Date;
 }
