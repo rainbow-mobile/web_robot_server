@@ -16,6 +16,11 @@ import {
   GeneralScope,
   GeneralStatus,
 } from '@common/enum/equipment.enum';
+import { AlarmDto } from '@sockets/dto/alarm.dto';
+import { AlarmEntity } from 'src/modules/apis/log/entity/alarm.entity';
+import socketLogger from './socket.logger';
+
+let lastGeneralLog;
 
 function getCustomFilenameWithDate(suffix: string) {
   const now = new Date();
@@ -25,11 +30,11 @@ function getCustomFilenameWithDate(suffix: string) {
   const HH = ('0' + now.getHours()).slice(-2);
 
   let baseLogDir: string;
-  if (os.platform() === 'win32') {
-    baseLogDir = path.join('D:\\Log');
-  } else {
+  // if (os.platform() === 'win32') {
+    // baseLogDir = path.join('D:\\Log');
+  // } else {
     baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
-  }
+  // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
 }
@@ -41,11 +46,11 @@ function getCustomFilenameWithoutDate(suffix: string) {
   const DD = ('0' + now.getDate()).slice(-2);
 
   let baseLogDir: string;
-  if (os.platform() === 'win32') {
-    baseLogDir = path.join('D:\\Log');
-  } else {
+  // if (os.platform() === 'win32') {
+    // baseLogDir = path.join('D:\\Log');
+  // } else {
     baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
-  }
+  // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}_${suffix}.log`);
 }
@@ -53,6 +58,7 @@ function getCustomFilenameWithoutDate(suffix: string) {
 function writeLog(filePath: string, header: string, row: string) {
   const logDir = path.dirname(filePath);
 
+  console.log(filePath);
   deleteOldLog(logDir, 30);
 
   if (!fs.existsSync(filePath)) {
@@ -84,20 +90,22 @@ export function generateManipulatorLog(
 ) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\tZ\tRX\tRY\tRZ\tBase\tShoulder\tElbow\tWrist1\tWrist2';
-  const row = [
+  
+    const row = [
     data.dateTime,
-    data.x.toFixed(2),
-    data.y.toFixed(2),
-    data.z.toFixed(2),
-    data.rx.toFixed(2),
-    data.ry.toFixed(2),
-    data.rz.toFixed(2),
-    data.base.toFixed(2),
-    data.shoulder.toFixed(2),
-    data.elbow.toFixed(2),
-    data.wrist1.toFixed(2),
-    data.wrist2.toFixed(2),
+    data.x,
+    data.y,
+    data.z,
+    data.rx,
+    data.ry,
+    data.rz,
+    data.base,
+    data.shoulder,
+    data.elbow,
+    data.wrist1,
+    data.wrist2,
   ].join('\t');
+
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
@@ -105,9 +113,9 @@ export function generateTorsoLog(data: TorsoPositionPayload, suffix: string) {
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\tX\tZ\ttheta';
   const row = [
     data.dateTime,
-    data.x.toFixed(2),
-    data.z.toFixed(2),
-    data.theta.toFixed(2),
+    data.x,
+    data.z,
+    data.theta,
   ].join('\t');
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
@@ -142,11 +150,11 @@ export function generateAmrObstacleLog(
   const row = [
     data.dateTime,
     data.statusFront,
-    data.distanceFront.toFixed(2),
-    data.thetaFront.toFixed(2),
+    data.distanceFront,
+    data.thetaFront,
     data.statusBack,
-    data.distanceBack.toFixed(2),
-    data.thetaBack.toFixed(2),
+    data.distanceBack,
+    data.thetaBack,
   ].join('\t');
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
@@ -169,6 +177,28 @@ export function generateAmrMovingPrecisionLog(
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
+
+export function setAlarmGeneralLog(alarm: AlarmEntity, status: GeneralOperationStatus){
+  const header =
+    'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
+  const row = [
+      `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
+    global.robotSerial ?? '-',
+    GeneralLogType.MANUAL,
+    '-',
+    '-',
+    '-',
+    GeneralStatus.ERROR,
+    GeneralScope.ALARM,
+    alarm.operationName,
+    status,
+    ''
+  ].join('\t');
+
+  writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
+}
+
+
 export function generateGeneralLog(param: {
   dateTime?: string;
   machineId?: string;
@@ -178,12 +208,20 @@ export function generateGeneralLog(param: {
   productId?: string;
   status: GeneralStatus;
   scope: GeneralScope;
-  operationName: GeneralOperationName;
-  operationStatus: GeneralOperationStatus;
-  data?: any;
+  operationName: string;
+  operationStatus: string;
+  data?: string;
 }) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
+  
+  if(param.operationStatus === "END"){
+    if(!lastGeneralLog || lastGeneralLog.operationStatus !== "START" || lastGeneralLog.operationName !== param.operationName){
+      socketLogger.warn(`[LOG] generateGeneralLog : unknwon END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`)
+      return false;
+    }
+  }
+
   const row = [
     param.dateTime ??
       `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
@@ -199,5 +237,7 @@ export function generateGeneralLog(param: {
     typeof param.data === 'undefined' ? '' : param.data,
   ].join('\t');
 
+  lastGeneralLog = param;
   writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
+  return true;
 }

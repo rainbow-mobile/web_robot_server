@@ -22,6 +22,10 @@ import { FrsUrlDto } from './dto/frs.url.dto';
 import { errorToJson } from '@common/util/error.util';
 import { EmitOnOffDto } from './dto/lidar.onoff.dto';
 import { VariableDto } from '../apis/variables/dto/variables.dto';
+import { generateGeneralLog } from '@common/logger/equipment.logger';
+import { GeneralLogType, GeneralOperationName, GeneralOperationStatus, GeneralScope, GeneralStatus } from '@common/enum/equipment.enum';
+import { AlarmDto } from './dto/alarm.dto';
+import { SequenceDto } from './dto/sequence.dto';
 
 @ApiTags('소켓 관련 API (Sockets)')
 @Controller('sockets')
@@ -33,7 +37,15 @@ export class SocketsController implements OnModuleInit {
 
   onModuleInit() {
     console.log('socket init');
-    this.getVariable();
+    this.getVariable().then(()=>{
+      generateGeneralLog({
+        logType: GeneralLogType.MANUAL,
+        status: GeneralStatus.IDLE,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.PROGRAM_START,
+        operationStatus: GeneralOperationStatus.SET,
+      });
+    });
     setTimeout(() => {
       this.conSocket();
     }, 5000);
@@ -303,5 +315,28 @@ export class SocketsController implements OnModuleInit {
       );
       return res.status(error.status).send(error.data);
     }
+  }
+
+  @Post('alarm')
+  @ApiOperation({
+    summary: '알람 발생 (내부)',
+    description: '각 모듈에서 에러 알람이 발생한 경우 송신',
+  })
+  async setAlarm(@Body() data: AlarmDto){
+    return this.socketGateway.setAlarm(data);
+  }
+
+  @Post('sequence/:scope')
+  @ApiOperation({
+    summary: '시퀀스 LOG 저장',
+    description: '시퀀스 LOG 저장. scope는 manipulator, torso값만 취급 ',
+  })
+  async sequenceManipulator(@Param('scope') scope:string, @Body() data: SequenceDto){
+    return this.socketGateway.setSequence(data, scope);
+  }
+
+  @Get('alarm')
+  async getAlarms(){
+
   }
 }

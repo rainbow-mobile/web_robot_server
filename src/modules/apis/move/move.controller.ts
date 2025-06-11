@@ -15,6 +15,8 @@ import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { errorToJson } from '@common/util/error.util';
+import { generateGeneralLog } from '@common/logger/equipment.logger';
+import { GeneralLogType, GeneralOperationStatus, GeneralScope, GeneralStatus, VehicleOperationName } from '@common/enum/equipment.enum';
 
 @ApiTags('이동 관련 API (move)')
 @Controller('move')
@@ -50,7 +52,6 @@ export class MoveController {
   async moveControl(@Body() data: MoveCommandDto, @Res() res: Response) {
     try {
       httpLogger.info(`[MOVE] moveControl: ${JSON.stringify(data)}`);
-
       if (data.command == 'goal') {
         if (data.goal_id == '' || data.method == '' || data.preset == '') {
           httpLogger.warn(`[MOVE] moveControl: move Goal parameter missing`);

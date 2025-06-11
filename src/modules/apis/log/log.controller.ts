@@ -9,6 +9,7 @@ import {
   Post,
   HttpStatus,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
@@ -17,6 +18,7 @@ import { StatusTestDto } from './dto/status.dto';
 import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { errorToJson } from '@common/util/error.util';
+import { RpcException } from '@nestjs/microservices';
 
 @ApiTags('로그 관련 API (log)')
 @Controller('log')
@@ -116,33 +118,50 @@ export class LogController {
     }
   }
 
-  @Get('alarm')
+  @Get('alarmList')
   @ApiOperation({
-    summary: 'Alarm 리스트 조회'
+    summary: '정의된 알람 리스트 조회'
   })
-  async getAlarms(@Res() res: Response) {
+  async getAlarmDetails(@Res() res: Response) {
     try {
-      const response = await this.logService.getAlarms();
+      const response = await this.logService.getAlarmDetails();
       res.send(response);
     } catch (error) {
       res.status(error.status).send(error.data);
     }
   }
 
-  @Get('alarmLog')
+  @Get('alarm')
   @ApiOperation({
-    summary: 'Alarm Log 조회'
+    summary: '현재 활성화된 알람 리스트 조회'
   })
-  async getAlarmLogs(@Query() param: LogReadDto, @Res() res: Response) {
+  async getAlarms() {
     try {
-      httpLogger.debug(`[LOG] getAlarmLogs: ${JSON.stringify(param)}`);
-      const response = await this.logService.getAlarmLog(param);
-      res.send(response);
+      httpLogger.debug(`[LOG] getAlarmLogs`);
+      const response = await this.logService.getAlarms();
+      this.logService.setAlarmsFlag(response);
+      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      return result;
     } catch (error) {
       httpLogger.error(
-        `[LOG] getAlarmLogs: ${JSON.stringify(param)}, ${errorToJson(error)}`,
+        `[LOG] getAlarms: ${errorToJson(error)}`,
       );
-      res.status(error.status).send(error.data);
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+
+    }
+  }
+
+  @Delete('alarm')
+  async alarmReset(){
+    try{
+      return this.logService.resetAlarms();
+    }catch(error){
+      httpLogger.error(
+        `[LOG] alarmReset: ${errorToJson(error)}`,
+      );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
     }
   }
 
