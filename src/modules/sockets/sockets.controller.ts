@@ -320,7 +320,7 @@ export class SocketsController implements OnModuleInit {
   @Post('alarm')
   @ApiOperation({
     summary: '알람 발생 (내부)',
-    description: '각 모듈에서 에러 알람이 발생한 경우 송신',
+    description: '각 모듈에서 에러 알람이 발생한 경우 송신. 알람은 중복검사를 거친 후 DB에 저장되며 추후 polling 요청이 들어오면 리스트로써 반환됨',
   })
   async setAlarm(@Body() data: AlarmDto){
     return this.socketGateway.setAlarm(data);
@@ -335,8 +335,4 @@ export class SocketsController implements OnModuleInit {
     return this.socketGateway.setSequence(data, scope);
   }
 
-  @Get('alarm')
-  async getAlarms(){
-
-  }
 }

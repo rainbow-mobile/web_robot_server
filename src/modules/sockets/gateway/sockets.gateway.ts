@@ -1011,9 +1011,11 @@ export class SocketGateway
     //interval changed (25-05-07 for traffic test)
   }, this.intervalTime);
 
-  onModuleInit() {
-  }
 
+  onModuleInit() {
+    this.setConnectChecker();
+  }
+ 
   onModuleDestroy() {
     generateGeneralLog({
       logType: GeneralLogType.MANUAL,
@@ -1028,6 +1030,24 @@ export class SocketGateway
     clearInterval(this.interval_frs);
   }
 
+  private connectChecker:NodeJS.Timeout;
+  setConnectChecker(){
+    this.connectChecker = setTimeout(()=>{
+      if(!this.slamnav){
+        socketLogger.error(`[CHECKER] connect Checker : Slamnav not connected`);
+        this.setAlarmCode(2000);
+      }else{
+        socketLogger.debug(`[CHECKER] connect Checker : Slamnav connected`);
+      }
+
+      if(!this.acs){
+        socketLogger.error(`[CHECKER] connect Checker : acs not connected`);
+        this.setAlarmCode(2016);
+      }else{
+        socketLogger.debug(`[CHECKER] connect Checker : acs connected`);
+      }
+    },10000);
+  }
   onApplicationShutdown(signal?: string): any {  
     socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
     this.frsSocket.disconnect();
@@ -1045,9 +1065,8 @@ export class SocketGateway
       } else {
         this.slamnav = client;
         this.frsSocket?.emit('slamRegist');
-
-        //samsung
-        this.setAlarm
+        clearTimeout(this.connectChecker);
+        this.clearAlarmCode(2000);
       }
     } else if (client.handshake.query.name == 'taskman') {
       this.taskman = client;
@@ -1059,6 +1078,9 @@ export class SocketGateway
       this.manipulator = client;
     } else if (client.handshake.query.name == 'torso') {
       this.torso = client;
+    } else if (client.handshake.query.name == 'acs') {
+      this.acs = client;
+      this.clearAlarmCode(2000);
     }
     client.join(client.handshake.query.name);
   }
@@ -1092,6 +1114,7 @@ export class SocketGateway
 
           this.frsSocket?.emit('slamUnregist');
           this.slamnav = null;
+          this.setConnectChecker();
 
           this.moveState = {
             command: '',
@@ -1357,6 +1380,107 @@ export class SocketGateway
         if (isEqual(tempjson, this.lastStatus)) {
           return;
         }
+
+        //samsung
+        if(this.lastStatus?.map.map_name !== tempjson.map.map_name){
+          if(tempjson.map.map_name !== ""){
+            this.clearAlarmCode(2002);
+            this.clearAlarmCode(2003);
+            this.clearAlarmCode(2004);
+          }else{
+            this.setAlarmCode(2003);
+          }
+        }
+        if(this.lastStatus?.robot_state.localization !== tempjson.robot_state.localization){
+          if(tempjson.robot_state.localization === "good"){
+            this.clearAlarmCode(2001);
+          }else{
+            this.setAlarmCode(2001);
+          }
+        }
+        if(this.lastStatus?.robot_state.emo !== tempjson.robot_state.emo){
+          if(tempjson.robot_state.emo === "false"){
+            this.clearAlarmCode(3000);
+          }else{
+            this.setAlarmCode(3000);
+          }
+        }
+        if(this.lastStatus?.power.bat_out !== tempjson.power.bat_out){
+          if(parseFloat(tempjson.power.bat_out) < 43.4){
+              this.setAlarmCode(4000);
+              this.clearAlarmCode(4002);
+              this.clearAlarmCode(4003);
+          }else if(parseFloat(tempjson.power.bat_percent) < 5){
+              this.setAlarmCode(4003);
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4002);
+          }else if(parseFloat(tempjson.power.bat_percent) < 15){
+              this.setAlarmCode(4002);
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4003);
+          }else{
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4002);
+              this.clearAlarmCode(4003);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].current !== tempjson.motor[0].current){
+          if(parseFloat(tempjson.motor[0].current) > 20 || parseFloat(tempjson.motor[1].current) > 20){
+            this.setAlarmCode(4500);
+          }else{
+            this.clearAlarmCode(4500);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].temp !== tempjson.motor[0].temp){
+          if(parseFloat(tempjson.motor[0].temp) > 60 || parseFloat(tempjson.motor[1].temp) > 60){
+            this.setAlarmCode(4505);
+          }else{
+            this.clearAlarmCode(4505);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].status !== tempjson.motor[0].status){
+          if(tempjson.motor[0].status === "1"){
+            this.clearAlarmCode(4515);
+          }else{
+            this.setAlarmCode(4515);
+          }
+        }
+
+        if(this.lastStatus?.motor[1].status !== tempjson.motor[1].status){
+          if(tempjson.motor[1].status === "1"){
+            this.clearAlarmCode(4514);
+          }else{
+            this.setAlarmCode(4514);
+          }
+        }
+ 
+        if(this.lastStatus?.motor[0].connection !== tempjson.motor[0].connection || this.lastStatus?.motor[1].connection !== tempjson.motor[1].connection){
+          if(tempjson.motor[0].connection === "true" && tempjson.motor[1].connection === "false"){
+            this.clearAlarmCode(4517);
+          }else{
+            this.setAlarmCode(4517);
+          }
+        }
+
+        if(this.lastStatus?.lidar[0].connection !== tempjson.lidar[0].connection){
+          if(tempjson.lidar[0].connection === "1"){
+            this.clearAlarmCode(5100);
+          }else{
+            this.setAlarmCode(5100);
+          }
+        }
+
+        if(this.lastStatus?.lidar[1].connection !== tempjson.lidar[1].connection){
+          if(tempjson.lidar[1].connection === "1"){
+            this.clearAlarmCode(5101);
+          }else{
+            this.setAlarmCode(5101);
+          }
+        }
+
         this.lastStatus = tempjson;
 
         this.server.to(['status', 'all', 'allStatus']).emit('status', json);
@@ -1366,6 +1490,7 @@ export class SocketGateway
             data: json,
           });
         }
+
 
         this.robotState = { ...this.robotState, ...json };
       } else {
@@ -1459,6 +1584,42 @@ export class SocketGateway
           return;
         }
 
+        //samsung
+        if(json.result === "fail"){
+          if(json.message === "path out"){
+            this.setAlarmCode(2005);
+          }else if(json.message === "localization fail"){
+            this.setAlarmCode(2006);
+          }else if(json.message === "path not found"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "somthing wrong"){
+          }else if(json.message === "not ready"){
+            this.setAlarmCode(2019);
+          }else if(json.message === "manual stopped"){
+          }else if(json.message === "bumper crash"){
+            this.setAlarmCode(3001);
+          }else{
+
+          }
+        }else if(json.result === "reject"){
+          if(json.message === "map not loaded"){
+            this.setAlarmCode(2003);
+          }else if(json.message === "no localization"){
+            this.setAlarmCode(2020);
+          }else if(json.message === "target location out of range"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "target location occupied"){
+            this.setAlarmCode(2021);
+          }else if(json.message === "target command not supported by multi"){
+          }else if(json.message === "not supported"){
+          }else if(json.message === "can not find node"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "empty node id"){
+          }else{
+            this.setAlarmCode(2021);
+          }
+        }
+
         this.server
           .to(['moveResponse', 'all', 'move'])
           .emit('moveResponse', json);
@@ -1528,9 +1689,10 @@ export class SocketGateway
       if(scope === undefined || scope === ""){
         throw new RpcException('scope 값이 없습니다.');
       }
-      if(scope.toLowerCase() !== "manipulator" && scope.toLowerCase() !== "torso"){
+      if(!Object.values(["manipulator","torso","acs"]).includes(scope.toLowerCase())){
         throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
       }
+
       if(data.operationName === undefined || data.operationName === ""){
         throw new RpcException('operationName 값이 없습니다.');
       }
@@ -1540,46 +1702,66 @@ export class SocketGateway
       if(!Object.values(GeneralOperationStatus).includes(data.operationStatus as GeneralOperationStatus)){
         throw new RpcException('operationStatus 값이 형식과 일치하지 않습니다.');
       }
+      
 
-      /// 2) scope 설정
-      var _scope:GeneralScope;
+      /// 2) GeneralLog 저장
       if(scope.toLowerCase() == "manipulator"){
-        _scope = GeneralScope.MANIPULATOR;
-      }else if(scope.toLowerCase() == "torso"){
-        _scope = GeneralScope.TORSO;
-      }
-
-      /// 3) GeneralLog 저장
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope:_scope,
-        operationName: data.operationName,
-        operationStatus: data.operationStatus
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.MANIPULATOR,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
       })
-
+      }else if(scope.toLowerCase() == "torso"){
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.TORSO,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
+      })
+      }else if(scope.toLowerCase() === "acs"){
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.EVENT,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
+        })
+      }else{
+        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
+      }
       return;
     }catch(error){
-      socketLogger.error(`[LOG] setManipulatorSequence : ${errorToJson(error)}`)
+      socketLogger.error(`[LOG] setSequence : ${errorToJson(error)}`)
       if(error instanceof RpcException) throw error;
       throw new RpcException('서버에 에러가 발생했습니다.')
     }
   }
 
+  async setAlarmCode(alarmCode: number){
+    this.setAlarm({alarmCode:alarmCode.toString(),state:true})
+  }
+  async clearAlarmCode(alarmCode: number){
+    // this.setAlarm({alarmCode:alarmCode.toString(),state:false})
+  }
+
   async setAlarm(data: AlarmDto){
     try{
       /// 1) Get Alarm
+      const alarmDetail = await this.logService.getAlarmDetail(data.alarmCode);
+
       /// 2) Check Before Alarm (중복 방지) 
       const lastAlarm = await this.logService.getLastAlarm(data.alarmCode);
-      console.log("setAlarm : ", data, lastAlarm);
       if(lastAlarm){
         if(data.alarmCode === lastAlarm.alarmCode && data.state === lastAlarm.state){
-          socketLogger.warn(`[LOG] duplicate alarm : ${data.alarmCode}`)
+          socketLogger.warn(`[LOG] duplicate alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`)
           return;
         }
-      }else{
-        console.log("no alarm");
       }
+      socketLogger.warn(`[LOG] set alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`)
+          
 
       /// 3) Generate AlarmDto
       const alarmDto = {alarmCode:data.alarmCode, alarmDetail:data.alarmDetail, emitFlag:false, state:data.state};
@@ -1589,6 +1771,10 @@ export class SocketGateway
 
       /// 5) save log
       this.logService.setAlarm(alarmDto);
+
+      /// 6) general log
+      const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
+      setAlarmGeneralLog(alarmEntity,GeneralOperationStatus.SET);
     }catch(error){
       socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`)
       if(error instanceof RpcException) throw error;
@@ -1632,6 +1818,15 @@ export class SocketGateway
         }
 
         this.server.to(['loadResponse', 'all']).emit('loadResponse', json);
+
+        //samsung
+        if(json.result === "fail"){
+          if(json.message === "type error"){
+            this.setAlarmCode(2004);
+          }else{
+            this.setAlarmCode(2002);
+          }
+        }
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('loadResponse', {
@@ -1818,6 +2013,14 @@ export class SocketGateway
       ) {
         socketLogger.warn(`[RESPONSE] dockResponse: Command NULL`);
         return;
+      }
+
+      //samsung
+      if(json.result === "fail"){
+        this.setAlarmCode(2007);
+        // this.setAlarmCode(2215);
+      }else if(json.result === 'reject'){
+        this.setAlarmCode(2024);
       }
 
       this.server.to(['dockResponse', 'all']).emit('dockResponse', json);
@@ -2107,49 +2310,6 @@ export class SocketGateway
     })
   }
 
-  @SubscribeMessage('manipulatorResponse')
-  async handleManipulatorResponseMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
-    generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope: GeneralScope.MANIPULATOR,
-        operationName: payload.operationName,
-        operationStatus: payload.operationStatus
-    })
-  }
-
-  @SubscribeMessage('torsoResponse')
-  async handleTorsoResponseMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
-    generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope: GeneralScope.EVENT,
-        operationName: payload.operationName,
-        operationStatus: payload.operationStatus
-    })
-  }
-
-  // @SubscribeMessage('manipulatorError')
-  // async handleManipulatorErrorMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
-  //   generateGeneralLog({
-  //       logType: GeneralLogType.AUTO,
-  //       status: GeneralStatus.ERROR,
-  //       scope: GeneralScope.EVENT,
-  //       operationName: payload.operationName,
-  //       operationStatus: payload.operationStatus
-  //   })
-  // }
-
-  // @SubscribeMessage('torsoError')
-  // async handleTorsoErrorMessage(@MessageBody() payload: {operationName: string, operationStatus: string}){
-  //   generateGeneralLog({
-  //       logType: GeneralLogType.AUTO,
-  //       status: GeneralStatus.ERROR,
-  //       scope: GeneralScope.TORSO,
-  //       operationName: payload.operationName,
-  //       operationStatus: payload.operationStatus
-  //   })
-  // }
   /**
    * @description 웹 변수 초기화를 처리하는 함수
    * @param socket

@@ -4,7 +4,7 @@ import { IsBoolean, IsString, Length } from "class-validator";
 
 export class SequenceDto{
     @IsString()
-    @Length(1,5)
+    @Length(1,50)
     @ApiProperty({
         description: '시퀀스 이름',
         example: 'READY',
