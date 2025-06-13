@@ -1042,7 +1042,7 @@ export class SocketGateway
 
       if(!this.acs){
         socketLogger.error(`[CHECKER] connect Checker : acs not connected`);
-        this.setAlarmCode(2016);
+        // this.setAlarmCode(2016);
       }else{
         socketLogger.debug(`[CHECKER] connect Checker : acs connected`);
       }
