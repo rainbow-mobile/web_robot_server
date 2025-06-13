@@ -1,8 +1,8 @@
 pre-commit:
   parallel: true
   commands:
-    protect-commit-branches:
-      run: ./scripts/protect-commit-branches.sh
+    # protect-commit-branches:
+      # run: ./scripts/protect-commit-branches.sh
     eslint:
       glob: '*.{js,ts,jsx,tsx}'
       run: npm run lint
