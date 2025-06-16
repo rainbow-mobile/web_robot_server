@@ -21,6 +21,7 @@ import { errorToJson } from '@common/util/error.util';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { join } from 'path';
 import { homedir } from 'os';
+import { HttpError } from '@influxdata/influxdb3-client';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -144,6 +145,35 @@ export class MapController {
         `[MAP] saveCloud ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`,
       );
       return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('tiles/:mapNm')
+  @ApiOperation({
+    summary: '맵 타일 존재 여부 요청',
+    description: '맵 tiles 디렉토리가 있는지 여부를 요청합니다.',
+  })
+  async getTilesExist(@Param('mapNm') mapNm: string) {
+    try {
+      if (mapNm === undefined || mapNm === '') {
+        throw new HttpError(
+          HttpStatus.BAD_REQUEST,
+          'mapNm이 지정되지 않았습니다.',
+        );
+      }
+      const path = join(homedir(), 'maps', mapNm, 'tiles');
+      if (fs.existsSync(path)) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] getTilesExist : ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      throw new HttpError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '요청을 수행하던 중 서버에 에러가 발생했습니다.',
+      );
     }
   }
 
