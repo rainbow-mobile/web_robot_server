@@ -13,6 +13,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
       - uses: actions/checkout@v3
 
       - name: Get Hotfix Flag
@@ -45,6 +51,11 @@ jobs:
             echo "Error: 'dist' directory not found"
             exit 1
           fi
+      - name: Install dependencies and compress node_modules
+        run: |
+          npm install
+          zip -r node_modules.zip node_modules
+
       - name: Compress dist directory
         run: |
           TEMP_DIR="temp_release_${{ env.VERSION }}"
