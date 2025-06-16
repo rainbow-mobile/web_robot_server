@@ -125,7 +125,8 @@ jobs:
           git add .
           git commit -m "Release Branch:${{ env.BRANCH_NAME }}, Version: ${{ env.VERSION }}"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
-          git push origin ${{ env.BRANCH_NAME }}
+          git pull origin ${{ env.BRANCH_NAME }} --rebase || echo "Rebase failed, proceeding with force push"
+          git push origin ${{ env.BRANCH_NAME }} --force-with-lease
 
       - name: Delete release tag
         if: always()
