@@ -26,9 +26,11 @@ import { Response } from 'express';
 import { TaskService } from './task.service';
 import httpLogger from '@common/logger/http.logger';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
-import path from 'path';
+import path, { join } from 'path';
 import { TaskSaveDto } from './dto/task.save.dto';
 import { errorToJson } from '@common/util/error.util';
+import * as fs from 'fs';
+import { homedir } from 'os';
 
 @ApiTags('태스크 관련 API (task)')
 @Controller('task')
@@ -122,11 +124,15 @@ export class TaskController {
     try {
       httpLogger.info(`loadTask : ${mapName}, ${taskName}`);
 
-      const data = await this.taskService.loadTask(
-        os.homedir() + '/maps/' + mapName + '/' + taskName,
-      );
-
-      return res.send(data);
+      const path = join(homedir(), 'maps', mapName, taskName);
+      const path2 = join('/data/maps', mapName, taskName);
+      if (fs.existsSync(path2)) {
+        const data = await this.taskService.loadTask(path2);
+        return res.send(data);
+      }else{
+        const data = await this.taskService.loadTask(path);
+        return res.send(data);
+      }
     } catch (error) {
       httpLogger.error(
         `[TASK] loadTask: ${mapName}, ${taskName}, ${errorToJson(error)}`,
@@ -210,11 +216,15 @@ export class TaskController {
     try {
       httpLogger.info(`[TASK] readTaskList: ${mapName}`);
 
-      const tasks = await this.taskService.getTaskList(
-        os.homedir() + '/maps/' + mapName,
-      );
-
-      return res.send(tasks);
+      const path = join(homedir(), 'maps', mapName);
+      const path2 = join('/data/maps', mapName);
+      if (fs.existsSync(path2)) {
+        const data = await this.taskService.getTaskList(path2);
+        return res.send(data);
+      }else{
+        const data = await this.taskService.getTaskList(path);
+        return res.send(data);
+      }
     } catch (error) {
       httpLogger.error(
         `[TASK] readTaskList: ${mapName}, ${errorToJson(error)}`,
@@ -256,10 +266,15 @@ export class TaskController {
         taskName += '.task';
       }
 
-      const path = os.homedir() + '/maps/' + mapName + '/' + taskName;
-      const task = await this.taskService.parse(path);
-
-      return res.send(task);
+      const path = join(homedir(), 'maps', mapName, taskName);
+      const path2 = join('/data/maps', mapName, taskName);
+      if (fs.existsSync(path2)) {
+        const data = await this.taskService.parse(path2);
+        return res.send(data);
+      }else{
+        const data = await this.taskService.parse(path);
+        return res.send(data);
+      }
     } catch (error) {
       httpLogger.error(`[TASK] readTask: ${mapName}, ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
@@ -300,12 +315,15 @@ export class TaskController {
         taskName += '.task';
       }
 
-      const task = await this.taskService.save(
-        os.homedir() + '/maps/' + mapName + '/' + taskName,
-        data.data,
-      );
-
-      return res.send(task);
+      const path = join(homedir(), 'maps', mapName, taskName);
+      const path2 = join('/data/maps', mapName, taskName);
+      if (fs.existsSync(path2)) {
+        const task = await this.taskService.save(path2, data.data);
+        return res.send(task);
+      }else{
+        const task = await this.taskService.save(path, data.data);
+        return res.send(task);
+      }
     } catch (error) {
       httpLogger.error(
         `[TASK] saveTask: ${mapName}, ${taskName}, ${errorToJson(error)}`,
