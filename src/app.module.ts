@@ -23,6 +23,8 @@ import { UpdateModule } from './modules/apis/update/update.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.development' : '.env',
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -55,11 +57,11 @@ import { UpdateModule } from './modules/apis/update/update.module';
     LogModule,
     UploadModule,
     SoundModule,
+    UpdateModule,
     // MotionModule,
     ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
       ? [OnvifDeviceModule]
       : []),
-    UpdateModule,
   ],
   providers: [],
   controllers: [],
