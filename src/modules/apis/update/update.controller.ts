@@ -1,29 +1,38 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { UpdateService } from './update.service';
-import { ReqUpdateSoftwareDto } from './dto/update.dto';
+import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { GetNewVersionDto } from './dto/update.get.dto';
 
+@ApiTags('업데이트 관련 API (update)')
 @Controller('update')
 export class UpdateController {
   constructor(private readonly updateService: UpdateService) {}
 
   @Post()
+  @ApiOperation({
+    summary: '소프트웨어 업데이트',
+    description: '소프트웨어 업데이트를 요청합니다.',
+  })
   updateSoftware(@Body() reqUpdateSoftwareDto: ReqUpdateSoftwareDto) {
     return this.updateService.updateSoftware(reqUpdateSoftwareDto);
   }
 
   @Get(':software/get-new-version')
+  @ApiOperation({
+    summary: '소프트웨어 새로운 버전 조회',
+    description:
+      '소프트웨어 새로운 버전을 조회합니다. 위부망 접속이 안될 환경시 400 에러가 발생합니다.',
+  })
+  @ApiQuery({
+    name: 'software',
+    required: true,
+    description: '소프트웨어 종류 (예: rrs, slamnav2)',
+    example: 'slamnav2',
+  })
   getNewVersion(
     @Param('software') software: string,
-    @Query('branch') branch: string = 'main',
+    @Query() { branch = 'main' }: GetNewVersionDto,
   ) {
     return this.updateService.getNewVersion({
       software,
@@ -32,17 +41,17 @@ export class UpdateController {
   }
 
   @Get(':software/get-current-version')
-  getCurrentVersion(@Param('software') software: string) {
+  @ApiOperation({
+    summary: '소프트웨어 현재 버전 조회',
+    description: '소프트웨어 현재 버전을 조회합니다.',
+  })
+  @ApiQuery({
+    name: 'software',
+    required: true,
+    description: '소프트웨어 종류 (예: rrs, slamnav2)',
+    example: 'slamnav2',
+  })
+  getCurrentVersion(@Param() software: string) {
     return this.updateService.getCurrentVersion(software);
-  }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateUpdateDto: UpdateUpdateDto) {
-  //   return this.updateService.update(+id, updateUpdateDto);
-  // }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.updateService.remove(+id);
   }
 }

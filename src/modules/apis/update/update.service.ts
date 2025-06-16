@@ -1,9 +1,18 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { ReqUpdateSoftwareDto } from './dto/update.dto';
+import {
+  BadRequestException,
+  GatewayTimeoutException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
 import * as path from 'path';
 import { homedir } from 'os';
 import * as fs from 'fs';
-import { SOFTWARE_DIR, RELEASE_REPO_URL } from './constants/software.c';
+import {
+  SOFTWARE_DIR,
+  RELEASE_REPO_RAW_URL,
+  RELEASE_REPO_URL,
+} from './constants/software.c';
 import { execSync } from 'child_process';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import httpLogger from '@common/logger/http.logger';
@@ -12,12 +21,41 @@ import httpLogger from '@common/logger/http.logger';
 export class UpdateService {
   constructor(private readonly socketGateway: SocketGateway) {}
 
+  /**
+   * 리포지토리 접근 확인 (외부망 접근 및 통신 확인)
+   * @returns 리포지토리 접근 여부
+   */
+  async checkRepositoryAccess() {
+    try {
+      const response = await fetch(RELEASE_REPO_URL);
+      if (!response.ok) {
+        throw new BadRequestException('Repository access failed');
+      }
+      return response.ok;
+    } catch (_error) {
+      throw new BadRequestException('Repository access failed');
+    }
+  }
+
+  /**
+   * 소프트웨어 업데이트
+   * @param software 소프트웨어 이름
+   * @param branch 브랜치 이름
+   * @returns 업데이트 요청 결과
+   */
   updateSoftware({ software, branch }: ReqUpdateSoftwareDto) {
     if (software === 'rrs') {
       return this.rrsUpdate(branch);
     }
+
+    return this.otherSwUpdate({ branch });
   }
 
+  /**
+   * rrs 업데이트
+   * @param branch 브랜치 이름
+   * @returns 업데이트 요청 결과
+   */
   rrsUpdate(branch: string) {
     const updateScript = path.join(
       homedir(),
@@ -26,12 +64,9 @@ export class UpdateService {
     );
 
     if (!fs.existsSync(updateScript)) {
-      throw {
-        status: 404,
-        data: {
-          message: 'rrs-update.sh 파일을 찾을 수 없습니다.',
-        },
-      };
+      throw new NotFoundException({
+        message: `~/rainbow-deploy-kit/${SOFTWARE_DIR['rrs']}/rrs-update.sh 파일을 찾을 수 없습니다.`,
+      });
     }
 
     execSync(`bash ${updateScript} ${branch}`);
@@ -44,35 +79,39 @@ export class UpdateService {
     };
   }
 
+  /**
+   * 기타 소프트웨어 업데이트
+   * @param data 업데이트 요청 데이터
+   * @returns 업데이트 요청 결과
+   */
   otherSwUpdate(data: { branch: string }) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
         this.socketGateway.server.to('slamnav').emit('software_update', data);
         httpLogger.info(`[UPDATE] software_update: ${JSON.stringify(data)}`);
 
-        this.socketGateway.slamnav.once('software_update_response', (data2) => {
+        this.socketGateway.slamnav.once('software_update_response', (res) => {
           httpLogger.info(
-            `[UPDATE] software_update Response: ${JSON.stringify(data2)}`,
+            `[UPDATE] software_update Response: ${JSON.stringify(res)}`,
           );
-          resolve(data2);
+          resolve(res);
           clearTimeout(timeoutId);
         });
 
         const timeoutId = setTimeout(() => {
-          reject({
-            status: HttpStatus.GATEWAY_TIMEOUT,
-            data: { message: '프로그램이 응답하지 않습니다' },
-          });
+          reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
         }, 5000); // 5초 타임아웃
       } else {
-        reject({
-          status: HttpStatus.GATEWAY_TIMEOUT,
-          data: { message: '프로그램이 연결되지 않았습니다' },
-        });
+        reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
       }
     });
   }
 
+  /**
+   * 소프트웨어 현재 버전 조회
+   * @param software 소프트웨어 이름
+   * @returns 현재 버전 정보를 담은 version.json 파일 내용
+   */
   async getCurrentVersion(software: string) {
     const softwareDir = SOFTWARE_DIR[software];
 
@@ -81,15 +120,18 @@ export class UpdateService {
       const versionData = await fs.promises.readFile(versionPath, 'utf-8');
       return JSON.parse(versionData);
     } catch (_error) {
-      throw {
-        status: 404,
-        data: {
-          message: `[${software}] version.json 파일을 찾을 수 없습니다.`,
-        },
-      };
+      throw new NotFoundException({
+        message: `[${software}] version.json 파일을 찾을 수 없습니다.`,
+      });
     }
   }
 
+  /**
+   * 소프트웨어 새로운 버전 조회
+   * @param software 소프트웨어 이름
+   * @param branch 브랜치 이름
+   * @returns 새로운 버전 정보를 담은 version.json 파일 내용
+   */
   async getNewVersion({
     software,
     branch,
@@ -97,31 +139,18 @@ export class UpdateService {
     software: string;
     branch: string;
   }) {
+    await this.checkRepositoryAccess();
+
     const softwareDir = SOFTWARE_DIR[software];
-    const newVersionUrl = `${RELEASE_REPO_URL}/${branch}/${softwareDir}/version.json`;
+    const newVersionUrl = `${RELEASE_REPO_RAW_URL}/${branch}/${softwareDir}/version.json`;
 
     try {
       const newVersionData = await fetch(newVersionUrl);
       return newVersionData.json();
     } catch (_error) {
-      throw {
-        status: 404,
-        data: {
-          message: `[${software}] ${branch} 브랜치의 version.json 파일을 찾을 수 없습니다.`,
-        },
-      };
+      throw new NotFoundException({
+        message: `[${software}] ${branch} 브랜치의 version.json 파일을 찾을 수 없습니다.`,
+      });
     }
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} update`;
-  }
-
-  update() {
-    return `This action updates  update`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} update`;
   }
 }
