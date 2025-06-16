@@ -18,6 +18,7 @@ import { SoundModule } from './modules/apis/sound/sound.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
+import { UpdateModule } from './modules/apis/update/update.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +59,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
       ? [OnvifDeviceModule]
       : []),
+    UpdateModule,
   ],
   providers: [],
   controllers: [],
