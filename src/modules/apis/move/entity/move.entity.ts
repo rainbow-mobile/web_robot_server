@@ -1,21 +1,27 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('move')
 export class MoveLogEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({name: 'command'})
+  @Column({ name: 'command' })
   command: string;
 
-  @Column({name: 'goal_id'})
+  @Column({ name: 'goal_id' })
   goal_id: string;
 
-  @Column({name: 'x'})
+  @Column({ name: 'x', type:'float' })
   x: number;
-  @Column({name: 'y'})
+  @Column({ name: 'y', type:'float' })
   y: number;
-  @Column({name: 'rz'})
+  @Column({ name: 'rz', type:'float' })
   rz: number;
 
   @Column({
@@ -24,5 +30,4 @@ export class MoveLogEntity {
     default: () => 'CURRENT_TIMESTAMP',
   })
   time: Date;
-    
 }
