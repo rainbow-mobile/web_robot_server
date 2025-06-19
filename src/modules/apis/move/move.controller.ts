@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   Inject,
+  Param,
   Post,
   Res,
 } from '@nestjs/common';
@@ -201,14 +202,14 @@ export class MoveController {
     }
   }
 
-  @Get('log')
+  @Get('log/:num')
   @ApiOperation({
     summary: '이동 명령 이력 조회',
     description: '이동 명령 이력을 조회합니다. ',
   })
-  async moveLog() {
+  async moveLog(@Param('num') num:number) {
     try {
-      return this.moveService.getMoveLog();
+      return this.moveService.getMoveLog(num);
     } catch (error) {
       httpLogger.error(`[MOVE] moveLog: ${errorToJson(error)}`);
       if (error instanceof HttpError) throw error;
@@ -219,14 +220,14 @@ export class MoveController {
     }
   }
 
-  @Get('log/goal')
+  @Get('log/goal/:num')
   @ApiOperation({
     summary: 'Goal 이동 명령 이력 조회',
     description: 'Goal 이동 명령 이력을 조회합니다. ',
   })
-  async moveGoalLog() {
+  async moveGoalLog(@Param('num') num:number) {
     try {
-      return this.moveService.getMoveLog('goal');
+      return this.moveService.getMoveLog(num,'goal');
     } catch (error) {
       httpLogger.error(`[MOVE] moveGoalLog: ${errorToJson(error)}`);
       if (error instanceof HttpError) throw error;
