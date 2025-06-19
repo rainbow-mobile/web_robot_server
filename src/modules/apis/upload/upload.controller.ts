@@ -23,7 +23,6 @@ import { uploadMiddleware } from '@middleware/upload.middleware';
 import { errorToJson } from '@common/util/error.util';
 import { join } from 'path';
 
-
 @ApiTags('파일 전송 관련 API (Upload)')
 @Controller('upload')
 export class UploadController {
@@ -34,12 +33,12 @@ export class UploadController {
     const path = join(homedir(), 'maps', data.mapNm);
     const path2 = join('/data/maps', data.mapNm);
     const zipFileName = `${data.name}.zip`;
-    var originalFilePath;
-    var zipFilePath;
+    let originalFilePath;
+    let zipFilePath;
     if (fs.existsSync(path2)) {
       originalFilePath = path2;
       zipFilePath = join(path2, zipFileName);
-    }else{
+    } else {
       originalFilePath = path;
       zipFilePath = join(path, zipFileName);
     }
@@ -127,18 +126,14 @@ export class PublishController {
 
       try {
         httpLogger.info(`[UPLOAD] PublishMap: Download Done`);
-        const zipFilePath = join(
-          homedir(),
-          'upload',
-          req.file.originalname,
-        );
+        const zipFilePath = join(homedir(), 'upload', req.file.originalname);
 
         const path = join(homedir(), 'maps', mapNm);
         const path2 = join('/data/maps', mapNm);
-        var extractToPath;
-        if(fs.existsSync(path2)){
+        let extractToPath;
+        if (fs.existsSync(path2)) {
           extractToPath = path2;
-        }else{
+        } else {
           extractToPath = path;
         }
         httpLogger.info(

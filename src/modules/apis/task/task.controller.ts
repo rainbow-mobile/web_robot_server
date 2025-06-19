@@ -129,7 +129,7 @@ export class TaskController {
       if (fs.existsSync(path2)) {
         const data = await this.taskService.loadTask(path2);
         return res.send(data);
-      }else{
+      } else {
         const data = await this.taskService.loadTask(path);
         return res.send(data);
       }
@@ -221,7 +221,7 @@ export class TaskController {
       if (fs.existsSync(path2)) {
         const data = await this.taskService.getTaskList(path2);
         return res.send(data);
-      }else{
+      } else {
         const data = await this.taskService.getTaskList(path);
         return res.send(data);
       }
@@ -271,7 +271,7 @@ export class TaskController {
       if (fs.existsSync(path2)) {
         const data = await this.taskService.parse(path2);
         return res.send(data);
-      }else{
+      } else {
         const data = await this.taskService.parse(path);
         return res.send(data);
       }
@@ -320,7 +320,7 @@ export class TaskController {
       if (fs.existsSync(path2)) {
         const task = await this.taskService.save(path2, data.data);
         return res.send(task);
-      }else{
+      } else {
         const task = await this.taskService.save(path, data.data);
         return res.send(task);
       }

@@ -165,7 +165,7 @@ export class MapController {
       const path2 = join('/data/maps', mapNm, 'tiles');
       if (fs.existsSync(path)) {
         return true;
-      }else if(fs.existsSync(path2)){
+      } else if (fs.existsSync(path2)) {
         return true;
       }
       return false;
@@ -224,7 +224,7 @@ export class MapController {
         });
 
         stream.pipe(res);
-      } else if(fs.existsSync(path2)) {
+      } else if (fs.existsSync(path2)) {
         const stream = fs.createReadStream(path2);
 
         res.set({

@@ -32,8 +32,8 @@ async function bootstrap() {
   app.use(xmlParser());
   // HTTPS를 위한 SSL 인증서
   // const httpsOptions = {
-  //   key: fs.readFileSync(os.homedir() + '/key.pem'),
-  //   cert: fs.readFileSync(os.homedir() + '/cert.pem'),
+  //   key: fs.readFileSync('/data/key.pem'),
+  //   cert: fs.readFileSync('/data/cert.pem'),
   // };
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.useGlobalPipes(

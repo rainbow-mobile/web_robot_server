@@ -15,6 +15,7 @@ import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { errorToJson } from '@common/util/error.util';
+import { HttpError } from '@influxdata/influxdb3-client';
 
 @ApiTags('이동 관련 API (move)')
 @Controller('move')
@@ -197,6 +198,36 @@ export class MoveController {
     } catch (error) {
       httpLogger.error(`[MOVE] moveResume: ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('log')
+  @ApiOperation({
+    summary: '이동 명령 이력 조회',
+    description: '이동 명령 이력을 조회합니다. ',
+  })
+  async moveLog(){
+    try{
+      return this.moveService.getMoveLog();
+    }catch(error){
+      httpLogger.error(`[MOVE] moveLog: ${errorToJson(error)}`);
+      if(error instanceof HttpError) throw error;
+      throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR,'에러가 발생했습니다.');
+    }
+  }
+
+  @Get('log/goal')
+  @ApiOperation({
+    summary: 'Goal 이동 명령 이력 조회',
+    description: 'Goal 이동 명령 이력을 조회합니다. ',
+  })
+  async moveGoalLog(){
+    try{
+      return this.moveService.getMoveLog('goal');
+    }catch(error){
+      httpLogger.error(`[MOVE] moveGoalLog: ${errorToJson(error)}`);
+      if(error instanceof HttpError) throw error;
+      throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR,'에러가 발생했습니다.');
     }
   }
 }

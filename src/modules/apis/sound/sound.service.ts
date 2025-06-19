@@ -15,7 +15,7 @@ export class SoundService {
   async play(body) {
     return new Promise(async (resolve, reject) => {
       try {
-        const path = os.homedir() + '/sounds/' + body.fileNm;
+        const path = '/data/audio/' + body.fileNm;
         httpLogger.info(`[SOUND] Play: ${path}`);
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(
@@ -59,7 +59,7 @@ export class SoundService {
   async playLoop(body) {
     return new Promise(async (resolve, reject) => {
       try {
-        const path = os.homedir() + '/sounds/' + body.fileNm;
+        const path = '/data/audio/' + body.fileNm;
         httpLogger.info(`[SOUND] Play: ${path}`);
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(

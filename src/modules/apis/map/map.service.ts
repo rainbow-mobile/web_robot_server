@@ -12,13 +12,13 @@ import { errorToJson } from '@common/util/error.util';
 @Injectable()
 export class MapService {
   constructor(private readonly socketGateway: SocketGateway) {
-    if(fs.existsSync('/data/maps')){
+    if (fs.existsSync('/data/maps')) {
       ///data/maps로 변경
-      this.mapDir = '/data/maps'
-    }else{
+      this.mapDir = '/data/maps';
+    } else {
       //homedir/maps 유지
     }
-    
+
     console.log(this.mapDir);
   }
 
