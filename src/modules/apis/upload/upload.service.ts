@@ -36,14 +36,14 @@ export class UploadService {
 
         const path = join(homedir(), 'maps');
         const path2 = join('/data/maps');
-        var pathDir;
-        if(fs.existsSync(path2)){
+        let pathDir;
+        if (fs.existsSync(path2)) {
           pathDir = path2;
-        }else{
+        } else {
           pathDir = path;
         }
 
-        const fileStream = fs.createWriteStream(join(pathDir,fileName));
+        const fileStream = fs.createWriteStream(join(pathDir, fileName));
         response.data.pipe(fileStream);
 
         fileStream.on('finish', async () => {

@@ -35,7 +35,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
         password: process.env.DB_PASSWORD || 'rainbow',
         database: process.env.DB_DATABASE || 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        // synchronize: false,
+        synchronize: false,
         logging: false,
       }),
     }),
