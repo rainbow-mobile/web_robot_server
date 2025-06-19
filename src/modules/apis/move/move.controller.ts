@@ -206,13 +206,16 @@ export class MoveController {
     summary: '이동 명령 이력 조회',
     description: '이동 명령 이력을 조회합니다. ',
   })
-  async moveLog(){
-    try{
+  async moveLog() {
+    try {
       return this.moveService.getMoveLog();
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[MOVE] moveLog: ${errorToJson(error)}`);
-      if(error instanceof HttpError) throw error;
-      throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR,'에러가 발생했습니다.');
+      if (error instanceof HttpError) throw error;
+      throw new HttpError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '에러가 발생했습니다.',
+      );
     }
   }
 
@@ -221,13 +224,16 @@ export class MoveController {
     summary: 'Goal 이동 명령 이력 조회',
     description: 'Goal 이동 명령 이력을 조회합니다. ',
   })
-  async moveGoalLog(){
-    try{
+  async moveGoalLog() {
+    try {
       return this.moveService.getMoveLog('goal');
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[MOVE] moveGoalLog: ${errorToJson(error)}`);
-      if(error instanceof HttpError) throw error;
-      throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR,'에러가 발생했습니다.');
+      if (error instanceof HttpError) throw error;
+      throw new HttpError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '에러가 발생했습니다.',
+      );
     }
   }
 }
