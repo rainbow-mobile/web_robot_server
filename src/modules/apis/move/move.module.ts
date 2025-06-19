@@ -6,12 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MoveLogEntity } from './entity/move.entity';
 
 @Module({
-  imports: [
-    SocketsModule,
-    TypeOrmModule.forFeature([
-      MoveLogEntity,
-    ]),
-  ],
+  imports: [SocketsModule, TypeOrmModule.forFeature([MoveLogEntity])],
   providers: [MoveService],
   controllers: [MoveController],
 })
