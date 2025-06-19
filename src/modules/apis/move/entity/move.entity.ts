@@ -17,11 +17,11 @@ export class MoveLogEntity {
   @Column({ name: 'goal_id' })
   goal_id: string;
 
-  @Column({ name: 'x', type:'float' })
+  @Column({ name: 'x', type: 'float' })
   x: number;
-  @Column({ name: 'y', type:'float' })
+  @Column({ name: 'y', type: 'float' })
   y: number;
-  @Column({ name: 'rz', type:'float' })
+  @Column({ name: 'rz', type: 'float' })
   rz: number;
 
   @Column({

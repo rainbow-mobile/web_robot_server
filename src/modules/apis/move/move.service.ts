@@ -1,6 +1,6 @@
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { MoveLogEntity } from './entity/move.entity';
@@ -16,12 +16,20 @@ export class MoveService {
     private readonly socketGateway: SocketGateway,
   ) {}
 
-  async getMoveLog(command?: string) {
+  async getMoveLog(num:number, command?: string) {
     try {
-      return await this.moveRepository.find({ 
-        where: { command },
-        order: {time:'ASC'} 
-      });
+      if(num===0){
+        return await this.moveRepository.find({
+          where: { command },
+          order: { time: 'DESC' }
+        });
+      }else{
+        return await this.moveRepository.find({
+          where: { command },
+          order: { time: 'DESC' },
+          take: num
+        });
+      }
     } catch (error) {
       if (error instanceof HttpError) throw error;
       socketLogger.error(`[MOVE] getMoveLog : ${errorToJson(error)}`);
@@ -35,21 +43,34 @@ export class MoveService {
     y?: number;
     rz?: number;
   }) {
-    if(data.command === 'stop' || data.command === 'goal' || data.command === 'target' || data.command === 'pause' || data.command === 'resume'){
+    if (
+      data.command === 'stop' ||
+      data.command === 'goal' ||
+      data.command === 'target' ||
+      data.command === 'pause' ||
+      data.command === 'resume'
+    ) {
       //save Log--------------------------------
-      const count = await this.moveRepository.count();
-      console.log('count : ', count);
+      this.moveRepository.save(data);
+
+      //일주일 지난 기록 삭제
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      await this.moveRepository.delete({
+        time: LessThan(oneWeekAgo),
+      });
 
       // 30개 초과 시 가장 오래된 거 삭제
-      if (count >= 30) {
-        const oldest = await this.moveRepository.find({
-          order: { time: 'ASC' }, // createdAt이 있다면
-          take: count - 29,
-        });
-        await this.moveRepository.remove(oldest);
-      }
+      // const count = await this.moveRepository.count();
+      // console.log('count : ', count);
+      // if (count >= 30) {
+      //   const oldest = await this.moveRepository.find({
+      //     order: { time: 'ASC' }, // createdAt이 있다면
+      //     take: count - 29,
+      //   });
+      //   await this.moveRepository.remove(oldest);
+      // }
 
-      this.moveRepository.save(data);
 
       //save Log--------------------------------
     }
