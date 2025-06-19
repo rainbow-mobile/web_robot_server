@@ -75,4 +75,4 @@ export const create_move = `CREATE TABLE move(
 	y float,
 	rz float,
 	time datetime(3) not null default now(3)
-);`; 
+);`;
