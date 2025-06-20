@@ -169,7 +169,7 @@ else
 fi
 
 # 릴리즈 메시지 생성
-release_message="[RRS] Branch: ${current_branch}, Version: ${new_version}] release 배포"
+release_message="Release App: RRS, Branch: ${current_branch}, Version: ${new_version}] release 배포"
 
 # Git 작업 실행
 git_tag_work "$current_branch" "$new_version" "$tag_version" "$release_message" || last_git_work_status="bad"
