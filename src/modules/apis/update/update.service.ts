@@ -87,10 +87,10 @@ export class UpdateService {
   otherSwUpdate(data: { branch: string }) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('software_update', data);
-        httpLogger.info(`[UPDATE] software_update: ${JSON.stringify(data)}`);
+        this.socketGateway.server.to('slamnav').emit('swUpdate', data);
+        httpLogger.info(`[UPDATE] swUpdate: ${JSON.stringify(data)}`);
 
-        this.socketGateway.slamnav.once('software_update_response', (res) => {
+        this.socketGateway.slamnav.once('swUpdateResponse', (res) => {
           httpLogger.info(
             `[UPDATE] software_update Response: ${JSON.stringify(res)}`,
           );
@@ -113,17 +113,47 @@ export class UpdateService {
    * @returns 현재 버전 정보를 담은 version.json 파일 내용
    */
   async getCurrentVersion(software: string) {
-    const softwareDir = SOFTWARE_DIR[software];
+    if (software === 'rrs') {
+      return this.getRrsCurrentVersion();
+    }
 
+    return this.getOtherSwCurrentVersion({ software });
+  }
+
+  async getRrsCurrentVersion() {
     try {
-      const versionPath = path.join(homedir(), softwareDir, 'version.json');
+      const rrsDir = path.join(homedir(), SOFTWARE_DIR['rrs']);
+      const versionPath = path.join(rrsDir, 'version.json');
       const versionData = await fs.promises.readFile(versionPath, 'utf-8');
       return JSON.parse(versionData);
     } catch (_error) {
       throw new NotFoundException({
-        message: `[${software}] version.json 파일을 찾을 수 없습니다.`,
+        message: `[rrs] version.json 파일을 찾을 수 없습니다.`,
       });
     }
+  }
+
+  async getOtherSwCurrentVersion(data: { software?: string } = {}) {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        this.socketGateway.server.to('slamnav').emit('swVersionInfo', data);
+        httpLogger.info(`[UPDATE] swVersionInfo: ${JSON.stringify(data)}`);
+
+        this.socketGateway.slamnav.once('swVersionInfoResponse', (res) => {
+          httpLogger.info(
+            `[UPDATE] swVersionInfo Response: ${JSON.stringify(res)}`,
+          );
+          resolve(res);
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
+        }, 5000); // 5초 타임아웃
+      } else {
+        reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
+      }
+    });
   }
 
   /**
