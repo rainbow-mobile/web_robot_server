@@ -221,7 +221,7 @@ export function generateGeneralLog(param: {
       return false;
     }
   }
-  socketLogger.debug(`[LOG] generateGeneralLog : unknwon END (${param.operationName}, ${param.operationStatus})`)
+  socketLogger.debug(`[LOG] generateGeneralLog : ${param.operationName}, ${param.operationStatus}`)
       
   const row = [
     param.dateTime ??

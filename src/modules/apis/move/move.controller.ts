@@ -96,7 +96,14 @@ export class MoveController {
       const newData = { ...data, time: Date.now().toString() };
       httpLogger.debug(`[MOVE] moveControl: ${JSON.stringify(newData)}`);
 
-      if (data.command != 'jog') {
+      if (data.command != 'jog') { 
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.VEHICLE,
+          operationName: VehicleOperationName.READY,
+          operationStatus: GeneralOperationStatus.START,
+        });
         const response = await this.moveService.moveCommand(newData);
         httpLogger.debug(
           `[MOVE] moveControl Response: ${JSON.stringify(response)}`,
