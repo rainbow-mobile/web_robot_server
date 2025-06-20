@@ -24,12 +24,6 @@ export class UpdateController {
     description:
       '소프트웨어 새로운 버전을 조회합니다. 위부망 접속이 안될 환경시 400 에러가 발생합니다.',
   })
-  @ApiQuery({
-    name: 'software',
-    required: true,
-    description: '소프트웨어 종류 (예: rrs, slamnav2)',
-    example: 'slamnav2',
-  })
   getNewVersion(
     @Param('software') software: string,
     @Query() { branch = 'main' }: GetNewVersionDto,
@@ -45,13 +39,7 @@ export class UpdateController {
     summary: '소프트웨어 현재 버전 조회',
     description: '소프트웨어 현재 버전을 조회합니다.',
   })
-  @ApiQuery({
-    name: 'software',
-    required: true,
-    description: '소프트웨어 종류 (예: rrs, slamnav2)',
-    example: 'slamnav2',
-  })
-  getCurrentVersion(@Param() software: string) {
+  getCurrentVersion(@Param('software') software: string) {
     return this.updateService.getCurrentVersion(software);
   }
 }
