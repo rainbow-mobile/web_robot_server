@@ -1,0 +1,1222 @@
+<?xml version="1.0"?>
+<robot name="RBBiped-SizeL" floating_base="true">
+    <!-- FOR MUJOCO -->
+    <mujoco>
+        <compiler meshdir="./meshes" balanceinertia="true" discardvisual="false"/>
+    </mujoco>
+
+    <!-- MATERIALS -->
+
+    <material name="dark_gray">
+        <color rgba="0.1 0.1 0.1 1"/>
+        <metallic value="0.8"/>
+        <roughness value="0.8"/>
+    </material>
+
+    <material name="gray">
+        <color rgba="0.3 0.3 0.3 1"/>
+        <metallic value="0.8"/>
+        <roughness value="0.8"/>
+    </material>
+
+    <!-- LINKS -->
+
+    <link name="BASE">
+        <inertial>
+            <origin xyz="0.00044 0.0 0.019198"/>
+            <mass value="5.682"/>
+            <inertia ixx="0.027468" ixy="-0.000001" ixz="-0.000094"
+            iyx="-0.000001" iyy="0.020385" iyz="-0.000003"
+            izx="-0.000094" izy="-0.000003" izz="0.015269"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Waist.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <transform>
+            <imu xyz="0 0 0.0635"/>
+        </transform>
+        <sylindrical_model>
+            <radius value="0.0"/>
+            <maxHeight value="0.0"/>
+            <minHeight value="-0.0"/>
+            <principalAxis value="0 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG0" group="RLEG">
+        <inertial>
+            <origin xyz="0.006470 0.002071 0.000525"/>
+            <mass value="3.4086"/>
+            <inertia ixx="0.007840" ixy="-0.000043" ixz="-0.000008" iyx="-0.000043" iyy="0.005399" iyz="0.000057" izx="-0.000008" izy="0.000057" izz="0.005556"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Pelvis_R.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0921088457"/>
+            <maxHeight value="0.0452499986"/>
+            <minHeight value="-0.0452499986"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG1" group="RLEG">
+        <inertial>
+            <origin xyz="0.004126 0.000000 -0.050168"/>
+            <mass value="0.8262"/>
+            <inertia ixx="0.002837" ixy="0.0" ixz="0.000229" iyy="0.003269" iyz="0.0201" izx="0.000229" izz="0.002076"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Hip_R.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0798325688"/>
+            <maxHeight value="0.0604999997"/>
+            <minHeight value="-0.114500001"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG2" group="RLEG">
+        <inertial>
+            <origin xyz="0.000055 0.004523 0.035631"/>
+            <mass value="4.8748"/>
+            <inertia ixx="0.019779" ixy="-0.000003" ixz="0.000003" iyy="0.022006" iyz="-0.000778" izy="-0.000778" izz="0.007160"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Thigh_R.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0795691535"/>
+            <maxHeight value="0.145500004"/>
+            <minHeight value="-0.0649653003"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG3" group="RLEG">
+        <inertial>
+            <origin xyz="0.006175 0.001124 -0.206697"/>
+            <mass value="5.3512"/>
+            <inertia ixx="0.049747" ixy="-0.000007" ixz="-0.001378" iyx="-0.000007" iyy="0.047792" iyz="0.001258" izx="-0.001378" izy="0.001258" izz="0.006670"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Calf_R.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0794338733"/>
+            <maxHeight value="0.0597621985"/>
+            <minHeight value="-0.469000012"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG4" group="RLEG">
+        <inertial>
+            <origin xyz="0.0 0.0 -0.007519"/>
+            <mass value="0.2873"/>
+            <inertia ixx="0.000072" ixy="0.0" ixz="0.0" iyx="0.0" iyy="0.000130" iyz="0.0" izx="-0.0" izy="0.0" izz="0.000156"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Ankle_R.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0318100378"/>
+            <maxHeight value="0.0419999994"/>
+            <minHeight value="-0.0419999994"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RLEG5" group="RLEG">
+        <inertial>
+            <origin xyz="0.031015 0.000000 -0.047807"/>
+            <mass value="1.0767"/>
+            <inertia ixx="0.001359" ixy="0.0" ixz="-0.000189" iyx="0.0" iyy="0.004596" iyz="0.0" izx="-0.000189" izy="-0.0" izz="0.004767"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Foot_R_S.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0960764885"/>
+            <maxHeight value="0.154499993"/>
+            <minHeight value="-0.0855000019"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG0" group="LLEG">
+        <inertial>
+            <origin xyz="0.006470 -0.002056 0.000581"/>
+            <mass value="3.4086"/>
+            <inertia ixx="0.007840" ixy="0.000041" ixz="-0.000015" iyx="0.000041" iyy="0.005389" iyz="-0.000040" izx="-0.000015" izy="-0.000040" izz="0.005565"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Pelvis_L.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.092108801"/>
+            <maxHeight value="0.0452499986"/>
+            <minHeight value="-0.0452499986"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG1" group="LLEG">
+        <inertial>
+            <origin xyz="0.004126 0.000000 -0.050168"/>
+            <mass value="0.8262"/>
+            <inertia ixx="0.002837" ixy="0.0" ixz="-0.000229" iyx="0.0" iyy="0.003269" iyz="-0.0" izx="-0.000229" izy="-0.0" izz="0.002076"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Hip_L.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0798325688"/>
+            <maxHeight value="0.0604999997"/>
+            <minHeight value="-0.114500001"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG2" group="LLEG">
+        <inertial>
+            <origin xyz="-0.000055 -0.004523 0.035631"/>
+            <mass value="4.8748"/>
+            <inertia ixx="0.019779" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.022006" iyz="0.000778" izx="-0.000003" izy="0.000778" izz="0.007160"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Thigh_L.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0795691535"/>
+            <maxHeight value="0.145500004"/>
+            <minHeight value="-0.0706081986"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG3" group="LLEG">
+        <inertial>
+            <origin xyz="0.006175 -0.000909 -0.206697"/>
+            <mass value="5.3512"/>
+            <inertia ixx="0.049747" ixy="0.000060" ixz="-0.001378" iyx="0.000060" iyy="0.047792" iyz="-0.001079" izx="-0.001378" izy="-0.001079" izz="0.006672"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Calf_L.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0794338733"/>
+            <maxHeight value="0.0597621985"/>
+            <minHeight value="-0.469000012"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG4" group="LLEG">
+        <inertial>
+            <origin xyz="0.0 0.0 -0.007519"/>
+            <mass value="0.2873"/>
+            <inertia ixx="0.000072" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.000130" iyz="-0.0" izx="-0.0" izy="-0.0" izz="0.000156"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Ankle_L.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0318100378"/>
+            <maxHeight value="0.0419999994"/>
+            <minHeight value="-0.0419999994"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LLEG5" group="LLEG">
+        <inertial>
+            <origin xyz="0.031015 0.000000 -0.047807"/>
+            <mass value="1.0767"/>
+            <inertia ixx="0.001359" ixy="0.0" ixz="-0.000189" iyx="0.0" iyy="0.004596" iyz="-0.0" izx="-0.000189" izy="-0.0" izz="0.004767"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Foot_L_S.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0960764885"/>
+            <maxHeight value="0.154499993"/>
+            <minHeight value="-0.0855000019"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="WST0" group="UPPERBODY">
+        <inertial>
+            <origin xyz="0.018956 0.0 -0.021285"/>
+            <mass value="0.4787"/>
+            <inertia
+              ixx="0.000352" ixy="0.000000" ixz="0.000143"
+              iyy="0.000933" iyz="0.000000"
+              izz="0.001069"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Waist_Yaw.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0907660872"/>
+            <maxHeight value="0.0175000001"/>
+            <minHeight value="-0.050999999"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="WST1" group="UPPERBODY">
+        <inertial>
+            <origin xyz="-0.005054 -0.000054 -0.000000"/>
+            <mass value="0.361700"/>
+            <inertia ixx="0.000191" ixy="0.0" ixz="0.0" iyy="0.000080" iyz="0.0" izz="0.000238"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/Power_Waist_Roll.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.03603613"/>
+            <maxHeight value="0.0439999998"/>
+            <minHeight value="-0.0439999998"/>
+            <principalAxis value="0 1 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="WST2" group="UPPERBODY">
+        <inertial>
+            <origin xyz="-0.10 -0.05 0.194460"/>
+            <mass value="6.0"/>
+            <inertia ixx="0.212890" ixy="0.000548" ixz="0.011959" iyx="0.000548" iyy="0.158252" iyz="-0.000365" izx="0.011959" izy="-0.000365" izz="0.095007"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/WAIST2.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.172267959"/>
+            <maxHeight value="0.365500003"/>
+            <minHeight value="-0.0172844995"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM0" group="RARM">
+        <inertial>
+            <origin xyz="-0.007172 0.000188 0.000094"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000941" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.000752" iyz="-0.0" izx="0.000003" izy="-0.0" izz="0.000772"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM0.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.082319878"/>
+            <maxHeight value="0.0445000008"/>
+            <minHeight value="-0.0410000011"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM1" group="RARM">
+        <inertial>
+            <origin xyz="-0.016736 0.000000 -0.033545"/>
+            <mass value="0.034300"/>
+            <inertia ixx="0.000068" ixy="0.0" ixz="-0.000020" iyx="0.0" iyy="0.000059" iyz="-0.0" izx="-0.000020" izy="-0.0" izz="0.000037"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM1.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0670270547"/>
+            <maxHeight value="0.0425000004"/>
+            <minHeight value="-0.0869999975"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM2" group="RARM">
+        <inertial>
+            <origin xyz="-0.000048 -0.000852 0.037982"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.005156" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.005282" iyz="0.000069" izx="-0.0" izy="0.000069" izz="0.001442"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM2.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0588003397"/>
+            <maxHeight value="0.132400006"/>
+            <minHeight value="-0.0399999991"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM3" group="RARM">
+        <inertial>
+            <origin xyz="-0.000000 0.012467 -0.035404"/>
+            <mass value="0.015500"/>
+            <inertia ixx="0.000022" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.000024" iyz="0.000007" izx="-0.0" izy="0.000007" izz="0.000011"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM3.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0496383756"/>
+            <maxHeight value="0.0419999994"/>
+            <minHeight value="-0.0804999992"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM4" group="RARM">
+        <inertial>
+            <origin xyz="-0.000531 0.000020 0.040552"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.003722" ixy="0.0" ixz="0.000033" iyx="0.0" iyy="0.003769" iyz="0.0" izx="0.000033" izy="0.0" izz="0.001054"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM4.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0579351336"/>
+            <maxHeight value="0.219999999"/>
+            <minHeight value="-0.00951057021"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM5" group="RARM">
+        <inertial>
+            <origin xyz="0.002117 -0.000505 -0.078939"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000559" ixy="0.0" ixz="0.000082" iyx="0.0" iyy="0.000588" iyz="0.0" izx="0.000082" izy="0.0" izz="0.000471"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM5.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0531919971"/>
+            <maxHeight value="0.0969939008"/>
+            <minHeight value="-0.0350000001"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="RARM6" group="RARM">
+        <inertial>
+            <origin xyz="-0.000073 -0.004112 -0.052504"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000123" ixy="0.0" ixz="0.0" iyx="0.0" iyy="0.000093" iyz="-0.000038" izx="0.0" izy="0.000038" izz="0.000082"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/RARM6.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0445223935"/>
+            <maxHeight value="0.0149999997"/>
+            <minHeight value="-0.073180303"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM0" group="LARM">
+        <inertial>
+            <origin xyz="-0.007172 0.000188 0.000094"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000941" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.000752" iyz="0.0" izx="-0.0" izy="0.0" izz="0.000772"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM0.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0821721181"/>
+            <maxHeight value="0.0445000008"/>
+            <minHeight value="-0.0405520983"/>
+            <principalAxis value="1 0 0"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM1" group="LARM">
+        <inertial>
+            <origin xyz="-0.016736 0.000000 -0.033545"/>
+            <mass value="0.034300"/>
+            <inertia ixx="0.000068" ixy="0.0" ixz="-0.000020" iyx="0.0" iyy="0.000059" iyz="-0.0" izx="-0.000020" izy="-0.0" izz="0.000037"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM1.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0670270547"/>
+            <maxHeight value="0.0425000004"/>
+            <minHeight value="-0.0869999975"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM2" group="LARM">
+        <inertial>
+            <origin xyz="-0.000048 -0.000852 0.037982"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.005156" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.005282" iyz="0.000069" izx="-0.0" izy="0.000069" izz="0.001442"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM2.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0591213703"/>
+            <maxHeight value="0.132400006"/>
+            <minHeight value="-0.0399999991"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM3" group="LARM">
+        <inertial>
+            <origin xyz="-0.000000 0.012467 -0.035404"/>
+            <mass value="0.015500"/>
+            <inertia ixx="0.000022" ixy="0.0" ixz="-0.0" iyx="0.0" iyy="0.000024" iyz="0.000007" izx="-0.0" izy="0.000007" izz="0.000011"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM3.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0496383756"/>
+            <maxHeight value="0.0419999994"/>
+            <minHeight value="-0.0804999992"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM4" group="LARM">
+        <inertial>
+            <origin xyz="-0.000531 0.000020 0.040552"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.003722" ixy="0.0" ixz="0.000033" iyx="0.0" iyy="0.003769" iyz="0.0" izx="0.000033" izy="0.0" izz="0.001054"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM4.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0579351336"/>
+            <maxHeight value="0.219999999"/>
+            <minHeight value="-0.00951057021"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM5" group="LARM">
+        <inertial>
+            <origin xyz="0.002117 -0.000505 -0.078939"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000559" ixy="0.0" ixz="0.000082" iyx="0.0" iyy="0.000588" iyz="0.0" izx="0.000082" izy="0.0" izz="0.000471"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM5.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0531919971"/>
+            <maxHeight value="0.0967196003"/>
+            <minHeight value="-0.0350000001"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+    <link name="LARM6" group="LARM">
+        <inertial>
+            <origin xyz="-0.000073 -0.004112 -0.052504"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.000123" ixy="0.0" ixz="0.0" iyx="0.0" iyy="0.000093" iyz="-0.000038" izx="0.0" izy="0.000038" izz="0.000082"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="./parts/LARM6.wrl" scale="1 1 1"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <sylindrical_model>
+            <radius value="0.0445223935"/>
+            <maxHeight value="0.0149999997"/>
+            <minHeight value="-0.073180303"/>
+            <principalAxis value="0 0 1"/>
+        </sylindrical_model>
+    </link>
+
+
+    <!-- JOINTS -->
+
+
+    <joint name="RLEG0" type="revolute">
+        <parent link="BASE"/>
+        <child link="RLEG0"/>
+        <origin xyz="0 -0.1492 -0.040" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="270" velocity="2.0" upper="2.356194" lower="-2.356194"/>
+    </joint>
+
+    <joint name="RLEG1" type="revolute">
+        <parent link="RLEG0"/>
+        <child link="RLEG1"/>
+        <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="200" velocity="2.0" upper="0.523599" lower="-2.094395"/>
+    </joint>
+
+    <joint name="RLEG2" type="revolute">
+        <parent link="RLEG1"/>
+        <child link="RLEG2"/>
+        <origin xyz="0.0 0.0 -0.2465" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="100" velocity="2.0" upper="9.424778" lower="-9.424778"/>
+    </joint>
+
+    <joint name="RLEG3" type="revolute">
+        <parent link="RLEG2"/>
+        <child link="RLEG3"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="270" velocity="2.0" upper="2.356194" lower="0.0"/>
+    </joint>
+
+    <joint name="RLEG4" type="revolute">
+        <parent link="RLEG3"/>
+        <child link="RLEG4"/>
+        <origin xyz="0.0 0.0 -0.440" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="0.523599" lower="-0.523599"/>
+    </joint>
+
+    <joint name="RLEG5" type="revolute">
+        <parent link="RLEG4"/>
+        <child link="RLEG5"/>
+        <origin xyz="0.0 0.0 -0.014" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="70" velocity="2.0" upper="0.349066" lower="-0.349066"/>
+    </joint>
+
+
+
+
+    <joint name="LLEG0" type="revolute">
+        <parent link="BASE"/>
+        <child link="LLEG0"/>
+        <origin xyz="0 0.1492 -0.040" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="270" velocity="2.0" upper="2.356194" lower="-2.356194"/>
+    </joint>
+
+    <joint name="LLEG1" type="revolute">
+        <parent link="LLEG0"/>
+        <child link="LLEG1"/>
+        <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="200" velocity="2.0" upper="2.094395" lower="-0.523599"/>
+    </joint>
+
+    <joint name="LLEG2" type="revolute">
+        <parent link="LLEG1"/>
+        <child link="LLEG2"/>
+        <origin xyz="0.0 0.0 -0.2465" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="100" velocity="2.0" upper="9.424778" lower="-9.424778"/>
+    </joint>
+
+    <joint name="LLEG3" type="revolute">
+        <parent link="LLEG2"/>
+        <child link="LLEG3"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="270" velocity="2.0" upper="2.356194" lower="0.0"/>
+    </joint>
+
+    <joint name="LLEG4" type="revolute">
+        <parent link="LLEG3"/>
+        <child link="LLEG4"/>
+        <origin xyz="0.0 0.0 -0.440" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="0.523599" lower="-0.523299"/>
+    </joint>
+
+    <joint name="LLEG5" type="revolute">
+        <parent link="LLEG4"/>
+        <child link="LLEG5"/>
+        <origin xyz="0.0 0.0 -0.014" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="70" velocity="2.0" upper="0.349066" lower="-0.349066"/>
+    </joint>
+
+
+
+
+
+
+    <joint name="WST0" type="revolute">
+        <parent link="BASE"/>
+        <child link="WST0"/>
+        <origin xyz="0 0 0.15376" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="100" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+
+    <joint name="WST1" type="revolute">
+        <parent link="WST0"/>
+        <child link="WST1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+
+    <joint name="WST2" type="revolute">
+        <parent link="WST1"/>
+        <child link="WST2"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+    
+    
+    
+    <joint name="RARM0" type="revolute">
+        <parent link="WST2"/>
+        <child link="RARM0"/>
+        <origin xyz="0.033 -0.215 0.2985" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="1.221730" lower="-2.356194"/>
+    </joint>
+
+    <joint name="RARM1" type="revolute">
+        <parent link="RARM0"/>
+        <child link="RARM1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="100" velocity="2.0" upper="-0.174533" lower="-0.523599"/>
+    </joint>
+
+    <joint name="RARM2" type="revolute">
+        <parent link="RARM1"/>
+        <child link="RARM2"/>
+        <origin xyz="0.0 0.0 -0.2051" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="70" velocity="2.0" upper="0.785395" lower="-0.785395"/>
+    </joint>
+
+    <joint name="RARM3" type="revolute">
+        <parent link="RARM2"/>
+        <child link="RARM3"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="0" lower="-2.007129"/>
+    </joint>
+
+    <joint name="RARM4" type="revolute">
+        <parent link="RARM3"/>
+        <child link="RARM4"/>
+        <origin xyz=" 0.0 0.0 -0.2746" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="70" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+
+    <joint name="RARM5" type="revolute">
+        <parent link="RARM4"/>
+        <child link="RARM5"/>
+        <origin xyz=" 0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="70" velocity="2.0" upper="1.047198" lower="-1.047198"/>
+    </joint>
+
+    <joint name="RARM6" type="revolute">
+        <parent link="RARM5"/>
+        <child link="RARM6"/>
+        <origin xyz=" 0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="50" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+
+
+
+    <joint name="LARM0" type="revolute">
+        <parent link="WST2"/>
+        <child link="LARM0"/>
+        <origin xyz="0.033 0.215 0.2985" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="1.221730" lower="-2.356194"/>
+    </joint>
+
+    <joint name="LARM1" type="revolute">
+        <parent link="LARM0"/>
+        <child link="LARM1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="100" velocity="2.0" upper="2.792527" lower="0.174533"/>
+    </joint>
+
+    <joint name="LARM2" type="revolute">
+        <parent link="LARM1"/>
+        <child link="LARM2"/>
+        <origin xyz="0.0 0.0 -0.2051" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="70" velocity="2.0" upper="0.785398" lower="-0.785398"/>
+    </joint>
+
+    <joint name="LARM3" type="revolute">
+        <parent link="LARM2"/>
+        <child link="LARM3"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="100" velocity="2.0" upper="0.0" lower="-2.007129"/>
+    </joint>
+
+    <joint name="LARM4" type="revolute">
+        <parent link="LARM3"/>
+        <child link="LARM4"/>
+        <origin xyz=" 0.0 0.0 -0.2746" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="70" velocity="2.0" upper="1.5708" lower="-1.5708"/>
+    </joint>
+
+    <joint name="LARM5" type="revolute">
+        <parent link="LARM4"/>
+        <child link="LARM5"/>
+        <origin xyz=" 0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit effort="70" velocity="2.0" upper="1.047198" lower="-1.047198"/>
+    </joint>
+
+    <joint name="LARM6" type="revolute">
+        <parent link="LARM5"/>
+        <child link="LARM6"/>
+        <origin xyz=" 0.0 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="50" velocity="2.0" upper="3.1416" lower="-3.1416"/>
+    </joint>
+
+
+
+
+
+    <!-- MOTORS -->
+
+    <motor name="RLEG0">
+        <gear ratio="28"/>
+        <torque constant="0.12"/>
+        <rotor inertia="0.00107516"/>
+    </motor>
+    <motor name="RLEG1">
+        <gear ratio="41.625"/>
+        <torque constant="0.177"/>
+        <rotor inertia="0.002301458"/>
+    </motor>
+    <motor name="RLEG2">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="RLEG3">
+        <gear ratio="41.625"/>
+        <torque constant="0.177"/>
+        <rotor inertia="0.002301458"/>
+    </motor>
+    <motor name="RLEG4">
+        <gear ratio="29.00"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="RLEG5">
+        <gear ratio="29.00"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LLEG0">
+        <gear ratio="28"/>
+        <torque constant="0.12"/>
+        <rotor inertia="0.00107516"/>
+    </motor>
+    <motor name="LLEG1">
+        <gear ratio="41.625"/>
+        <torque constant="0.177"/>
+        <rotor inertia="0.002301458"/>
+    </motor>
+    <motor name="LLEG2">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="LLEG3">
+        <gear ratio="41.625"/>
+        <torque constant="0.177"/>
+        <rotor inertia="0.002301458"/>
+    </motor>
+    <motor name="LLEG4">
+        <gear ratio="29.00"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LLEG5">
+        <gear ratio="29.00"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+
+
+    <motor name="WST0">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+
+    <motor name="WST1">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+
+    <motor name="WST2">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+
+
+    <motor name="RARM0">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="RARM1">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="RARM2">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="RARM3">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="RARM4">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="RARM5">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+        <d inertia="0.000635095"/>
+    </motor>
+    <motor name="RARM6">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+
+    <motor name="LARM0">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="LARM1">
+        <gear ratio="44"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000821619"/>
+    </motor>
+    <motor name="LARM2">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LARM3">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LARM4">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LARM5">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+    <motor name="LARM6">
+        <gear ratio="50"/>
+        <torque constant="0.21"/>
+        <rotor inertia="0.000635095"/>
+    </motor>
+
+
+
+    <!-- COMPONENTS -->
+
+    <component name="RLEG">
+        <root link="B_BASE"/>
+        <tip link="RFOOT"/>
+    </component>
+
+    <component name="LLEG">
+        <root link="B_BASE"/>
+        <tip link="LFOOT"/>
+    </component>
+
+    <component name="RARM">
+        <root link="B_BASE"/>
+        <tip link="R_WRIST_P"/>
+    </component>
+
+    <component name="LARM">
+        <root link="B_BASE"/>
+        <tip link="L_WRIST_P"/>
+    </component>
+
+    <!-- PARAMETERS -->
+
+    <parameter name="gravity" type="vector" value="0 0 9.81"/>
+    <parameter name="mu" type="double" value="0.3"/>
+    <parameter name="min_friction" type="double" value="10"/>
+    <parameter name="max_friction" type="double" value="400"/>
+    <parameter name="max_linear_acc" type="double" value="6.0"/>
+    <parameter name="num_legs" type="double" value="2"/>
+
+    <parameter name="foot.heel" type="double" value="0.060"/>
+    <parameter name="foot.toe" type="double" value="0.180"/>
+    <parameter name="foot.inside" type="double" value="0.0375"/>
+    <parameter name="foot.outside" type="double" value="0.0375"/>
+    <parameter name="foot.ankle_height" type="double" value="0.081"/>
+
+    <parameter name="step_saturation.x" type="double" value="0.40"/>
+    <parameter name="step_saturation.x_stretchedknee" type="double" value="0.60"/>
+    <parameter name="step_saturation.y_outside" type="double" value="0.20"/>
+    <parameter name="step_saturation.x_adjust" type="double" value="0.10"/>
+    <parameter name="step_saturation.y_adjust" type="double" value="0.05"/>
+    <parameter name="step_saturation.yaw_adjust" type="double" value="10"/>
+
+    <parameter name="joint_limits.position_upper_deg" type="vector" value="135.0 30.0 540.0 135.0 30.0 20.0 135.0 120.0 540.0 135.0 30.0 20.0 90.0 90.0 90.0 70 -10 45 0.0 90 60 90 70 160 45 0.0 90 60 90"/>
+    <parameter name="joint_limits.position_lower_deg" type="vector" value="-135.0 -120.0 -540.0 0.0 -30.0 -20.0 -135.0 -30.0 -540.0 0.0 -30.0 -20.0 -90.0 -90.0 -90.0 -135 -160 -45 -115.0 -90 -60 -90 -135 10 -45 -115.0 -90 -60 -90"/>
+    <parameter name="joint_limits.velocity_limit" type="vector" value="2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0"/>
+    <parameter name="joint_limits.torque_limit" type="vector" value="270.0 200.0 100.0 270.0 100.0 70.0 270.0 200.0 100.0 270.0 100.0 70.0 100.0 100.0 100.0 100 100 70 100 70 70 50 100 100 70 100 70 70 50"/>
+    <parameter name="collisionPairs.necessary" type="boolean" value="true"/>
+    <parameter name="collisionPairs.pair1" type="vector" value="19 19 19 19 19 19 19 19 19 19 19 21 21 21 21 21 21 21 21 21 21 21 26 26 26 26 26 26 26 26 26 26 26 28 28 28 28 28 28 28 28 28 28 28"/>
+    <parameter name="collisionPairs.pair2" type="vector" value="12 13 14 0 1 2 6 7 8 26 28 12 13 14 0 1 2 6 7 8 26 28 12 13 14 0 1 2 6 7 8 19 21 12 13 14 0 1 2 6 7 8 19 21"/>
+    <parameter name="collisionPairs.margin" type="double" value="0.01"/>
+
+    <motor_state_vector>
+        <motor name="RLEG0"/>
+        <motor name="RLEG1"/>
+        <motor name="RLEG2"/>
+        <motor name="RLEG3"/>
+        <motor name="RLEG4"/>
+        <motor name="RLEG5"/>
+        <motor name="LLEG0"/>
+        <motor name="LLEG1"/>
+        <motor name="LLEG2"/>
+        <motor name="LLEG3"/>
+        <motor name="LLEG4"/>
+        <motor name="LLEG5"/>
+        <motor name="WST0"/>
+        <motor name="WST1"/>
+        <motor name="WST2"/>
+        <motor name="RARM0"/>
+        <motor name="RARM1"/>
+        <motor name="RARM2"/>
+        <motor name="RARM3"/>
+        <motor name="RARM4"/>
+        <motor name="RARM5"/>
+        <motor name="RARM6"/>
+        <motor name="LARM0"/>
+        <motor name="LARM1"/>
+        <motor name="LARM2"/>
+        <motor name="LARM3"/>
+        <motor name="LARM4"/>
+        <motor name="LARM5"/>
+        <motor name="LARM6"/>
+    </motor_state_vector>
+
+    <joint_state_vector>
+        <joint name="__FLOATING_JOINT__"/>
+        <joint name="RLEG0"/>
+        <joint name="RLEG1"/>
+        <joint name="RLEG2"/>
+        <joint name="RLEG3"/>
+        <joint name="RLEG4"/>
+        <joint name="RLEG5"/>
+        <joint name="LLEG0"/>
+        <joint name="LLEG1"/>
+        <joint name="LLEG2"/>
+        <joint name="LLEG3"/>
+        <joint name="LLEG4"/>
+        <joint name="LLEG5"/>
+        <joint name="WST0"/>
+        <joint name="WST1"/>
+        <joint name="WST2"/>
+        <joint name="RARM0"/>
+        <joint name="RARM1"/>
+        <joint name="RARM2"/>
+        <joint name="RARM3"/>
+        <joint name="RARM4"/>
+        <joint name="RARM5"/>
+        <joint name="RARM6"/>
+        <joint name="LARM0"/>
+        <joint name="LARM1"/>
+        <joint name="LARM2"/>
+        <joint name="LARM3"/>
+        <joint name="LARM4"/>
+        <joint name="LARM5"/>
+        <joint name="LARM6"/>
+    </joint_state_vector>
+
+    <motor_joint_constraint><![CDATA[
+    RLEG0=RLEG0
+    RLEG1=RLEG1
+    RLEG2=RLEG2
+    RLEG3=RLEG3
+    RLEG4=RLEG4
+    RLEG5=RLEG5
+    LLEG5=LLEG5
+    LLEG4=LLEG4
+    LLEG3=LLEG3
+    LLEG2=LLEG2
+    LLEG1=LLEG1
+    LLEG0=LLEG0
+    WST0=WST0
+    WST1=WST1
+    WST2=WST2
+    RARM0=RARM0
+    RARM1=RARM1
+    RARM2=RARM2
+    RARM3=RARM3
+    RARM4=RARM4
+    RARM5=RARM5
+    RARM6=RARM6
+    LARM6=LARM6
+    LARM5=LARM5
+    LARM4=LARM4
+    LARM3=LARM3
+    LARM2=LARM2
+    LARM1=LARM1
+    LARM0=LARM0
+    ]]></motor_joint_constraint>
+
+</robot>

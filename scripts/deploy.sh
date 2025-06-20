@@ -47,10 +47,6 @@ function git_tag_work() {
         git add -f "dist" || { print_string "error" "Git add dist 실패"; return 1; }
     fi
 
-    if [ -f "node_modules.zip" ]; then
-        git add -f "node_modules.zip" || { print_string "error" "Git add node_modules.zip 실패"; return 1; }
-    fi
-    
     # 태그용 임시 커밋 생성
     git commit --allow-empty -m "chore: Release ${new_version}" || { print_string "error" "Git commit 실패"; return 1; }
     
@@ -65,10 +61,6 @@ function git_tag_work() {
     # dist 파일을 스테이징에서 제거
     if [ -d "dist" ]; then
         git rm -r --cached "dist" || { print_string "error" "Git rm dist 실패"; return 1; }
-    fi
-
-    if [ -f "node_modules.zip" ]; then
-        git rm -r --cached "node_modules.zip" || { print_string "error" "Git rm node_modules.zip 실패"; return 1; }
     fi
 
     git commit --allow-empty -m "chore: dist 폴더 Git 추적 제거" || { print_string "error" "Git commit 실패"; return 1; }
@@ -179,14 +171,8 @@ fi
 # 릴리즈 메시지 생성
 release_message="[RRS] Branch: ${current_branch}, Version: ${new_version}] release 배포"
 
-# node_modules 폴더 압축
-zip -r node_modules.zip node_modules
-
 # Git 작업 실행
 git_tag_work "$current_branch" "$new_version" "$tag_version" "$release_message" || last_git_work_status="bad"
-
-# node_modules 폴더 압축 제거
-rm -rf node_modules.zip
 
 # RELEASE_LOG 업데이트
 if [ "$last_git_work_status" = "normal" ]; then
