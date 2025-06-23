@@ -86,11 +86,11 @@ export class MoveService {
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
-          goal_name: data.goal_name,
-          map_name: data.map_name,
-          x: parseFloat(data.x),
-          y: parseFloat(data.y),
-          rz: parseFloat(data.rz),
+          goal_name: data.goal_name ?? null,
+          map_name: data.map_name ?? null,
+          x: parseFloat(data.x) ?? null,
+          y: parseFloat(data.y) ?? null,
+          rz: parseFloat(data.rz) ?? null,
         });
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
           httpLogger.info(
