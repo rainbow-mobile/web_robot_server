@@ -45,6 +45,7 @@ export class MoveService {
     y?: number;
     rz?: number;
   }) {
+
     if (
       data.command === 'stop' ||
       data.command === 'goal' ||
@@ -52,7 +53,7 @@ export class MoveService {
       data.command === 'pause' ||
       data.command === 'resume'
     ) {
-      httpLogger.info(`[MOVE] saveLog : ${data.command}`);
+      httpLogger.info(`[MOVE] saveLog : ${JSON.stringify(data)}`);
       //save Log--------------------------------
       this.moveRepository.save(data);
 
@@ -82,7 +83,6 @@ export class MoveService {
       if (this.socketGateway.slamnav != null) {
         this.socketGateway.server.to('slamnav').emit('move', data);
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
-
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
