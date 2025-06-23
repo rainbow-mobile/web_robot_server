@@ -39,6 +39,8 @@ export class MoveService {
   async saveLog(data: {
     command: string;
     goal_id?: string;
+    goal_name?: string;
+    map_name?: string;
     x?: number;
     y?: number;
     rz?: number;
@@ -50,7 +52,7 @@ export class MoveService {
       data.command === 'pause' ||
       data.command === 'resume'
     ) {
-      httpLogger.info(`[MOVE] saveLog : ${data.command}`)
+      httpLogger.info(`[MOVE] saveLog : ${data.command}`);
       //save Log--------------------------------
       this.moveRepository.save(data);
 
@@ -84,6 +86,8 @@ export class MoveService {
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
+          goal_name: data.goal_name,
+          map_name: data.map_name,
           x: parseFloat(data.x),
           y: parseFloat(data.y),
           rz: parseFloat(data.rz),

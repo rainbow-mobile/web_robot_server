@@ -17,6 +17,12 @@ export class MoveLogEntity {
   @Column({ name: 'goal_id' })
   goal_id: string;
 
+  @Column({ name: 'map_name' })
+  mapName: string;
+
+  @Column({ name: 'goal_name' })
+  goal_name: string;
+
   @Column({ name: 'x', type: 'float' })
   x: number;
   @Column({ name: 'y', type: 'float' })
