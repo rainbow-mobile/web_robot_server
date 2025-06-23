@@ -207,7 +207,7 @@ export class MoveController {
     summary: '이동 명령 이력 조회',
     description: '이동 명령 이력을 조회합니다. ',
   })
-  async moveLog(@Param('num') num:number) {
+  async moveLog(@Param('num') num: number) {
     try {
       return this.moveService.getMoveLog(num);
     } catch (error) {
@@ -225,9 +225,9 @@ export class MoveController {
     summary: 'Goal 이동 명령 이력 조회',
     description: 'Goal 이동 명령 이력을 조회합니다. ',
   })
-  async moveGoalLog(@Param('num') num:number) {
+  async moveGoalLog(@Param('num') num: number) {
     try {
-      return this.moveService.getMoveLog(num,'goal');
+      return this.moveService.getMoveLog(num, 'goal');
     } catch (error) {
       httpLogger.error(`[MOVE] moveGoalLog: ${errorToJson(error)}`);
       if (error instanceof HttpError) throw error;

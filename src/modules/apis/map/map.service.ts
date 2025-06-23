@@ -18,7 +18,6 @@ export class MapService {
     } else {
       //homedir/maps 유지
     }
-
     console.log(this.mapDir);
   }
 
