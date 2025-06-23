@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ReqUpdateSoftwareDto {
   @ApiProperty({
@@ -19,4 +19,13 @@ export class ReqUpdateSoftwareDto {
   @IsString()
   @IsNotEmpty()
   branch: string;
+
+  @ApiProperty({
+    description: '업데이트할 버전 이름',
+    example: '1.2.4',
+    default: '',
+  })
+  @IsString()
+  @IsOptional()
+  version?: string;
 }

@@ -43,12 +43,12 @@ export class UpdateService {
    * @param branch 브랜치 이름
    * @returns 업데이트 요청 결과
    */
-  updateSoftware({ software, branch }: ReqUpdateSoftwareDto) {
+  updateSoftware({ software, branch, version }: ReqUpdateSoftwareDto) {
     if (software === 'rrs') {
-      return this.rrsUpdate(branch);
+      return this.rrsUpdate({ branch, version });
     }
 
-    return this.otherSwUpdate({ branch });
+    return this.otherSwUpdate({ branch, version });
   }
 
   /**
@@ -56,7 +56,7 @@ export class UpdateService {
    * @param branch 브랜치 이름
    * @returns 업데이트 요청 결과
    */
-  rrsUpdate(branch: string) {
+  rrsUpdate({ branch, version }: { branch?: string; version?: string } = {}) {
     const updateScript = path.join(
       homedir(),
       `rainbow-deploy-kit/${SOFTWARE_DIR['rrs']}`,
@@ -69,7 +69,9 @@ export class UpdateService {
       });
     }
 
-    execSync(`bash ${updateScript} ${branch}`);
+    execSync(
+      `bash ${updateScript} --mode=${branch || 'main'} --version=${version}`,
+    );
 
     return {
       status: 200,
@@ -84,9 +86,17 @@ export class UpdateService {
    * @param data 업데이트 요청 데이터
    * @returns 업데이트 요청 결과
    */
-  otherSwUpdate(data: { branch: string }) {
+  otherSwUpdate({
+    branch,
+    version,
+  }: { branch?: string; version?: string } = {}) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
+        const data = {
+          branch: branch || 'main',
+          version: version || '',
+        };
+
         this.socketGateway.server.to('slamnav').emit('swUpdate', data);
         httpLogger.info(`[UPDATE] swUpdate: ${JSON.stringify(data)}`);
 
