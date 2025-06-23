@@ -18,7 +18,7 @@ export class MoveLogEntity {
   goal_id: string;
 
   @Column({ name: 'map_name' })
-  mapName: string;
+  map_name: string;
 
   @Column({ name: 'goal_name' })
   goal_name: string;
