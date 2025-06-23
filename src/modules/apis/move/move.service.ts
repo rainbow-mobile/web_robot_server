@@ -88,9 +88,9 @@ export class MoveService {
           goal_id: data.goal_id,
           goal_name: data.goal_name ?? null,
           map_name: data.map_name ?? null,
-          x: parseFloat(data.x) ?? null,
-          y: parseFloat(data.y) ?? null,
-          rz: parseFloat(data.rz) ?? null,
+          x: data.x ? parseFloat(data.x) : null,
+          y: data.x ? parseFloat(data.y) : null,
+          rz: data.rz ? parseFloat(data.rz) : null,
         });
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
           httpLogger.info(
