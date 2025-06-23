@@ -71,6 +71,8 @@ export const create_move = `CREATE TABLE move(
 	id varchar(128) not null primary key,
 	command varchar(32) not null,
 	goal_id varchar(32),
+	goal_name varchar(32),
+	map_name varchar(32),
 	x float,
 	y float,
 	rz float,
