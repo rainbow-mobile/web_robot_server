@@ -16,18 +16,18 @@ export class MoveService {
     private readonly socketGateway: SocketGateway,
   ) {}
 
-  async getMoveLog(num:number, command?: string) {
+  async getMoveLog(num: number, command?: string) {
     try {
-      if(num===0){
-        return await this.moveRepository.find({
-          where: { command },
-          order: { time: 'DESC' }
-        });
-      }else{
+      if (num === 0) {
         return await this.moveRepository.find({
           where: { command },
           order: { time: 'DESC' },
-          take: num
+        });
+      } else {
+        return await this.moveRepository.find({
+          where: { command },
+          order: { time: 'DESC' },
+          take: num,
         });
       }
     } catch (error) {
@@ -50,6 +50,7 @@ export class MoveService {
       data.command === 'pause' ||
       data.command === 'resume'
     ) {
+      httpLogger.info(`[MOVE] saveLog : ${data.command}`)
       //save Log--------------------------------
       this.moveRepository.save(data);
 
@@ -70,7 +71,6 @@ export class MoveService {
       //   });
       //   await this.moveRepository.remove(oldest);
       // }
-
 
       //save Log--------------------------------
     }
