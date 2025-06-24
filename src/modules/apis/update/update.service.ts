@@ -38,6 +38,22 @@ export class UpdateService {
   }
 
   /**
+   * 타겟 호스트에 30번 ping 전송
+   * @param target 타겟 호스트
+   */
+  pingSendToTarget(target: string) {
+    exec(`ping -c 30 ${target}`, (error, stdout, stderr) => {
+      if (error) {
+        throw new BadRequestException(stderr);
+      }
+    });
+
+    return {
+      message: 'Ping sent to target',
+    };
+  }
+
+  /**
    * 소프트웨어 업데이트
    * @param software 소프트웨어 이름
    * @param branch 브랜치 이름

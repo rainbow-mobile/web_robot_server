@@ -1,5 +1,5 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetSoftwareParamDto {
   @IsString()
@@ -18,4 +18,14 @@ export class GetNewVersionDto {
     default: 'main',
   })
   branch?: string;
+}
+
+export class PingSendToTargetDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional({
+    description: '타겟 호스트',
+    default: '192.168.1.1',
+  })
+  target: string;
 }
