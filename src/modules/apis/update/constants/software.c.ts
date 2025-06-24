@@ -7,4 +7,5 @@ export const RELEASE_REPO_URL =
 export const SOFTWARE_DIR = {
   slamnav2: 'slamnav2',
   rrs: 'web_robot_server',
+  'web-ui': 'web-rainbow-ui',
 } as const;
