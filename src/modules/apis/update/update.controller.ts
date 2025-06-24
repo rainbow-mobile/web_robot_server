@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { UpdateService } from './update.service';
 import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetNewVersionDto } from './dto/update.get.dto';
 
 @ApiTags('업데이트 관련 API (update)')
