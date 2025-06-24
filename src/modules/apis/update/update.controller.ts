@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { UpdateService } from './update.service';
 import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetNewVersionDto } from './dto/update.get.dto';
+import { GetNewVersionDto, PingSendToTargetDto } from './dto/update.get.dto';
 
 @ApiTags('업데이트 관련 API (update)')
 @Controller('update')
@@ -16,6 +16,11 @@ export class UpdateController {
   })
   updateSoftware(@Body() reqUpdateSoftwareDto: ReqUpdateSoftwareDto) {
     return this.updateService.updateSoftware(reqUpdateSoftwareDto);
+  }
+
+  @Get('ping')
+  pingSendToTarget(@Query() { target }: PingSendToTargetDto) {
+    return this.updateService.pingSendToTarget(target);
   }
 
   @Get(':software/get-new-version')
