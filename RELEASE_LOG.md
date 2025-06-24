@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250624192915] - 2025-06-24
+- Release App: RRS, Branch: WB-10_software-update, Version: rrs-20250624192915] release 배포
+
+
 ## [rrs-20250624192844] - 2025-06-24
 - Release App: RRS, Branch: WB-10_software-update, Version: rrs-20250624192844] release 배포
 
