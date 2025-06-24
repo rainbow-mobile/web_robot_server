@@ -13,7 +13,7 @@ import {
   RELEASE_REPO_RAW_URL,
   RELEASE_REPO_URL,
 } from './constants/software.c';
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import httpLogger from '@common/logger/http.logger';
 
@@ -59,26 +59,28 @@ export class UpdateService {
   rrsUpdate({ branch, version }: { branch?: string; version?: string } = {}) {
     const updateScript = path.join(
       homedir(),
-      `rainbow-deploy-kit/${SOFTWARE_DIR['rrs']}`,
+      `rainbow-deploy-kit/rrs-server`,
       'rrs-update.sh',
     );
 
+    const rainbowDeployKitDir = path.join(homedir(), 'rainbow-deploy-kit');
+
     if (!fs.existsSync(updateScript)) {
       throw new NotFoundException({
-        message: `~/rainbow-deploy-kit/${SOFTWARE_DIR['rrs']}/rrs-update.sh 파일을 찾을 수 없습니다.`,
+        message: `~/rainbow-deploy-kit/rrs-server/rrs-update.sh 파일을 찾을 수 없습니다.`,
       });
     }
 
-    execSync(
-      `bash ${updateScript} --mode=${branch || 'main'} --version=${version}`,
+    execSync('git pull', {
+      cwd: rainbowDeployKitDir,
+      stdio: 'pipe',
+    });
+
+    exec(
+      `nohup bash ${updateScript} --mode=${branch || 'main'} --version=${version} > /tmp/rrs-update.log 2>&1 &`,
     );
 
-    return {
-      status: 200,
-      data: {
-        message: 'rrs 업데이트 요청 완료',
-      },
-    };
+    return { applyReqUpdate: true, version: version || '', rejectReason: '' };
   }
 
   /**
@@ -104,6 +106,21 @@ export class UpdateService {
           httpLogger.info(
             `[UPDATE] software_update Response: ${JSON.stringify(res)}`,
           );
+
+          httpLogger.info(
+            `[UPDATE] software_update applyReqUpdate: ${JSON.stringify(
+              res.applyReqUpdate,
+            )}`,
+          );
+
+          if (res.applyReqUpdate) {
+            res.applyReqUpdate = res.applyReqUpdate === 'true';
+          } else {
+            httpLogger.info(
+              `[UPDATE] software_update applyReqUpdate falsy: ${res.applyReqUpdate}`,
+            );
+          }
+
           resolve(res);
           clearTimeout(timeoutId);
         });
