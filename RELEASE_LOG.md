@@ -1,5 +1,8 @@
 # Release log
 
+## [rrs-20250625132714] - 2025-06-25
+- [RRS] Branch: develop, Version: rrs-20250625132714] release 배포
+
 ## [rrs-20250624200904] - 2025-06-24
 - Release App: RRS, Branch: WB-10_software-update, Version: rrs-20250624200904] release 배포
 
@@ -94,6 +97,46 @@
 
 ## [rrs-20250620171925] - 2025-06-20
 - [RRS] Branch: WB-10_software-update, Version: rrs-20250620171925] release 배포
+
+
+## [rrs-20250623170121] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623170121] release 배포
+
+
+## [rrs-20250623165016] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623165016] release 배포
+
+
+## [rrs-20250623164023] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623164023] release 배포
+
+
+## [rrs-20250623161555] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623161555] release 배포
+
+
+## [rrs-20250623160819] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623160819] release 배포
+
+
+## [rrs-20250623154626] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623154626] release 배포
+
+
+## [rrs-20250623154027] - 2025-06-23
+- [RRS] Branch: develop, Version: rrs-20250623154027] release 배포
+
+
+## [rrs-20250620111619] - 2025-06-20
+- [RRS] Branch: develop, Version: rrs-20250620111619] release 배포
+
+
+## [rrs-20250616165018] - 2025-06-16
+- [RRS] Branch: develop, Version: rrs-20250616165018] release 배포
+
+
+## [rrs-20250616164517] - 2025-06-16
+- [RRS] Branch: WB-16, Version: rrs-20250616164517] release 배포
 
 
 ## [rrs-20250616135517] - 2025-06-16
