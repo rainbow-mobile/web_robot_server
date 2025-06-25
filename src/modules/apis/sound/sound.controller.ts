@@ -75,7 +75,7 @@ export class SoundController {
     description: '경로 내 사운드 파일 리스트 반환',
   })
   async getFileList(@Res() res: Response) {
-    const response = await this.soundService.getList(os.homedir() + '/sounds');
+    const response = await this.soundService.getList('./public/sound');
     res.send(response);
   }
 
