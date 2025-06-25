@@ -14,7 +14,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as os from 'os';
-import { homedir } from 'os';
 import * as AdmZip from 'adm-zip';
 import { DateUtil } from '@common/util/date.util';
 import { LogReadDto } from './dto/log.read.dto';
@@ -51,6 +50,7 @@ export class LogService {
   async init() {
     await this.checkTables('variables', Query.create_variables);
     this.checkTables('status', Query.create_status);
+    this.checkTables('move', Query.create_move);
     this.checkTables('system', Query.create_system);
   }
 
@@ -340,7 +340,7 @@ export class LogService {
     param: LogReadDto,
   ): Promise<PaginationResponse<any>> {
     try {
-      const logPath = homedir() + '/log/' + type;
+      const logPath = '/data/log/' + type;
       const logdata: Array<{
         time: string;
         level: string;
@@ -963,7 +963,7 @@ export class LogService {
 
     if (oldData.length > 0) {
       // 파일 저장 경로 설정
-      const archiveDir = path.join(homedir(), 'log', 'archive', type);
+      const archiveDir = path.join('/data/log', 'archive', type);
 
       if (!fs.existsSync(archiveDir)) {
         fs.mkdirSync(archiveDir, { recursive: true });
@@ -1030,11 +1030,11 @@ export class LogService {
 
   async archiveOldJSONData(type: string, date: string): Promise<void> {
     //파일 존재 확인
-    const filePath = homedir() + '/log/' + type + '/' + date + '.log';
+    const filePath = '/data/log/' + type + '/' + date + '.log';
     if (fs.existsSync(filePath)) {
       //파일을 압축
       const zipPath = path.join(
-        homedir(),
+        'data',
         'log',
         'archive',
         type,

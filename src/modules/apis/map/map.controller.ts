@@ -162,7 +162,10 @@ export class MapController {
         );
       }
       const path = join(homedir(), 'maps', mapNm, 'tiles');
+      const path2 = join('/data/maps', mapNm, 'tiles');
       if (fs.existsSync(path)) {
+        return true;
+      } else if (fs.existsSync(path2)) {
         return true;
       }
       return false;
@@ -212,8 +215,17 @@ export class MapController {
           .send({ message: 'z값이 없습니다' });
       }
       const path = join(homedir(), 'maps', mapNm, 'tiles', z, x, y + '.png');
+      const path2 = join('/data/maps', mapNm, 'tiles', z, x, y + '.png');
       if (fs.existsSync(path)) {
         const stream = fs.createReadStream(path);
+
+        res.set({
+          'Content-Type': 'image/png',
+        });
+
+        stream.pipe(res);
+      } else if (fs.existsSync(path2)) {
+        const stream = fs.createReadStream(path2);
 
         res.set({
           'Content-Type': 'image/png',
