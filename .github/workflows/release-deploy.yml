@@ -74,20 +74,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
-          git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git rainbow-release-apps
-          cd rainbow-release-apps
-          
-          # 원하는 브랜치가 있는지 확인하고 없으면 empty 브랜치에서 생성
-          if ! git ls-remote --heads origin ${{ env.BRANCH_NAME }} | grep ${{ env.BRANCH_NAME }}; then
-            echo "Branch ${{ env.BRANCH_NAME }} not found, creating from empty branch"
-            git checkout empty
-            git checkout -b ${{ env.BRANCH_NAME }}
-            git push origin ${{ env.BRANCH_NAME }}
+          BRANCH_NAME=${{ env.BRANCH_NAME }}
+          REPO_URL="https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git"
+      
+          # 브랜치가 존재하는지 확인
+          if git ls-remote --heads "$REPO_URL" "$BRANCH_NAME" | grep "$BRANCH_NAME" > /dev/null; then
+            echo "✅ 브랜치 $BRANCH_NAME 존재 → shallow clone"
+            git clone --depth 1 --branch "$BRANCH_NAME" --single-branch "$REPO_URL" rainbow-release-apps
           else
-            git checkout ${{ env.BRANCH_NAME }}
+            echo "🌱 브랜치 $BRANCH_NAME 없음 → empty 브랜치로부터 생성"
+            git clone --depth 1 --branch empty --single-branch "$REPO_URL" rainbow-release-apps
+            cd rainbow-release-apps
+            git checkout -b "$BRANCH_NAME"
+            git push origin "$BRANCH_NAME"
+            cd ..
           fi
-          
-          cd ..
           
       - name: Copy and commit dist files
         env:
@@ -125,7 +126,8 @@ jobs:
           git add .
           git commit -m "Release Branch:${{ env.BRANCH_NAME }}, Version: ${{ env.VERSION }}"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
-          git push origin ${{ env.BRANCH_NAME }}
+          git pull origin ${{ env.BRANCH_NAME }} --rebase || echo "Rebase failed, proceeding with force push"
+          git push origin ${{ env.BRANCH_NAME }} --force-with-lease
 
       - name: Delete release tag
         if: always()
@@ -135,4 +137,4 @@ jobs:
           cd $GITHUB_WORKSPACE
           
           # 태그 삭제
-          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}" || echo "⚠️ 태그 $TAG_NAME 없음 — 삭제 스킵"
