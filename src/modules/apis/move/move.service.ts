@@ -45,7 +45,6 @@ export class MoveService {
     y?: number;
     rz?: number;
   }) {
-
     if (
       data.command === 'stop' ||
       data.command === 'goal' ||
