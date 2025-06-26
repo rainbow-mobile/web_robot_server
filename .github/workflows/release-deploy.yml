@@ -66,6 +66,10 @@ jobs:
           cp -r wsdl $TEMP_DIR/
           cp -r node_modules.zip $TEMP_DIR/
 
+          if [ -d "public" ]; then
+            cp -r public $TEMP_DIR/
+          fi
+
           cd $TEMP_DIR
           zip -r "../${{ env.VERSION }}.zip" .
           
