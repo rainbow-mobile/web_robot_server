@@ -153,21 +153,30 @@ export class MapController {
     summary: '맵 타일 존재 여부 요청',
     description: '맵 tiles 디렉토리가 있는지 여부를 요청합니다.',
   })
-  async getTilesExist(@Param('mapNm') mapNm: string){
-    try{
-      if(mapNm === undefined || mapNm === ""){
-        throw new HttpError(HttpStatus.BAD_REQUEST, "mapNm이 지정되지 않았습니다.")
+  async getTilesExist(@Param('mapNm') mapNm: string) {
+    try {
+      if (mapNm === undefined || mapNm === '') {
+        throw new HttpError(
+          HttpStatus.BAD_REQUEST,
+          'mapNm이 지정되지 않았습니다.',
+        );
       }
       const path = join(homedir(), 'maps', mapNm, 'tiles');
+      const path2 = join('/data/maps', mapNm, 'tiles');
       if (fs.existsSync(path)) {
+        return true;
+      } else if (fs.existsSync(path2)) {
         return true;
       }
       return false;
-    }catch(error){
+    } catch (error) {
       httpLogger.error(
         `[MAP] getTilesExist : ${error.status} -> ${JSON.stringify(error.data)}`,
       );
-      throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, "요청을 수행하던 중 서버에 에러가 발생했습니다.")
+      throw new HttpError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '요청을 수행하던 중 서버에 에러가 발생했습니다.',
+      );
     }
   }
 
@@ -206,8 +215,17 @@ export class MapController {
           .send({ message: 'z값이 없습니다' });
       }
       const path = join(homedir(), 'maps', mapNm, 'tiles', z, x, y + '.png');
+      const path2 = join('/data/maps', mapNm, 'tiles', z, x, y + '.png');
       if (fs.existsSync(path)) {
         const stream = fs.createReadStream(path);
+
+        res.set({
+          'Content-Type': 'image/png',
+        });
+
+        stream.pipe(res);
+      } else if (fs.existsSync(path2)) {
+        const stream = fs.createReadStream(path2);
 
         res.set({
           'Content-Type': 'image/png',

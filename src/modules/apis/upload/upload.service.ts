@@ -3,11 +3,11 @@ import * as multer from 'multer';
 import { homedir } from 'os';
 import * as AdmZip from 'adm-zip';
 import * as fs from 'fs';
-import * as path from 'path';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { errorToJson } from '@common/util/error.util';
 import axios from 'axios';
+import { join } from 'path';
 
 @Injectable()
 export class UploadService {
@@ -34,16 +34,23 @@ export class UploadService {
           },
         );
 
-        const fileStream = fs.createWriteStream(
-          homedir() + '/maps/' + fileName,
-        );
+        const path = join(homedir(), 'maps');
+        const path2 = join('/data/maps');
+        let pathDir;
+        if (fs.existsSync(path2)) {
+          pathDir = path2;
+        } else {
+          pathDir = path;
+        }
+
+        const fileStream = fs.createWriteStream(join(pathDir, fileName));
         response.data.pipe(fileStream);
 
         fileStream.on('finish', async () => {
           httpLogger.info(`[UPLOAD] DownloadMap: Done`);
-          const zipFilePath = path.join(homedir(), 'maps', fileName);
+          const zipFilePath = join(pathDir, fileName);
 
-          const extractToPath = path.join(homedir(), 'maps');
+          const extractToPath = pathDir;
           httpLogger.info(
             `[UPLOAD] DownloadMap: Zip (${zipFilePath}, ${extractToPath})`,
           );
@@ -53,7 +60,7 @@ export class UploadService {
           resolve({});
 
           httpLogger.info(`[UPLOAD] DownloadMap: Zip Done`);
-          fs.unlink(homedir() + '/maps/' + fileName, (err) => {
+          fs.unlink(zipFilePath, (err) => {
             if (err)
               httpLogger.error(
                 `[UPLOAD] DownloadMap: Zip Delete Fail ${errorToJson(err)}`,
@@ -81,12 +88,12 @@ export class UploadService {
           const files = fs.readdirSync(folderPath);
 
           files.forEach((file) => {
-            const filePath = path.join(folderPath, file);
+            const filePath = join(folderPath, file);
             const stat = fs.statSync(filePath);
 
             if (stat.isDirectory()) {
               // 하위 폴더가 있다면 재귀적으로 처리
-              addFilesRecursively(filePath, path.join(zipFolderPath, file));
+              addFilesRecursively(filePath, join(zipFolderPath, file));
             } else {
               // 파일이라면 압축에 추가
               zip.addLocalFile(filePath, zipFolderPath);

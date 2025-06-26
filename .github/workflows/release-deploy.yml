@@ -137,4 +137,4 @@ jobs:
           cd $GITHUB_WORKSPACE
           
           # 태그 삭제
-          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}" || echo "⚠️ 태그 $TAG_NAME 없음 — 삭제 스킵"
