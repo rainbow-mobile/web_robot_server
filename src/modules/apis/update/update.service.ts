@@ -119,25 +119,27 @@ export class UpdateService {
         httpLogger.info(`[UPDATE] swUpdate: ${JSON.stringify(data)}`);
 
         this.socketGateway.slamnav.once('swUpdateResponse', (res) => {
-          httpLogger.info(
-            `[UPDATE] software_update Response: ${JSON.stringify(res)}`,
-          );
-
-          httpLogger.info(
-            `[UPDATE] software_update applyReqUpdate: ${JSON.stringify(
-              res.applyReqUpdate,
-            )}`,
-          );
-
-          if (res.applyReqUpdate) {
-            res.applyReqUpdate = res.applyReqUpdate === 'true';
-          } else {
+          if (res) {
             httpLogger.info(
-              `[UPDATE] software_update applyReqUpdate falsy: ${res.applyReqUpdate}`,
+              `[UPDATE] software_update Response: ${JSON.stringify(res)}`,
             );
-          }
 
-          resolve(res);
+            httpLogger.info(
+              `[UPDATE] software_update applyReqUpdate: ${JSON.stringify(
+                res.applyReqUpdate,
+              )}`,
+            );
+
+            if (res.applyReqUpdate) {
+              res.applyReqUpdate = res.applyReqUpdate === 'true';
+            } else {
+              httpLogger.info(
+                `[UPDATE] software_update applyReqUpdate falsy: ${res.applyReqUpdate}`,
+              );
+            }
+
+            resolve(res);
+          }
           clearTimeout(timeoutId);
         });
 
