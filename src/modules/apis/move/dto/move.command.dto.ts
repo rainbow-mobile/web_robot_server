@@ -25,6 +25,26 @@ export class MoveCommandDto {
 
   @IsOptional()
   @IsString()
+  @Length(0, 50)
+  @ApiProperty({
+    description: 'Goal NAME (command == goal)',
+    example: '',
+  })
+  @Expose()
+  goal_name: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 50)
+  @ApiProperty({
+    description: 'Map NAME',
+    example: '',
+  })
+  @Expose()
+  map_name: string;
+
+  @IsOptional()
+  @IsString()
   @Length(1, 50)
   @ApiProperty({
     description: '주행 Method',

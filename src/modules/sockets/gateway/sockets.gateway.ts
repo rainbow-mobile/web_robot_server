@@ -1381,7 +1381,7 @@ export class SocketGateway
         }
 
         const json = JSON.parse(payload);
-        socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
+        // socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
         // delete json.time;
         if (isEqual(json, this.lastMoveStatus)) {
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
@@ -1928,6 +1928,64 @@ export class SocketGateway
       socketLogger.debug(`[RESPONSE] SLAMNAV Motion: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Motion: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swVersionInfo')
+  async handleSwVersionInfoMessage(@MessageBody() payload?: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload || '{}'));
+      this.slamnav?.emit('swVersionInfo', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swVersionInfo: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swVersionInfoResponse')
+  async handleSwVersionInfoResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['swVersionInfoResponse', 'all'])
+        .emit('swVersionInfoResponse', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swVersionInfoResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swUpdate')
+  async handleSwUpdateMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload || '{}'));
+
+      if (!json.version) {
+        socketLogger.warn(`[COMMAND] swUpdate: version is null/undefined`);
+        return;
+      }
+
+      this.slamnav?.emit('swUpdate', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swUpdate: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swUpdateResponse')
+  async handleSwUpdateResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(
+        payload ||
+          '{"applyReqUpdate": false, "version": "", "rejectReason": "Bad Response"}',
+      );
+
+      this.server
+        .to(['swUpdateResponse', 'all'])
+        .emit('swUpdateResponse', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swUpdateResponse: ${errorToJson(error)}`);
       throw error();
     }
   }

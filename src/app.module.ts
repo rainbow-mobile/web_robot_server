@@ -18,10 +18,13 @@ import { SoundModule } from './modules/apis/sound/sound.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
+import { UpdateModule } from './modules/apis/update/update.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.development' : '.env',
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -35,7 +38,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
         password: process.env.DB_PASSWORD || 'rainbow',
         database: process.env.DB_DATABASE || 'rainbow_rrs',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        // synchronize: false,
+        synchronize: false,
         logging: false,
       }),
     }),
@@ -54,6 +57,7 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
     LogModule,
     UploadModule,
     SoundModule,
+    UpdateModule,
     // MotionModule,
     ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
       ? [OnvifDeviceModule]
