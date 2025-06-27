@@ -16,6 +16,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
+import config from './modules/config';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
 import { UpdateModule } from './modules/apis/update/update.module';
@@ -23,6 +24,7 @@ import { UpdateModule } from './modules/apis/update/update.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [config],
       envFilePath:
         process.env.NODE_ENV === 'development' ? '.env.development' : '.env',
     }),

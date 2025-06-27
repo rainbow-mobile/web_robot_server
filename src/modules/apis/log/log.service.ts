@@ -27,6 +27,7 @@ import {
 } from '@common/interface/system/usage.interface';
 import { execSync } from 'child_process';
 import { SystemLogEntity } from './entity/system.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LogService {
@@ -38,6 +39,7 @@ export class LogService {
     private readonly systemRepository: Repository<SystemLogEntity>,
 
     private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
   ) {
     console.log('log constructor');
     this.init();
@@ -340,7 +342,7 @@ export class LogService {
     param: LogReadDto,
   ): Promise<PaginationResponse<any>> {
     try {
-      const logPath = '/data/log/' + type;
+      const logPath = this.configService.get('dataBasePath') + `/log/${type}`;
       const logdata: Array<{
         time: string;
         level: string;
@@ -962,8 +964,9 @@ export class LogService {
     }));
 
     if (oldData.length > 0) {
+      const dataBasePath = this.configService.get('dataBasePath');
       // 파일 저장 경로 설정
-      const archiveDir = path.join('/data/log', 'archive', type);
+      const archiveDir = path.join(dataBasePath, 'log', 'archive', type);
 
       if (!fs.existsSync(archiveDir)) {
         fs.mkdirSync(archiveDir, { recursive: true });
@@ -1030,7 +1033,8 @@ export class LogService {
 
   async archiveOldJSONData(type: string, date: string): Promise<void> {
     //파일 존재 확인
-    const filePath = '/data/log/' + type + '/' + date + '.log';
+    const dataBasePath = this.configService.get('dataBasePath');
+    const filePath = path.join(dataBasePath, 'log', type, date + '.log');
     if (fs.existsSync(filePath)) {
       //파일을 압축
       const zipPath = path.join(
