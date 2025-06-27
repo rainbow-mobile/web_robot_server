@@ -27,6 +27,10 @@ import {
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
 import { SubscribeDto } from '@sockets/dto/subscribe.dto';
+import { MoveService } from 'src/modules/apis/move/move.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
+import { LessThan, Repository } from 'typeorm';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -50,6 +54,8 @@ export class SocketGateway
 {
   constructor(
     private readonly networkService: NetworkService,
+    @InjectRepository(MoveLogEntity)
+    private readonly moveRepository: Repository<MoveLogEntity>,
     // private readonly influxService: InfluxDBService,
     // private readonly mqttService: MqttClientService,
     // private readonly kafakService: KafkaClientService,
@@ -1195,6 +1201,47 @@ export class SocketGateway
     }
   }
 
+  async saveLog(data: {
+    command: string;
+    goal_id?: string;
+    goal_name?: string;
+    map_name?: string;
+    x?: number;
+    y?: number;
+    rz?: number;
+  }) {
+    if (
+      data.command === 'stop' ||
+      data.command === 'goal' ||
+      data.command === 'target' ||
+      data.command === 'pause' ||
+      data.command === 'resume'
+    ) {
+      socketLogger.info(`[MOVE] saveLog : ${JSON.stringify(data)}`);
+      //save Log--------------------------------
+      this.moveRepository.save(data);
+
+      //일주일 지난 기록 삭제
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      await this.moveRepository.delete({
+        time: LessThan(oneWeekAgo),
+      });
+
+      // 30개 초과 시 가장 오래된 거 삭제
+      // const count = await this.moveRepository.count();
+      // console.log('count : ', count);
+      // if (count >= 30) {
+      //   const oldest = await this.moveRepository.find({
+      //     order: { time: 'ASC' }, // createdAt이 있다면
+      //     take: count - 29,
+      //   });
+      //   await this.moveRepository.remove(oldest);
+      // }
+
+      //save Log--------------------------------
+    }
+  }
   @SubscribeMessage('taskError')
   async handleTaskErrorMessage(
     @MessageBody()
@@ -1245,6 +1292,15 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
+      this.saveLog({
+        command: json.command,
+        goal_id: json.goal_id,
+        goal_name: json.goal_name ?? null,
+        map_name: json.map_name ?? null,
+        x: json.x ? parseFloat(json.x) : null,
+        y: json.x ? parseFloat(json.y) : null,
+        rz: json.rz ? parseFloat(json.rz) : null,
+      });
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
@@ -1268,6 +1324,15 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
+      this.saveLog({
+        command: json.command,
+        goal_id: json.goal_id,
+        goal_name: json.goal_name ?? null,
+        map_name: json.map_name ?? null,
+        x: json.x ? parseFloat(json.x) : null,
+        y: json.x ? parseFloat(json.y) : null,
+        rz: json.rz ? parseFloat(json.rz) : null,
+      });
       // if(isEqual(json,this.lastMoveRequest)){
       //   socketLogger.warn(`[COMMAND] Move: Equal lastMoveRequest`);
       //   return;
