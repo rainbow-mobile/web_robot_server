@@ -561,7 +561,7 @@ export class SocketGateway
             }
 
 
-            
+
             this.saveLog({
               command: json.command,
               goal_id: json.goal_id,
@@ -572,7 +572,7 @@ export class SocketGateway
               rz: json.rz ? parseFloat(json.rz) : null,
             });
 
-            socketLogger.info(`[COMMAND] FRS Move       : ${JSON.stringify(json)}`);
+            socketLogger.info(`[COMMAND] FRS Move2       : ${JSON.stringify(json)}`);
             if (this.slamnav) {
               this.slamnav?.emit('move', stringifyAllValues(json));
             } else {
