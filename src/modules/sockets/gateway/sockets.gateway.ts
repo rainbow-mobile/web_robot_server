@@ -559,6 +559,15 @@ export class SocketGateway
               socketLogger.warn(`[COMMAND] FRS Move : Command NULL`);
               return;
             }
+            this.saveLog({
+              command: json.command,
+              goal_id: json.goal_id,
+              goal_name: json.goal_name ?? null,
+              map_name: json.map_name ?? null,
+              x: json.x ? parseFloat(json.x) : null,
+              y: json.x ? parseFloat(json.y) : null,
+              rz: json.rz ? parseFloat(json.rz) : null,
+            });
 
             socketLogger.info(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
             if (this.slamnav) {
