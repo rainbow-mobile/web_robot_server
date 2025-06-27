@@ -559,6 +559,9 @@ export class SocketGateway
               socketLogger.warn(`[COMMAND] FRS Move : Command NULL`);
               return;
             }
+
+
+
             this.saveLog({
               command: json.command,
               goal_id: json.goal_id,
@@ -569,7 +572,7 @@ export class SocketGateway
               rz: json.rz ? parseFloat(json.rz) : null,
             });
 
-            socketLogger.info(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
+            socketLogger.info(`[COMMAND] FRS Move2       : ${JSON.stringify(json)}`);
             if (this.slamnav) {
               this.slamnav?.emit('move', stringifyAllValues(json));
             } else {
@@ -585,7 +588,7 @@ export class SocketGateway
           }
         } catch (error) {
           socketLogger.error(
-            `[COMMAND] FRS Move: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+            `[COMMAND] FRS Move      : ${JSON.stringify(_data)}, ${errorToJson(error)}`,
           );
         }
       });
@@ -1249,6 +1252,8 @@ export class SocketGateway
       // }
 
       //save Log--------------------------------
+    }else{
+      socketLogger.debug(`[ERROR] what?`)
     }
   }
   @SubscribeMessage('taskError')
