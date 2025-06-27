@@ -8,13 +8,18 @@ import * as moment from 'moment';
 import { readCsv, readJson, saveCsv, saveJson } from '@common/util/file.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { errorToJson } from '@common/util/error.util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MapService {
-  constructor(private readonly socketGateway: SocketGateway) {
-    if (fs.existsSync('/data/maps')) {
+  constructor(
+    private readonly socketGateway: SocketGateway,
+    private readonly configService: ConfigService,
+  ) {
+    const dataBasePath = this.configService.get('dataBasePath');
+    if (fs.existsSync(dataBasePath + '/maps')) {
       ///data/maps로 변경
-      this.mapDir = '/data/maps';
+      this.mapDir = dataBasePath + '/maps';
     } else {
       //homedir/maps 유지
     }

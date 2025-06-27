@@ -1,11 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
 import * as multer from 'multer';
 import { diskStorage } from 'multer';
+import { getDataBasePath } from 'src/modules/config/path.config';
+
+const DATA_BASE_PATH = getDataBasePath();
 
 // multer 설정
 const upload = multer({
   storage: diskStorage({
-    destination: '/data/upload/', // 파일 저장 폴더
+    destination: DATA_BASE_PATH + '/upload/', // 파일 저장 폴더
     filename: (req, file, callback) => {
       callback(null, `${file.originalname}`);
     },
@@ -16,7 +18,7 @@ const upload = multer({
 // multer 설정
 const upload_sound = multer({
   storage: diskStorage({
-    destination: '/data/sounds/', // 파일 저장 폴더
+    destination: DATA_BASE_PATH + '/sounds/', // 파일 저장 폴더
     filename: (req, file, callback) => {
       callback(null, `${file.originalname}`);
     },
