@@ -13,7 +13,6 @@ export class SoundService {
   private player = playSound();
   private curPlay: any = null;
   private isLooping: boolean = false;
-  public isPlaying: boolean = false;
 
   async play(body: SoundPlayDto) {
     return new Promise(async (resolve, reject) => {
@@ -111,8 +110,6 @@ export class SoundService {
                     playNext();
                   }
                 }
-
-                this.isPlaying = true;
               },
             );
           };
@@ -137,7 +134,7 @@ export class SoundService {
     });
   }
 
-  async stop(): Promise<void> {
+  async stop() {
     return new Promise((resolve) => {
       try {
         this.isLooping = false;
@@ -153,17 +150,14 @@ export class SoundService {
             if (!error) {
               httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
             }
-            this.isPlaying = false;
-            resolve();
+            resolve('Sound stopped');
           });
         } else {
-          this.isPlaying = false;
-          resolve();
+          resolve('Sound stopped');
         }
       } catch (error) {
         httpLogger.error(`[SOUND] Stop: ${errorToJson(error)}`);
-        this.isPlaying = false;
-        resolve();
+        resolve('Sound stopped');
       }
     });
   }
