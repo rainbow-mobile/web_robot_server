@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250630140447] - 2025-06-30
+- Release App: RRS, Branch: WB-10_sound-api, Version: rrs-20250630140447] release 배포
+
+
 ## [rrs-20250626124721] - 2025-06-26
 - Release App: RRS, Branch: main, Version: rrs-20250626124721] release 배포
 
