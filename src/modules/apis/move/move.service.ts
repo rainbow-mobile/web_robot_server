@@ -91,11 +91,16 @@ export class MoveService {
           y: data.x ? parseFloat(data.y) : null,
           rz: data.rz ? parseFloat(data.rz) : null,
         });
+
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
           );
-          resolve(data2);
+          if(data2.result === 'accept'){
+            resolve(data2);
+          }else{
+            reject({data:data2,status: HttpStatus.FORBIDDEN});
+          }
           clearTimeout(timeoutId);
         });
 
