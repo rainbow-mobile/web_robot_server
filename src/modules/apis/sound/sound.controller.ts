@@ -46,6 +46,10 @@ export class SoundController {
           .status(HttpStatus.BAD_REQUEST)
           .send({ message: 'fileNm is not mp3 format' });
       } else {
+        if (this.soundService.isPlaying) {
+          await this.soundService.stop();
+        }
+
         if (body.repeat) {
           const response = await this.soundService.playLoop(body);
           res.send(response);
