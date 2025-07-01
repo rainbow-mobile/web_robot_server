@@ -1,12 +1,12 @@
 import {
-  WebSocketGateway,
-  WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
   OnGatewayInit,
-  MessageBody,
-  ConnectedSocket,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as ioClient from 'socket.io-client';
@@ -16,7 +16,7 @@ import { TaskPayload } from '@common/interface/robot/task.interface';
 import { MovePayload } from '@common/interface/robot/move.interface';
 import { StatusPayload } from '@common/interface/robot/status.interface';
 import { stringifyAllValues } from '@common/util/network.util';
-import { Global, OnModuleDestroy } from '@nestjs/common';
+import { Global, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { errorToJson } from '@common/util/error.util';
 import { NetworkService } from 'src/modules/apis/network/network.service';
 import { instrument } from '@socket.io/admin-ui';
@@ -27,6 +27,32 @@ import {
 } from 'src/modules/apis/motion/dto/motion.dto';
 import { MotionPayload } from '@common/interface/robot/motion.interface';
 import { SubscribeDto } from '@sockets/dto/subscribe.dto';
+import {
+  generateAmrDockingPrecisionLog,
+  generateAmrMovingPrecisionLog,
+  generateAmrObstacleLog,
+  generateAmrVelocityLog,
+  generateGeneralLog,
+  generateManipulatorLog,
+  generateTorsoLog,
+  setAlarmGeneralLog
+} from '@common/logger/equipment.logger';
+import {
+  AmrLogType,
+  FormType,
+  GeneralLogType,
+  GeneralOperationName,
+  GeneralOperationStatus,
+  GeneralScope,
+  GeneralStatus,
+  ManipulatorType,
+  VehicleOperationName,
+} from '@common/enum/equipment.enum';
+import { MoveStatusPayload } from '@interface/move/move.interface';
+import { LogService } from 'src/modules/apis/log/log.service';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
+import { AlarmDto } from '@sockets/dto/alarm.dto';
+import { SequenceDto } from '@sockets/dto/sequence.dto';
 import { MoveService } from 'src/modules/apis/move/move.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
@@ -50,10 +76,12 @@ export class SocketGateway
     OnGatewayConnection,
     OnGatewayDisconnect,
     OnModuleDestroy,
-    OnGatewayInit
+    OnGatewayInit,
+    OnModuleInit
 {
   constructor(
     private readonly networkService: NetworkService,
+    private readonly logService: LogService
     @InjectRepository(MoveLogEntity)
     private readonly moveRepository: Repository<MoveLogEntity>,
     // private readonly influxService: InfluxDBService,
@@ -78,6 +106,11 @@ export class SocketGateway
   slamnav: Socket;
   streaming: Socket;
   taskman: Socket;
+
+  //samsung
+  acs:Socket;
+  manipulator:Socket;
+  torso:Socket;
 
   taskState: TaskPayload = {
     connection: false,
@@ -227,7 +260,6 @@ export class SocketGateway
 
   //Test Techtaka (lastGoalMove)
   lastGoal: string;
-
   intervalTime = 500 + Math.floor(Math.random() * 500);
 
   //disabled(25-05-07, for traffic test)
@@ -990,9 +1022,7 @@ export class SocketGateway
       },
     };
 
-    this.server
-      ?.to(['programStatus', 'all', 'allStatus'])
-      ?.emit('programStatus', statusData.data);
+    this.server.to(['programStatus', 'all', 'allStatus']).emit('programStatus', statusData.data);
 
     if (this.frsSocket?.connected && global.robotSerial != '') {
       this.frsSocket.emit('programStatus', statusData);
@@ -1001,8 +1031,45 @@ export class SocketGateway
     //interval changed (25-05-07 for traffic test)
   }, this.intervalTime);
 
+
+  onModuleInit() {
+    this.setConnectChecker();
+  }
+ 
   onModuleDestroy() {
+    generateGeneralLog({
+      logType: GeneralLogType.MANUAL,
+      status: GeneralStatus.STOP,
+      scope: GeneralScope.EVENT,
+      operationName: GeneralOperationName.PROGRAM_END,
+      operationStatus: GeneralOperationStatus.SET,
+    });
+
     socketLogger.warn(`[CONNECT] Socket Gateway Destroy`);
+    this.frsSocket?.disconnect();
+    clearInterval(this.interval_frs);
+  }
+
+  private connectChecker:NodeJS.Timeout;
+  setConnectChecker(){
+    this.connectChecker = setTimeout(()=>{
+      if(!this.slamnav){
+        socketLogger.error(`[CHECKER] connect Checker : Slamnav not connected`);
+        this.setAlarmCode(2000);
+      }else{
+        socketLogger.debug(`[CHECKER] connect Checker : Slamnav connected`);
+      }
+
+      if(!this.acs){
+        socketLogger.error(`[CHECKER] connect Checker : acs not connected`);
+        // this.setAlarmCode(2016);
+      }else{
+        socketLogger.debug(`[CHECKER] connect Checker : acs connected`);
+      }
+    },10000);
+  }
+  onApplicationShutdown(signal?: string): any {  
+    socketLogger.warn(`[CONNECT] Socket Gateway Shutdown Signal ${signal}`);
     this.frsSocket.disconnect();
     clearInterval(this.interval_frs);
   }
@@ -1018,6 +1085,8 @@ export class SocketGateway
       } else {
         this.slamnav = client;
         this.frsSocket?.emit('slamRegist');
+        clearTimeout(this.connectChecker);
+        this.clearAlarmCode(2000);
       }
     } else if (client.handshake.query.name == 'taskman') {
       this.taskman = client;
@@ -1025,6 +1094,13 @@ export class SocketGateway
       // this.taskman.emit('file')
     } else if (client.handshake.query.name == 'streaming') {
       this.streaming = client;
+    } else if (client.handshake.query.name == 'manipulator') {
+      this.manipulator = client;
+    } else if (client.handshake.query.name == 'torso') {
+      this.torso = client;
+    } else if (client.handshake.query.name == 'acs') {
+      this.acs = client;
+      this.clearAlarmCode(2000);
     }
     client.join(client.handshake.query.name);
   }
@@ -1058,6 +1134,7 @@ export class SocketGateway
 
           this.frsSocket?.emit('slamUnregist');
           this.slamnav = null;
+          this.setConnectChecker();
 
           this.moveState = {
             command: '',
@@ -1093,7 +1170,12 @@ export class SocketGateway
         result: undefined,
       };
       this.taskman = null;
+    } else if (client.handshake.query.name == 'manipulator') {
+      this.manipulator = null;
+    } else if (client.handshake.query.name == 'torso') {
+      this.torso = null;
     }
+
     client.leave(client.handshake.query.name as string);
   }
 
@@ -1374,10 +1456,113 @@ export class SocketGateway
         }
 
         const json = JSON.parse(payload);
-        if (isEqual(json, this.lastStatus)) {
+        const tempjson = {...json};
+        delete tempjson.time;
+        if (isEqual(tempjson, this.lastStatus)) {
           return;
         }
-        this.lastStatus = json;
+
+        //samsung
+        if(this.lastStatus?.map.map_name !== tempjson.map.map_name){
+          if(tempjson.map.map_name !== ""){
+            this.clearAlarmCode(2002);
+            this.clearAlarmCode(2003);
+            this.clearAlarmCode(2004);
+          }else{
+            this.setAlarmCode(2003);
+          }
+        }
+        if(this.lastStatus?.robot_state.localization !== tempjson.robot_state.localization){
+          if(tempjson.robot_state.localization === "good"){
+            this.clearAlarmCode(2001);
+          }else{
+            this.setAlarmCode(2001);
+          }
+        }
+        if(this.lastStatus?.robot_state.emo !== tempjson.robot_state.emo){
+          if(tempjson.robot_state.emo === "false"){
+            this.clearAlarmCode(3000);
+          }else{
+            this.setAlarmCode(3000);
+          }
+        }
+        if(this.lastStatus?.power.bat_out !== tempjson.power.bat_out){
+          if(parseFloat(tempjson.power.bat_out) < 43.4){
+              this.setAlarmCode(4000);
+              this.clearAlarmCode(4002);
+              this.clearAlarmCode(4003);
+          }else if(parseFloat(tempjson.power.bat_percent) < 5){
+              this.setAlarmCode(4003);
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4002);
+          }else if(parseFloat(tempjson.power.bat_percent) < 15){
+              this.setAlarmCode(4002);
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4003);
+          }else{
+              this.clearAlarmCode(4000);
+              this.clearAlarmCode(4002);
+              this.clearAlarmCode(4003);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].current !== tempjson.motor[0].current){
+          if(parseFloat(tempjson.motor[0].current) > 20 || parseFloat(tempjson.motor[1].current) > 20){
+            this.setAlarmCode(4500);
+          }else{
+            this.clearAlarmCode(4500);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].temp !== tempjson.motor[0].temp){
+          if(parseFloat(tempjson.motor[0].temp) > 60 || parseFloat(tempjson.motor[1].temp) > 60){
+            this.setAlarmCode(4505);
+          }else{
+            this.clearAlarmCode(4505);
+          }
+        }
+
+        if(this.lastStatus?.motor[0].status !== tempjson.motor[0].status){
+          if(tempjson.motor[0].status === "1"){
+            this.clearAlarmCode(4515);
+          }else{
+            this.setAlarmCode(4515);
+          }
+        }
+
+        if(this.lastStatus?.motor[1].status !== tempjson.motor[1].status){
+          if(tempjson.motor[1].status === "1"){
+            this.clearAlarmCode(4514);
+          }else{
+            this.setAlarmCode(4514);
+          }
+        }
+ 
+        if(this.lastStatus?.motor[0].connection !== tempjson.motor[0].connection || this.lastStatus?.motor[1].connection !== tempjson.motor[1].connection){
+          if(tempjson.motor[0].connection === "true" && tempjson.motor[1].connection === "false"){
+            this.clearAlarmCode(4517);
+          }else{
+            this.setAlarmCode(4517);
+          }
+        }
+
+        if(this.lastStatus?.lidar[0].connection !== tempjson.lidar[0].connection){
+          if(tempjson.lidar[0].connection === "1"){
+            this.clearAlarmCode(5100);
+          }else{
+            this.setAlarmCode(5100);
+          }
+        }
+
+        if(this.lastStatus?.lidar[1].connection !== tempjson.lidar[1].connection){
+          if(tempjson.lidar[1].connection === "1"){
+            this.clearAlarmCode(5101);
+          }else{
+            this.setAlarmCode(5101);
+          }
+        }
+
+        this.lastStatus = tempjson;
 
         this.server.to(['status', 'all', 'allStatus']).emit('status', json);
         if (this.frsSocket?.connected) {
@@ -1386,6 +1571,7 @@ export class SocketGateway
             data: json,
           });
         }
+
 
         this.robotState = { ...this.robotState, ...json };
       } else {
@@ -1466,11 +1652,13 @@ export class SocketGateway
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
           return;
         }
-        this.lastMoveStatus = json;
+        this.lastMoveStatus = tempjson;
+
 
         this.server
           .to(['moveStatus', 'all', 'allStatus'])
           .emit('moveStatus', json);
+
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveStatus', {
@@ -1480,10 +1668,19 @@ export class SocketGateway
         }
 
         // this.influxService.writeMoveStatus(json);
-        this.robotState = { ...this.robotState, ...json };
+        this.robotState = {...this.robotState,...json};
       }
     } catch (error) {
       socketLogger.error(`[STATUS] MoveStatus : ${errorToJson(error)}`);
+
+      // generateGeneralLog({
+      //   logType: GeneralLogType.AUTO,
+      //   status: GeneralStatus.ERROR,
+      //   scope: GeneralScope.VEHICLE,
+      //   operationName: GeneralOperationName.MOVE,
+      //   operationStatus: GeneralOperationStatus.SET,
+      //   data: `[STATUS] MoveStatus : ${errorToJson(error)}`,
+      // });
     }
   }
 
@@ -1500,6 +1697,7 @@ export class SocketGateway
     try {
       if (client.id == this.slamnav?.id) {
         if (payload == null || payload == undefined) {
+          this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
           return;
         }
@@ -1511,14 +1709,87 @@ export class SocketGateway
           json.command == undefined ||
           json.command == ''
         ) {
+          this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: Command NULL`);
           return;
+        }
+
+        //samsung
+        if(json.result === "fail"){
+          if(json.message === "path out"){
+            this.setAlarmCode(2005);
+          }else if(json.message === "localization fail"){
+            this.setAlarmCode(2006);
+          }else if(json.message === "path not found"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "somthing wrong"){
+          }else if(json.message === "not ready"){
+            this.setAlarmCode(2019);
+          }else if(json.message === "manual stopped"){
+          }else if(json.message === "bumper crash"){
+            this.setAlarmCode(3001);
+          }else{
+
+          }
+        }else if(json.result === "reject"){
+          if(json.message === "map not loaded"){
+            this.setAlarmCode(2003);
+          }else if(json.message === "no localization"){
+            this.setAlarmCode(2020);
+          }else if(json.message === "target location out of range"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "target location occupied"){
+            this.setAlarmCode(2021);
+          }else if(json.message === "target command not supported by multi"){
+          }else if(json.message === "not supported"){
+          }else if(json.message === "can not find node"){
+            this.setAlarmCode(2018);
+          }else if(json.message === "empty node id"){
+          }else{
+            this.setAlarmCode(2021);
+          }
         }
 
         this.server
           .to(['moveResponse', 'all', 'move'])
           .emit('moveResponse', json);
         socketLogger.debug(`[RESPONSE] SLAMNAV Move: ${JSON.stringify(json)}`);
+
+        if(json.command === 'goal' || json.command === 'target'){
+          if (json.result === 'success' || json.result === 'fail') {
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.END,
+            });
+          }else if(json.result === 'accept'){
+            if(generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.READY,
+              operationStatus: GeneralOperationStatus.END,
+            })){
+              generateGeneralLog({
+                logType: GeneralLogType.AUTO,
+                status: GeneralStatus.RUN,
+                scope: GeneralScope.VEHICLE,
+                operationName: VehicleOperationName.MOVE,
+                operationStatus: GeneralOperationStatus.START,
+              });
+            }
+          }else if(json.result === 'reject'){
+            generateGeneralLog({
+              logType: GeneralLogType.AUTO,
+              status: GeneralStatus.RUN,
+              scope: GeneralScope.VEHICLE,
+              operationName: VehicleOperationName.READY,
+              operationStatus: GeneralOperationStatus.END,
+            });
+          }
+        }
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('moveResponse', {
@@ -1534,9 +1805,123 @@ export class SocketGateway
         );
       }
     } catch (error) {
+      this.setAlarmLog(10000);
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
       throw error();
     }
+  }
+
+
+
+  async setSequence(data:SequenceDto, scope: string){
+    try{
+      /// 1) Dto 검사
+      if(scope === undefined || scope === ""){
+        throw new RpcException('scope 값이 없습니다.');
+      }
+      if(!Object.values(["manipulator","torso","acs"]).includes(scope.toLowerCase())){
+        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
+      }
+
+      if(data.operationName === undefined || data.operationName === ""){
+        throw new RpcException('operationName 값이 없습니다.');
+      }
+      if(data.operationStatus === undefined || data.operationStatus === ""){
+        throw new RpcException('operationStatus 값이 없습니다.');
+      }
+      if(!Object.values(GeneralOperationStatus).includes(data.operationStatus as GeneralOperationStatus)){
+        throw new RpcException('operationStatus 값이 형식과 일치하지 않습니다.');
+      }
+      
+
+      /// 2) GeneralLog 저장
+      if(scope.toLowerCase() == "manipulator"){
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.MANIPULATOR,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
+      })
+      }else if(scope.toLowerCase() == "torso"){
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.TORSO,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
+      })
+      }else if(scope.toLowerCase() === "acs"){
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.EVENT,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus
+        })
+      }else{
+        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
+      }
+      return;
+    }catch(error){
+      socketLogger.error(`[LOG] setSequence : ${errorToJson(error)}`)
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  async setAlarmCode(alarmCode: number){
+    this.setAlarm({alarmCode:alarmCode.toString(),state:true})
+  }
+  async clearAlarmCode(alarmCode: number){
+    // this.setAlarm({alarmCode:alarmCode.toString(),state:false})
+  }
+
+  async setAlarm(data: AlarmDto){
+    try{
+      /// 1) Get Alarm
+      const alarmDetail = await this.logService.getAlarmDetail(data.alarmCode);
+
+      /// 2) Check Before Alarm (중복 방지) 
+      const lastAlarm = await this.logService.getLastAlarm(data.alarmCode);
+      if(lastAlarm){
+        if(data.alarmCode === lastAlarm.alarmCode && data.state === lastAlarm.state){
+          socketLogger.warn(`[LOG] duplicate alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`)
+          return;
+        }
+      }
+      socketLogger.warn(`[LOG] set alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`)
+          
+
+      /// 3) Generate AlarmDto
+      const alarmDto = {alarmCode:data.alarmCode, alarmDetail:data.alarmDetail, emitFlag:false, state:data.state};
+
+      /// 4) Emit alarm
+      this.server.to(["alarm","all"]).emit("alarm", alarmDto);
+
+      /// 5) save log
+      this.logService.setAlarm(alarmDto);
+
+      /// 6) general log
+      const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
+      setAlarmGeneralLog(alarmEntity,GeneralOperationStatus.SET);
+    }catch(error){
+      socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`)
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+
+
+  async setAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.SET);
+  }
+  async clearAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.END);
+  }
+  async startAlarmLog(code:number|string){
+    setAlarmGeneralLog(await this.logService.getAlarmDetail(code),GeneralOperationStatus.START);
   }
 
   @SubscribeMessage('loadResponse')
@@ -1563,6 +1948,15 @@ export class SocketGateway
         }
 
         this.server.to(['loadResponse', 'all']).emit('loadResponse', json);
+
+        //samsung
+        if(json.result === "fail"){
+          if(json.message === "type error"){
+            this.setAlarmCode(2004);
+          }else{
+            this.setAlarmCode(2002);
+          }
+        }
 
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('loadResponse', {
@@ -1591,6 +1985,7 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('mappingResponse')
   async handleMappingReponseMessage(
     @MessageBody() payload: string,
@@ -1730,6 +2125,7 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('dockResponse')
   async handleDockReponseMessage(@MessageBody() payload: string) {
     try {
@@ -1747,6 +2143,14 @@ export class SocketGateway
       ) {
         socketLogger.warn(`[RESPONSE] dockResponse: Command NULL`);
         return;
+      }
+
+      //samsung
+      if(json.result === "fail"){
+        this.setAlarmCode(2007);
+        // this.setAlarmCode(2215);
+      }else if(json.result === 'reject'){
+        this.setAlarmCode(2024);
       }
 
       this.server.to(['dockResponse', 'all']).emit('dockResponse', json);
@@ -1866,6 +2270,7 @@ export class SocketGateway
       throw error();
     }
   }
+
   @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload: any[]) {
     try {
@@ -2011,6 +2416,28 @@ export class SocketGateway
     }
   }
 
+
+  //samsung
+  @SubscribeMessage('acsStart')
+  async handleACSAutoRunStartMessage(){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.AUTORUN_START,
+        operationStatus: GeneralOperationStatus.SET,
+    })
+  }
+
+  @SubscribeMessage('acsEnd')
+  async handleACSAutoRunEndMessage(){
+    generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: GeneralScope.EVENT,
+        operationName: GeneralOperationName.AUTORUN_END,
+        operationStatus: GeneralOperationStatus.SET,
+    })
   @SubscribeMessage('swVersionInfo')
   async handleSwVersionInfoMessage(@MessageBody() payload?: string) {
     try {
@@ -2087,6 +2514,170 @@ export class SocketGateway
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
       throw error();
+    }
+  }
+
+  @SubscribeMessage('alarm')
+  async handleAlarmLogMessage(@MessageBody() payload:AlarmDto){
+    try{
+      if(payload.state){
+        this.server.to(["alarm"]).emit('alarm',payload);
+      }else{
+        this.server.to(["alarm","alarmClear"]).emit('alarmClear',payload);
+      }
+      this.logService.writeAlarmLog(payload.alarmCode,payload.alarmDetail,payload.state);
+    }catch(error){
+      socketLogger.error(`[LOG] alarmLog: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('equipmentLog')
+  async handleEquipmentLogMessage(
+    @MessageBody() payload: { form: FormType; data: any },
+  ) {
+    if (typeof payload === 'string') {
+      payload = JSON.parse(payload);
+    }
+
+    switch (payload.form) {
+      case FormType.MANIPULATOR:
+        // const parseManipulatorPosition = await this.parseManipulatorPosition(
+        //   payload.data,
+        // );
+
+        const parseManipulatorPosition: {
+          position: ManipulatorType;
+          datetime: string;
+          x: number;
+          y: number;
+          z: number;
+          rx: number;
+          ry: number;
+          rz: number;
+          base: number;
+          shoulder: number;
+          elbow: number;
+          wrist1: number;
+          wrist2: number;
+        } = payload.data;
+
+        if (parseManipulatorPosition.position === ManipulatorType.LEFT) {
+          generateManipulatorLog(
+            {
+              dateTime: parseManipulatorPosition.datetime,
+              x: parseManipulatorPosition.x,
+              y: parseManipulatorPosition.y,
+              z: parseManipulatorPosition.z,
+              rx: parseManipulatorPosition.rx,
+              ry: parseManipulatorPosition.ry,
+              rz: parseManipulatorPosition.rz,
+              base: parseManipulatorPosition.base,
+              shoulder: parseManipulatorPosition.shoulder,
+              elbow: parseManipulatorPosition.elbow,
+              wrist1: parseManipulatorPosition.wrist1,
+              wrist2: parseManipulatorPosition.wrist2,
+            },
+            `${ManipulatorType.LEFT}_Manipulator_position`,
+          );
+        } else if (
+          parseManipulatorPosition.position === ManipulatorType.RIGHT
+        ) {
+          generateManipulatorLog(
+            {
+              dateTime: parseManipulatorPosition.datetime,
+              x: parseManipulatorPosition.x,
+              y: parseManipulatorPosition.y,
+              z: parseManipulatorPosition.z,
+              rx: parseManipulatorPosition.rx,
+              ry: parseManipulatorPosition.ry,
+              rz: parseManipulatorPosition.rz,
+              base: parseManipulatorPosition.base,
+              shoulder: parseManipulatorPosition.shoulder,
+              elbow: parseManipulatorPosition.elbow,
+              wrist1: parseManipulatorPosition.wrist1,
+              wrist2: parseManipulatorPosition.wrist2,
+            },
+            `${ManipulatorType.RIGHT}_Manipulator_Position`,
+          );
+        }
+
+        break;
+      case FormType.TORSO:
+        // const parseTorsoPosition = await this.parseTorsoPosition(payload.data);
+        const parseTorsoPosition: {
+          datetime: string;
+          x: number;
+          z: number;
+          theta: number;
+        } = payload.data;
+
+        generateTorsoLog(
+          {
+            dateTime: parseTorsoPosition.datetime,
+            x: parseTorsoPosition.x,
+            z: parseTorsoPosition.z,
+            theta: parseTorsoPosition.theta,
+          },
+          `Torso_Position`,
+        );
+        break;
+      case FormType.AMR:
+        const parseData = payload.data;
+        if (parseData.kind === AmrLogType.VELOCITY) {
+          generateAmrVelocityLog(
+            {
+              dateTime: parseData.datetime,
+              x: parseData.x,
+              y: parseData.y,
+              theta: parseData.theta,
+              xVel: parseData.xVel,
+              yVel: parseData.yVel,
+            },
+            `Mobile_Position_Velocity`,
+          );
+        } else if (parseData.kind === AmrLogType.OBSTACLE) {
+          generateAmrObstacleLog(
+            {
+              dateTime: parseData.datetime,
+              statusFront: parseData.statusFront,
+              distanceFront: parseData.distanceFront,
+              thetaFront: parseData.thetaFront,
+              statusBack: parseData.statusBack,
+              distanceBack: parseData.distanceBack,
+              thetaBack: parseData.thetaBack,
+            },
+            `Lidar_Recognize_Obstacle`,
+          );
+        } else if (parseData.kind === AmrLogType.DOCKING_PRECISION) {
+          generateAmrDockingPrecisionLog(
+            {
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
+              twoDMarkerRecognizePosition:
+                parseData.twoDMarkerRecognizePosition,
+            },
+            `Mobile_Charging_Docking_Precision`,
+          );
+        } else if (parseData.kind === AmrLogType.MOVING_PRECISION) {
+          generateAmrMovingPrecisionLog(
+            {
+              dateTime: parseData.datetime
+                .toISOString()
+                .replace('T', ' ')
+                .substring(0, 23),
+              twoDMarkerRecognizePosition:
+                parseData.twoDMarkerRecognizePosition,
+            },
+            `Mobile_Moving_Precision`,
+          );
+        }
+
+        break;
+      default:
+        break;
     }
   }
 

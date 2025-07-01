@@ -1,5 +1,8 @@
 # Release log
 
+## [rrs-20250613173512] - 2025-06-13
+- [RRS] Branch: feat/samsung-em/log, Version: rrs-20250613173512] release 배포
+
 ## [rrs-20250630110742] - 2025-06-30
 - Release App: RRS, Branch: main, Version: rrs-20250630110742] release 배포
 
@@ -224,6 +227,7 @@
 
 ## [rrs-20250526163147] - 2025-05-26
 - [RRS] Branch: develop, Version: rrs-20250526163147] release 배포
+
 
 
 ## [rrs-20250526161832] - 2025-05-26

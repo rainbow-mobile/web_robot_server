@@ -4,6 +4,7 @@ import httpLogger from '@common/logger/http.logger';
 import * as csv from 'csv';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { errorToJson } from './error.util';
+import { RpcException } from '@nestjs/microservices';
 
 export async function readJson(dir: string) {
   return new Promise<any[]>(async (resolve, reject) => {
@@ -31,33 +32,27 @@ export async function readJson(dir: string) {
   });
 }
 
-export async function deleteFile(dir: string) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      fs.open(dir, 'r', (err, fd) => {
-        if (err) {
-          httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
-          reject({
-            status: HttpStatus.NOT_FOUND,
-            data: { message: HttpStatusMessagesConstants.FILE.NOT_FOUND_404 },
-          });
-        } else {
-          fs.unlink(dir, (err) => {
-            if (err) {
-              httpLogger.error(
-                `[FILE] deleteFile: ${dir}, ${errorToJson(err)}`,
-              );
-              reject({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                data: {
-                  message: HttpStatusMessagesConstants.FILE.FAIL_DELETE_500,
-                },
-              });
-            }
-            resolve({
-              message: HttpStatusMessagesConstants.FILE.SUCCESS_DELETE_200,
-            });
-          });
+
+export async function deleteFile(dir:string){
+    return new Promise(async(resolve,reject) => {
+        try{
+            fs.open(dir, "r", (err,fd) => {
+                if(err){
+                    httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
+                    reject({status:HttpStatus.NOT_FOUND, data:{message:HttpStatusMessagesConstants.FILE.NOT_FOUND_404}});
+                }else{
+                    fs.unlink(dir, (err) => {
+                        if(err){
+                            httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
+                            reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.FILE.FAIL_DELETE_500}})
+                        }
+                        resolve({message:HttpStatusMessagesConstants.FILE.SUCCESS_DELETE_200});
+                    })
+                }
+            })
+        }catch(error){
+            httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(error)}`);
+            reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:error}});
         }
       });
     } catch (error) {

@@ -9,6 +9,7 @@ import {
   Post,
   HttpStatus,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
@@ -17,6 +18,10 @@ import { StatusTestDto } from './dto/status.dto';
 import { LogReadDto } from './dto/log.read.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { errorToJson } from '@common/util/error.util';
+import { RpcException } from '@nestjs/microservices';
+import { homedir } from 'os';
+import * as path from 'path';
+import { deleteFile } from '@common/util/file.util';
 
 @ApiTags('로그 관련 API (log)')
 @Controller('log')
@@ -113,6 +118,100 @@ export class LogController {
         `[LOG] getSocketLog: ${JSON.stringify(param)}, ${errorToJson(error)}`,
       );
       res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('alarmList')
+  @ApiOperation({
+    summary: '정의된 알람 리스트 조회'
+  })
+  async getAlarmDetails(@Res() res: Response) {
+    try {
+      const response = await this.logService.getAlarmDetails();
+      res.send(response);
+    } catch (error) {
+      res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('alarm')
+  @ApiOperation({
+    summary: '현재 활성화된 알람 리스트 조회'
+  })
+  async getAlarms() {
+    try {
+      httpLogger.debug(`[LOG] getAlarms`);
+      const response = await this.logService.getAlarms();
+      this.logService.setAlarmsFlag(response);
+      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      return result;
+    } catch (error) {
+      httpLogger.error(
+        `[LOG] getAlarms: ${errorToJson(error)}`,
+      );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+
+    }
+  }
+
+  @Get('alarm/all')
+  @ApiOperation({
+    summary: '알람 리스트(DB) 조회'
+  })
+  async getAlarmAll() {
+    try {
+      httpLogger.debug(`[LOG] getAlarmAll`);
+      const response = await this.logService.getAlarmsAll();
+      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      return result;
+    } catch (error) {
+      httpLogger.error(
+        `[LOG] getAlarmAll: ${errorToJson(error)}`,
+      );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+
+    }
+  }
+  @Delete('alarm')
+  async alarmReset(){
+    try{
+      return this.logService.resetAlarms();
+    }catch(error){
+      httpLogger.error(
+        `[LOG] alarmReset: ${errorToJson(error)}`,
+      );
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  @Get('generalLog/:date')
+  async getGeneralLog(@Param('date') date: string){
+    try{
+      console.log("getGeneralLog : ", date);
+      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
+      console.log("path : ",_path);
+      return this.logService.readGeneralLog(_path);
+    }catch(error){
+      console.error(error);
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
+    }
+  }
+
+  @Delete('generalLog/:date')
+  async deleteGeneralLog(@Param('date') date: string){
+    try{
+      console.log("deleteGeneralLog : ", date);
+      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
+      console.log("path : ",_path);
+      return deleteFile(_path);
+    }catch(error){
+      console.error(error);
+      if(error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.')
     }
   }
 
