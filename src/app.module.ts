@@ -58,16 +58,14 @@ import { UpdateModule } from './modules/apis/update/update.module';
     LogModule,
     UploadModule,
     SoundModule,
-    OnvifDeviceModule
+    OnvifDeviceModule,
     UpdateModule,
     // MotionModule,
     // ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
     //   ? [OnvifDeviceModule]
     //   : []),
   ],
-  providers: [
-    AppService
-  ],
+  providers: [AppService],
   controllers: [],
 })
 export class AppModule {}

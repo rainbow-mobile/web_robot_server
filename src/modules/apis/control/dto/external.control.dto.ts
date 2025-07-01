@@ -1,0 +1,20 @@
+import { Optional } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsString, Length } from 'class-validator';
+
+export class ExternalCommandDto {
+  @IsString()
+  @Length(1, 50)
+  @ApiProperty({
+    description:
+      '전달할 명령을 입력하세요. Foot명령의 경우 move, stop이 있습니다.',
+  })
+  command: string;
+
+  @IsNumber()
+  @Optional()
+  @ApiProperty({
+    description: '이동할 위치값을 입력하세요.',
+  })
+  pose: number;
+}

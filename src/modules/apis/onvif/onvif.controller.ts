@@ -55,7 +55,7 @@ export class OnvifDeviceController implements OnModuleInit {
       const methodName = Object.keys(result['Envelope']['Body']).find(
         (key) => key !== '$',
       );
-      
+
       httpLogger.info(
         `[ONVIF] Request Device Service : ${methodName}, ${JSON.stringify(result)}`,
       );

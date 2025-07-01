@@ -12,7 +12,6 @@ import { Response, Request } from 'express';
 import httpLogger from '@common/logger/http.logger';
 import { UploadMapDto } from './dto/upload.map.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { homedir } from 'os';
 import * as FormData from 'form-data';
 // const FormData = require('form-data');
 import * as fs from 'fs';
@@ -30,18 +29,10 @@ export class UploadController {
 
   @Post('map')
   async uploadMap(@Body() data: UploadMapDto, @Res() res: Response) {
-    const path = join(homedir(), 'maps', data.mapNm);
-    const path2 = join('/data/maps', data.mapNm);
     const zipFileName = `${data.name}.zip`;
-    let originalFilePath;
-    let zipFilePath;
-    if (fs.existsSync(path2)) {
-      originalFilePath = path2;
-      zipFilePath = join(path2, zipFileName);
-    } else {
-      originalFilePath = path;
-      zipFilePath = join(path, zipFileName);
-    }
+    const originalFilePath = join('/data/maps', data.mapNm);
+    const zipFilePath = join(originalFilePath, zipFileName);
+
     try {
       httpLogger.info(`[UPLOAD] uploadMap: ${JSON.stringify(data)}`);
       await this.uploadService.zipFolder(originalFilePath, zipFilePath);
@@ -126,16 +117,10 @@ export class PublishController {
 
       try {
         httpLogger.info(`[UPLOAD] PublishMap: Download Done`);
-        const zipFilePath = join(homedir(), 'upload', req.file.originalname);
+        const zipFilePath = join('data', 'upload', req.file.originalname);
 
-        const path = join(homedir(), 'maps', mapNm);
-        const path2 = join('/data/maps', mapNm);
-        let extractToPath;
-        if (fs.existsSync(path2)) {
-          extractToPath = path2;
-        } else {
-          extractToPath = path;
-        }
+        const extractToPath = join('/data/maps', mapNm);
+
         httpLogger.info(
           `[UPLOAD] PublishMap: ${zipFilePath}, ${extractToPath}`,
         );
@@ -154,14 +139,14 @@ export class PublishController {
           .status(HttpStatus.INTERNAL_SERVER_ERROR)
           .send(HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500);
       } finally {
-        fs.unlink(homedir() + '/upload/' + req.file.originalname, (err) => {
+        fs.unlink('/data/upload/' + req.file.originalname, (err) => {
           if (err)
             httpLogger.error(
-              `[UPLOAD] PublishMap: Delete Zip (${homedir() + '/upload' + req.file.originalname}) ${errorToJson(err)}`,
+              `[UPLOAD] PublishMap: Delete Zip ('/data/upload' + req.file.originalname}) ${errorToJson(err)}`,
             );
           // 성공적으로 업로드된 파일 정보 반환
           httpLogger.info(
-            `[UPLOAD] PublishMap: Delete Zip (${homedir() + '/upload' + req.file.originalname})`,
+            `[UPLOAD] PublishMap: Delete Zip ('/data/upload' + req.file.originalname})`,
           );
         });
       }

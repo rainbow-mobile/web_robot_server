@@ -20,7 +20,6 @@ import { GoalReadDto } from './dto/goal.read.dto';
 import { errorToJson } from '@common/util/error.util';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { join } from 'path';
-import { homedir } from 'os';
 import { HttpError } from '@influxdata/influxdb3-client';
 
 @ApiTags('맵 관련 API (map)')
@@ -161,7 +160,7 @@ export class MapController {
           'mapNm이 지정되지 않았습니다.',
         );
       }
-      const path = join(homedir(), 'maps', mapNm, 'tiles');
+      const path = join('data', 'maps', mapNm, 'tiles');
       const path2 = join('/data/maps', mapNm, 'tiles');
       if (fs.existsSync(path)) {
         return true;
@@ -214,7 +213,7 @@ export class MapController {
           .status(HttpStatus.BAD_REQUEST)
           .send({ message: 'z값이 없습니다' });
       }
-      const path = join(homedir(), 'maps', mapNm, 'tiles', z, x, y + '.png');
+      const path = join('data', 'maps', mapNm, 'tiles', z, x, y + '.png');
       const path2 = join('/data/maps', mapNm, 'tiles', z, x, y + '.png');
       if (fs.existsSync(path)) {
         const stream = fs.createReadStream(path);

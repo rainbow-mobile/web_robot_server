@@ -1,6 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import * as multer from 'multer';
-import { homedir } from 'os';
 import * as AdmZip from 'adm-zip';
 import * as fs from 'fs';
 import httpLogger from '@common/logger/http.logger';
@@ -13,7 +12,7 @@ import { join } from 'path';
 export class UploadService {
   private storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, homedir() + '/upload/'); // 파일이 저장될 디렉토리
+      cb(null, '/data/upload/'); // 파일이 저장될 디렉토리
     },
     filename: (req, file, cb) => {
       cb(null, file.originalname); // 원본 파일 이름 그대로 저장
@@ -34,14 +33,7 @@ export class UploadService {
           },
         );
 
-        const path = join(homedir(), 'maps');
-        const path2 = join('/data/maps');
-        let pathDir;
-        if (fs.existsSync(path2)) {
-          pathDir = path2;
-        } else {
-          pathDir = path;
-        }
+        const pathDir = join('/data/maps');
 
         const fileStream = fs.createWriteStream(join(pathDir, fileName));
         response.data.pipe(fileStream);

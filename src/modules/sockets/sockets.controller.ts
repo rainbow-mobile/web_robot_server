@@ -23,7 +23,13 @@ import { errorToJson } from '@common/util/error.util';
 import { EmitOnOffDto } from './dto/lidar.onoff.dto';
 import { VariableDto } from '../apis/variables/dto/variables.dto';
 import { generateGeneralLog } from '@common/logger/equipment.logger';
-import { GeneralLogType, GeneralOperationName, GeneralOperationStatus, GeneralScope, GeneralStatus } from '@common/enum/equipment.enum';
+import {
+  GeneralLogType,
+  GeneralOperationName,
+  GeneralOperationStatus,
+  GeneralScope,
+  GeneralStatus,
+} from '@common/enum/equipment.enum';
 import { AlarmDto } from './dto/alarm.dto';
 import { SequenceDto } from './dto/sequence.dto';
 
@@ -37,7 +43,7 @@ export class SocketsController implements OnModuleInit {
 
   onModuleInit() {
     console.log('socket init');
-    this.getVariable().then(()=>{
+    this.getVariable().then(() => {
       generateGeneralLog({
         logType: GeneralLogType.MANUAL,
         status: GeneralStatus.IDLE,
@@ -320,9 +326,10 @@ export class SocketsController implements OnModuleInit {
   @Post('alarm')
   @ApiOperation({
     summary: '알람 발생 (내부)',
-    description: '각 모듈에서 에러 알람이 발생한 경우 송신. 알람은 중복검사를 거친 후 DB에 저장되며 추후 polling 요청이 들어오면 리스트로써 반환됨',
+    description:
+      '각 모듈에서 에러 알람이 발생한 경우 송신. 알람은 중복검사를 거친 후 DB에 저장되며 추후 polling 요청이 들어오면 리스트로써 반환됨',
   })
-  async setAlarm(@Body() data: AlarmDto){
+  async setAlarm(@Body() data: AlarmDto) {
     return this.socketGateway.setAlarm(data);
   }
 
@@ -331,8 +338,10 @@ export class SocketsController implements OnModuleInit {
     summary: '시퀀스 LOG 저장',
     description: '시퀀스 LOG 저장. scope는 manipulator, torso값만 취급 ',
   })
-  async sequenceManipulator(@Param('scope') scope:string, @Body() data: SequenceDto){
+  async sequenceManipulator(
+    @Param('scope') scope: string,
+    @Body() data: SequenceDto,
+  ) {
     return this.socketGateway.setSequence(data, scope);
   }
-
 }

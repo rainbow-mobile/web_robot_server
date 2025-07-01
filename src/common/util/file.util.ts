@@ -32,27 +32,33 @@ export async function readJson(dir: string) {
   });
 }
 
-
-export async function deleteFile(dir:string){
-    return new Promise(async(resolve,reject) => {
-        try{
-            fs.open(dir, "r", (err,fd) => {
-                if(err){
-                    httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
-                    reject({status:HttpStatus.NOT_FOUND, data:{message:HttpStatusMessagesConstants.FILE.NOT_FOUND_404}});
-                }else{
-                    fs.unlink(dir, (err) => {
-                        if(err){
-                            httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
-                            reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:HttpStatusMessagesConstants.FILE.FAIL_DELETE_500}})
-                        }
-                        resolve({message:HttpStatusMessagesConstants.FILE.SUCCESS_DELETE_200});
-                    })
-                }
-            })
-        }catch(error){
-            httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(error)}`);
-            reject({status:HttpStatus.INTERNAL_SERVER_ERROR, data:{message:error}});
+export async function deleteFile(dir: string) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      fs.open(dir, 'r', (err, fd) => {
+        if (err) {
+          httpLogger.error(`[FILE] deleteFile: ${dir}, ${errorToJson(err)}`);
+          reject({
+            status: HttpStatus.NOT_FOUND,
+            data: { message: HttpStatusMessagesConstants.FILE.NOT_FOUND_404 },
+          });
+        } else {
+          fs.unlink(dir, (err) => {
+            if (err) {
+              httpLogger.error(
+                `[FILE] deleteFile: ${dir}, ${errorToJson(err)}`,
+              );
+              reject({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                data: {
+                  message: HttpStatusMessagesConstants.FILE.FAIL_DELETE_500,
+                },
+              });
+            }
+            resolve({
+              message: HttpStatusMessagesConstants.FILE.SUCCESS_DELETE_200,
+            });
+          });
         }
       });
     } catch (error) {

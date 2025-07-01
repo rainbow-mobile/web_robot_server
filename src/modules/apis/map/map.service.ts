@@ -2,7 +2,6 @@ import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import * as fs from 'fs';
-import { homedir } from 'os';
 import * as Path from 'path';
 import * as moment from 'moment';
 import { readCsv, readJson, saveCsv, saveJson } from '@common/util/file.util';
@@ -12,16 +11,13 @@ import { errorToJson } from '@common/util/error.util';
 @Injectable()
 export class MapService {
   constructor(private readonly socketGateway: SocketGateway) {
-    if (fs.existsSync('/data/maps')) {
-      ///data/maps로 변경
-      this.mapDir = '/data/maps';
-    } else {
-      //homedir/maps 유지
-    }
+    ///data/maps로 변경
+    this.mapDir = '/data/maps';
+
     console.log(this.mapDir);
   }
 
-  private mapDir: string = homedir() + '/maps';
+  private mapDir: string = '/data/maps';
 
   async getMapList() {
     return new Promise<any>(async (resolve, reject) => {

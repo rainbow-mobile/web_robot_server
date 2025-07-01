@@ -13,7 +13,7 @@ const socketLogger = createLogger({
   ),
   transports: [
     new (DailyRotateFile as any)({
-      filename: homedir() + '/log/socket/%DATE%.log',
+      filename: '/data/log/socket/%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       level: 'info',
     }),

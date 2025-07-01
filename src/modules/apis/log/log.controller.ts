@@ -123,7 +123,7 @@ export class LogController {
 
   @Get('alarmList')
   @ApiOperation({
-    summary: '정의된 알람 리스트 조회'
+    summary: '정의된 알람 리스트 조회',
   })
   async getAlarmDetails(@Res() res: Response) {
     try {
@@ -136,82 +136,84 @@ export class LogController {
 
   @Get('alarm')
   @ApiOperation({
-    summary: '현재 활성화된 알람 리스트 조회'
+    summary: '현재 활성화된 알람 리스트 조회',
   })
   async getAlarms() {
     try {
       httpLogger.debug(`[LOG] getAlarms`);
       const response = await this.logService.getAlarms();
       this.logService.setAlarmsFlag(response);
-      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      const result = response.map(({ emitFlag, ...alarm }) => alarm);
       return result;
     } catch (error) {
-      httpLogger.error(
-        `[LOG] getAlarms: ${errorToJson(error)}`,
-      );
-      if(error instanceof RpcException) throw error;
-      throw new RpcException('서버에 에러가 발생했습니다.')
-
+      httpLogger.error(`[LOG] getAlarms: ${errorToJson(error)}`);
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
 
   @Get('alarm/all')
   @ApiOperation({
-    summary: '알람 리스트(DB) 조회'
+    summary: '알람 리스트(DB) 조회',
   })
   async getAlarmAll() {
     try {
       httpLogger.debug(`[LOG] getAlarmAll`);
       const response = await this.logService.getAlarmsAll();
-      const result = response.map(({emitFlag, ...alarm}) => alarm);
+      const result = response.map(({ emitFlag, ...alarm }) => alarm);
       return result;
     } catch (error) {
-      httpLogger.error(
-        `[LOG] getAlarmAll: ${errorToJson(error)}`,
-      );
-      if(error instanceof RpcException) throw error;
-      throw new RpcException('서버에 에러가 발생했습니다.')
-
+      httpLogger.error(`[LOG] getAlarmAll: ${errorToJson(error)}`);
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
   @Delete('alarm')
-  async alarmReset(){
-    try{
+  async alarmReset() {
+    try {
       return this.logService.resetAlarms();
-    }catch(error){
-      httpLogger.error(
-        `[LOG] alarmReset: ${errorToJson(error)}`,
-      );
-      if(error instanceof RpcException) throw error;
-      throw new RpcException('서버에 에러가 발생했습니다.')
+    } catch (error) {
+      httpLogger.error(`[LOG] alarmReset: ${errorToJson(error)}`);
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
 
   @Get('generalLog/:date')
-  async getGeneralLog(@Param('date') date: string){
-    try{
-      console.log("getGeneralLog : ", date);
-      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
-      console.log("path : ",_path);
+  async getGeneralLog(@Param('date') date: string) {
+    try {
+      console.log('getGeneralLog : ', date);
+      const _path = path.join(
+        homedir(),
+        'log',
+        'samsung-em',
+        date + '_ROBOT.log',
+      );
+      console.log('path : ', _path);
       return this.logService.readGeneralLog(_path);
-    }catch(error){
+    } catch (error) {
       console.error(error);
-      if(error instanceof RpcException) throw error;
-      throw new RpcException('서버에 에러가 발생했습니다.')
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
 
   @Delete('generalLog/:date')
-  async deleteGeneralLog(@Param('date') date: string){
-    try{
-      console.log("deleteGeneralLog : ", date);
-      const _path = path.join(homedir(),"log","samsung-em",date+"_ROBOT.log");
-      console.log("path : ",_path);
+  async deleteGeneralLog(@Param('date') date: string) {
+    try {
+      console.log('deleteGeneralLog : ', date);
+      const _path = path.join(
+        homedir(),
+        'log',
+        'samsung-em',
+        date + '_ROBOT.log',
+      );
+      console.log('path : ', _path);
       return deleteFile(_path);
-    }catch(error){
+    } catch (error) {
       console.error(error);
-      if(error instanceof RpcException) throw error;
-      throw new RpcException('서버에 에러가 발생했습니다.')
+      if (error instanceof RpcException) throw error;
+      throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
 
