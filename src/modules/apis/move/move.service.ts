@@ -1,3 +1,5 @@
+import { GeneralLogType, GeneralOperationStatus, GeneralScope, GeneralStatus, VehicleOperationName } from '@common/enum/equipment.enum';
+import { generateGeneralLog } from '@common/logger/equipment.logger';
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { LessThan, Repository } from 'typeorm';

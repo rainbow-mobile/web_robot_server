@@ -20,6 +20,7 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   app.setGlobalPrefix('api');
   app.enableCors({
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -114,6 +115,8 @@ async function bootstrap() {
   });
 
   SwaggerModule.setup('docs/api', app, swaggerDocument, swaggerCustomOptions);
+
+  app.enableShutdownHooks();
 
   const port = 11334;
   await app.listen(port);
