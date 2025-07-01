@@ -1,6 +1,7 @@
 import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
+import { ExternalCommandDto } from './dto/external.control.dto';
 
 @Injectable()
 export class ControlService {
@@ -59,6 +60,40 @@ export class ControlService {
           .emit(topic, { ...data, time: Date.now().toString() });
         httpLogger.info(`[CONTROL] sendCommand: ${JSON.stringify(data)}`);
         resolve({});
+      } else {
+        reject({
+          status: HttpStatus.GATEWAY_TIMEOUT,
+          data: { message: '프로그램이 연결되지 않았습니다' },
+        });
+      }
+    });
+  }
+
+  async externalCommand(request: ExternalCommandDto) {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.externalAccessory != null) {
+        const data = { ...request, time: Date.now().toString() };
+
+        this.socketGateway.externalAccessory.emit('externalCommand', data);
+        httpLogger.info(`[CONTROL] externalCommand: ${JSON.stringify(data)}`);
+
+        this.socketGateway.externalAccessory.once(
+          'externalResponse',
+          (resp) => {
+            httpLogger.info(
+              `[CONTROL] externalResponse: ${JSON.stringify(resp)}`,
+            );
+            resolve(resp);
+            clearTimeout(timeoutId);
+          },
+        );
+
+        const timeoutId = setTimeout(() => {
+          reject({
+            status: HttpStatus.GATEWAY_TIMEOUT,
+            data: { message: '프로그램이 응답하지 않습니다' },
+          });
+        }, 5000); // 5초 타임아웃
       } else {
         reject({
           status: HttpStatus.GATEWAY_TIMEOUT,

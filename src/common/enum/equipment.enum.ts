@@ -32,17 +32,17 @@ export enum GeneralOperationName {
 export enum VehicleOperationName {
   AMR_SERVO_OFF = 'AMR_SERVO_OFF',
   MOVE = 'MOVE',
-  READY = 'READY'
+  READY = 'READY',
 }
 
 export enum ManipulatoreOperationName {
   MOVE = 'MOVE',
-  READY = 'READY'
+  READY = 'READY',
 }
 
 export enum TorsoOperationName {
   MOVE = 'MOVE',
-  READY = 'READY'
+  READY = 'READY',
 }
 export enum GeneralLogType {
   AUTO = 'A',

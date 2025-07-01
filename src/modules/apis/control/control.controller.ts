@@ -29,6 +29,7 @@ import { errorToJson } from '@common/util/error.util';
 import { LedControlDto } from './dto/led.control.dto';
 import { LidarControlDto } from './dto/lidar.control.dto';
 import { MotorControlDto } from './dto/motor.control.dto';
+import { ExternalCommandDto } from './dto/external.control.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -326,6 +327,27 @@ export class ControlController {
     } catch (error) {
       httpLogger.error(
         `[COMMAND] RandomSeq Control: ${error.status} -> ${errorToJson(error.data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Post('external/foot')
+  @ApiOperation({
+    summary: '외부 악세서리 Foot 명령',
+    description: '외부 악세서리 Foot에 명령을 전달합니다.',
+  })
+  async externalCommand(
+    @Body() request: ExternalCommandDto,
+    @Res() res: Response,
+  ) {
+    try {
+      httpLogger.info(`[COMMAND] externalCommand Control`);
+      const response = await this.controlService.externalCommand(request);
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[COMMAND] externalCommand Control: ${error.status} -> ${errorToJson(error.data)}`,
       );
       return res.status(error.status).send(error.data);
     }

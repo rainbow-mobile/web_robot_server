@@ -18,8 +18,8 @@ import { AlarmLogEntity } from './entity/alarmlog.entity';
       StatusLogEntity,
       SystemLogEntity,
       AlarmEntity,
-      AlarmLogEntity
-    ])
+      AlarmLogEntity,
+    ]),
   ],
   controllers: [LogController],
   providers: [LogService],

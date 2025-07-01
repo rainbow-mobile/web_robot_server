@@ -17,7 +17,13 @@ import { Response } from 'express';
 import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { errorToJson } from '@common/util/error.util';
 import { generateGeneralLog } from '@common/logger/equipment.logger';
-import { GeneralLogType, GeneralOperationStatus, GeneralScope, GeneralStatus, VehicleOperationName } from '@common/enum/equipment.enum';
+import {
+  GeneralLogType,
+  GeneralOperationStatus,
+  GeneralScope,
+  GeneralStatus,
+  VehicleOperationName,
+} from '@common/enum/equipment.enum';
 import { HttpError } from '@influxdata/influxdb3-client';
 
 @ApiTags('이동 관련 API (move)')

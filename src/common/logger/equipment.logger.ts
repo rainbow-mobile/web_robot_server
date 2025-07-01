@@ -29,11 +29,7 @@ function getCustomFilenameWithDate(suffix: string) {
   const DD = ('0' + now.getDate()).slice(-2);
   const HH = ('0' + now.getHours()).slice(-2);
 
-  let baseLogDir: string;
-  // if (os.platform() === 'win32') {
-    // baseLogDir = path.join('D:\\Log');
-  // } else {
-    baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
+  const baseLogDir: string = path.join('data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
@@ -45,11 +41,7 @@ function getCustomFilenameWithoutDate(suffix: string) {
   const MM = ('0' + (now.getMonth() + 1)).slice(-2);
   const DD = ('0' + now.getDate()).slice(-2);
 
-  let baseLogDir: string;
-  // if (os.platform() === 'win32') {
-    // baseLogDir = path.join('D:\\Log');
-  // } else {
-    baseLogDir = path.join(os.homedir(), 'log', 'samsung-em');
+  const baseLogDir: string = path.join('data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}_${suffix}.log`);
@@ -90,8 +82,8 @@ export function generateManipulatorLog(
 ) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tX\tY\tZ\tRX\tRY\tRZ\tBase\tShoulder\tElbow\tWrist1\tWrist2';
-  
-    const row = [
+
+  const row = [
     data.dateTime,
     data.x,
     data.y,
@@ -111,12 +103,7 @@ export function generateManipulatorLog(
 
 export function generateTorsoLog(data: TorsoPositionPayload, suffix: string) {
   const header = 'SEM_LOG_VERSION=2.0\nDateTime\tX\tZ\ttheta';
-  const row = [
-    data.dateTime,
-    data.x,
-    data.z,
-    data.theta,
-  ].join('\t');
+  const row = [data.dateTime, data.x, data.z, data.theta].join('\t');
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
@@ -177,12 +164,14 @@ export function generateAmrMovingPrecisionLog(
   writeLog(getCustomFilenameWithDate(suffix), header, row);
 }
 
-
-export function setAlarmGeneralLog(alarm: AlarmEntity, status: GeneralOperationStatus){
+export function setAlarmGeneralLog(
+  alarm: AlarmEntity,
+  status: GeneralOperationStatus,
+) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
   const row = [
-      `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
+    `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
     global.robotSerial ?? '-',
     GeneralLogType.MANUAL,
     '-',
@@ -192,12 +181,11 @@ export function setAlarmGeneralLog(alarm: AlarmEntity, status: GeneralOperationS
     GeneralScope.ALARM,
     alarm.operationName,
     status,
-    ''
+    '',
   ].join('\t');
 
   writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
 }
-
 
 export function generateGeneralLog(param: {
   dateTime?: string;
@@ -214,10 +202,16 @@ export function generateGeneralLog(param: {
 }) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
-  
-  if(param.operationStatus === "END"){
-    if(!lastGeneralLog || lastGeneralLog.operationStatus !== "START" || lastGeneralLog.operationName !== param.operationName){
-      socketLogger.warn(`[LOG] generateGeneralLog : unknwon END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`)
+
+  if (param.operationStatus === 'END') {
+    if (
+      !lastGeneralLog ||
+      lastGeneralLog.operationStatus !== 'START' ||
+      lastGeneralLog.operationName !== param.operationName
+    ) {
+      socketLogger.warn(
+        `[LOG] generateGeneralLog : unknwon END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`,
+      );
       return false;
     }
   }

@@ -43,7 +43,7 @@ export class LogService {
 
     @InjectRepository(AlarmLogEntity)
     private readonly alarmLogRepository: Repository<AlarmLogEntity>,
-    
+
     @InjectRepository(AlarmEntity)
     private readonly alarmRepository: Repository<AlarmEntity>,
 
@@ -70,7 +70,7 @@ export class LogService {
   private systemUsage = null;
   private processUsage: Map<string, any>;
   private networkUsage = null;
-  private alarmIndex:number = 0;
+  private alarmIndex: number = 0;
 
   async addDisconForGaps(filteredArray: { time: Date; value: any }[]) {
     const result = [];
@@ -350,427 +350,432 @@ export class LogService {
     }
   }
 
-  async writeAlarmLog(alarmCode: string, alarmDetail: string | undefined, state: boolean){
-    try{
+  async writeAlarmLog(
+    alarmCode: string,
+    alarmDetail: string | undefined,
+    state: boolean,
+  ) {
+    try {
       const alarm = await this.getAlarmDetail(alarmCode);
       this.alarmLogRepository.save({
-        alarmCode:alarm.alarmCode,
-        alarmDetail:alarmDetail,
-        state:state
+        alarmCode: alarm.alarmCode,
+        alarmDetail: alarmDetail,
+        state: state,
       });
-    }catch(error){
+    } catch (error) {
       console.error(error);
     }
   }
 
-  async getAlarmDetail(alarmCode: string | number):Promise<AlarmEntity>{
-    if(typeof alarmCode !== "string"){
+  async getAlarmDetail(alarmCode: string | number): Promise<AlarmEntity> {
+    if (typeof alarmCode !== 'string') {
       alarmCode = alarmCode.toString();
     }
     const queryBuilder = this.alarmRepository.createQueryBuilder();
-    const result = await queryBuilder.andWhere("alarmCode = :alarmCode",{alarmCode}).getMany();
+    const result = await queryBuilder
+      .andWhere('alarmCode = :alarmCode', { alarmCode })
+      .getMany();
 
-    if(result.length > 0){
+    if (result.length > 0) {
       return result[0];
-    }else{
-      throw new RpcException(`Not Found alarmCode ${alarmCode}`)
+    } else {
+      throw new RpcException(`Not Found alarmCode ${alarmCode}`);
     }
   }
 
-  async getAlarmDetails():Promise<AlarmEntity[]>{
+  async getAlarmDetails(): Promise<AlarmEntity[]> {
     return this.alarmRepository.createQueryBuilder().getMany();
   }
 
-  async generateAlarmDB(){
-    let entity:AlarmEntity;
+  async generateAlarmDB() {
+    let entity: AlarmEntity;
     entity = {
-      alarmCode:'2000',
-      operationName:'PROGRAM_START_FAIL',
-      alarmDetail:'',
-      alarmDescription:'프로그램 시작을 실패했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'2001',
-      operationName:'LOCALIZATION_FAIL',
-      alarmDetail:'',
-      alarmDescription:'초기 위치를 찾지 못했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'2002',
-      operationName:'MAP_LOAD_FAIL',
-      alarmDetail:'',
-      alarmDescription:'지도 가져오기를 실패했습니다.',
-      isError: true
-    }
+      alarmCode: '2000',
+      operationName: 'PROGRAM_START_FAIL',
+      alarmDetail: '',
+      alarmDescription: '프로그램 시작을 실패했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2003',
-      operationName:'MAP_NOT_LOAD',
-      alarmDetail:'',
-      alarmDescription:'지도 데이터가 없습니다.',
-      isError: true
-    }
+      alarmCode: '2001',
+      operationName: 'LOCALIZATION_FAIL',
+      alarmDetail: '',
+      alarmDescription: '초기 위치를 찾지 못했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2004',
-      operationName:'MAP_TYPE_FAIL',
-      alarmDetail:'',
-      alarmDescription:'지도 데이터의 형식이 불일치합니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-
-
-    entity = {
-      alarmCode:'2005',
-      operationName:'MOVE_PATH_FAIL',
-      alarmDetail:'',
-      alarmDescription:'경로를 이탈했습니다.',
-      isError: true
-    }
+      alarmCode: '2002',
+      operationName: 'MAP_LOAD_FAIL',
+      alarmDetail: '',
+      alarmDescription: '지도 가져오기를 실패했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2006',
-      operationName:'MOVE_LOCAL_FAIL',
-      alarmDetail:'',
-      alarmDescription:'이동 중 위치를 잃었습니다.',
-      isError: true
-    }
+      alarmCode: '2003',
+      operationName: 'MAP_NOT_LOAD',
+      alarmDetail: '',
+      alarmDescription: '지도 데이터가 없습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2007',
-      operationName:'DOCK_FAIL',
-      alarmDetail:'',
-      alarmDescription:'도킹에 실패했습니다.',
-      isError: true
-    }
+      alarmCode: '2004',
+      operationName: 'MAP_TYPE_FAIL',
+      alarmDetail: '',
+      alarmDescription: '지도 데이터의 형식이 불일치합니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2016',
-      operationName:'ACS_CONNECT_FAIL',
-      alarmDetail:'',
-      alarmDescription:'ACS와 연결이 끊어졌습니다.',
-      isError: true
-    }
+      alarmCode: '2005',
+      operationName: 'MOVE_PATH_FAIL',
+      alarmDetail: '',
+      alarmDescription: '경로를 이탈했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2018',
-      operationName:'MOVE_PATH_EMPTY',
-      alarmDetail:'',
-      alarmDescription:'경로가 생성되지 않았습니다.',
-      isError: true
-    }
+      alarmCode: '2006',
+      operationName: 'MOVE_LOCAL_FAIL',
+      alarmDetail: '',
+      alarmDescription: '이동 중 위치를 잃었습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2019',
-      operationName:'MOVE_DRIVE_FAIL',
-      alarmDetail:'',
-      alarmDescription:'드라이버가 시작되지 않았습니다.',
-      isError: true
-    }
+      alarmCode: '2007',
+      operationName: 'DOCK_FAIL',
+      alarmDetail: '',
+      alarmDescription: '도킹에 실패했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2020',
-      operationName:'LOCALIZATION_NOT_START',
-      alarmDetail:'',
-      alarmDescription:'위치추정 모듈이 시작되지 않았습니다.',
-      isError: true
-    }
+      alarmCode: '2016',
+      operationName: 'ACS_CONNECT_FAIL',
+      alarmDetail: '',
+      alarmDescription: 'ACS와 연결이 끊어졌습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2021',
-      operationName:'MOVE_FAIL',
-      alarmDetail:'',
-      alarmDescription:'도착 실패했습니다.',
-      isError: true
-    }
+      alarmCode: '2018',
+      operationName: 'MOVE_PATH_EMPTY',
+      alarmDetail: '',
+      alarmDescription: '경로가 생성되지 않았습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2024',
-      operationName:'ACS_DOCK_COMMAND_UNKNOWN',
-      alarmDetail:'',
-      alarmDescription:'ACS 도킹 명령이 잘못되었습니다.',
-      isError: true
-    }
+      alarmCode: '2019',
+      operationName: 'MOVE_DRIVE_FAIL',
+      alarmDetail: '',
+      alarmDescription: '드라이버가 시작되지 않았습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'2215',
-      operationName:'CHARGE_FAIL',
-      alarmDetail:'',
-      alarmDescription:'CHARGE명령을 받았지만 수행하지 못했습니다.',
-      isError: true
-    }
+      alarmCode: '2020',
+      operationName: 'LOCALIZATION_NOT_START',
+      alarmDetail: '',
+      alarmDescription: '위치추정 모듈이 시작되지 않았습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'3000',
-      operationName:'EMS',
-      alarmDetail:'',
-      alarmDescription:'EMS 버튼이 눌렸습니다.',
-      isError: true
-    }
+      alarmCode: '2021',
+      operationName: 'MOVE_FAIL',
+      alarmDetail: '',
+      alarmDescription: '도착 실패했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'3001',
-      operationName:'FRONT_BUMPER_CRASH',
-      alarmDetail:'',
-      alarmDescription:'전면 범퍼에 충돌이 발생했습니다.',
-      isError: true
-    }
+      alarmCode: '2024',
+      operationName: 'ACS_DOCK_COMMAND_UNKNOWN',
+      alarmDetail: '',
+      alarmDescription: 'ACS 도킹 명령이 잘못되었습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'3002',
-      operationName:'BACK_BUMPER_CRASH',
-      alarmDetail:'',
-      alarmDescription:'후면 범퍼에 충돌이 발생했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'3004',
-      operationName:'FRONT_OBSTACLE_DETECT',
-      alarmDetail:'',
-      alarmDescription:'전방에 물체가 감지되었습니다.',
-      isError: false
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'3005',
-      operationName:'MOVE_STOP_OBSTACLE',
-      alarmDetail:'',
-      alarmDescription:'전방 물체 감지로 이동 불가합니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'3006',
-      operationName:'BACK_OBSTACLE_DETECT',
-      alarmDetail:'',
-      alarmDescription:'후방에 물체가 감지되었습니다.',
-      isError: false
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'3007',
-      operationName:'MOVE_STOP_OBSTACLE',
-      alarmDetail:'',
-      alarmDescription:'후방 물체 감지로 이동 불가합니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4000',
-      operationName:'BATTERY_EMPTY',
-      alarmDetail:'',
-      alarmDescription:'배터리 저전압 이상입니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4001',
-      operationName:'CHARGE_ERROR',
-      alarmDetail:'',
-      alarmDescription:'배터리 충전 이상입니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4002',
-      operationName:'BATTERY_LOW',
-      alarmDetail:'',
-      alarmDescription:'배터리 부족으로 충전이 필요합니다.',
-      isError: false
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4003',
-      operationName:'BATTERY_VERY_LOW',
-      alarmDetail:'',
-      alarmDescription:'배터리 방전으로 충전이 필요합니다.',
-      isError: false
-    }
-    await this.alarmRepository.save(entity);
-        
-    entity = {
-      alarmCode:'4500',
-      operationName:'MOTOR_CURRENT_HIGH',
-      alarmDetail:'',
-      alarmDescription:'모터 전류가 너무 높습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-        
-    entity = {
-      alarmCode:'4505',
-      operationName:'TEMPERATURE_HIGH',
-      alarmDetail:'',
-      alarmDescription:'내부 온도가 높습니다.',
-      isError: false
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4512',
-      operationName:'MOTOR_BIG_ERROR',
-      alarmDetail:'',
-      alarmDescription:'Encoder 위치 편차가 큽니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4514',
-      operationName:'LEFT_MOTOR_ERROR',
-      alarmDetail:'',
-      alarmDescription:'왼쪽 모터에 이상이 발생했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4515',
-      operationName:'RIGHT_MOTOR_ERROR',
-      alarmDetail:'',
-      alarmDescription:'오른쪽 모터에 이상이 발생했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'4517',
-      operationName:'MOTOR_CONNECT_FAIL',
-      alarmDetail:'',
-      alarmDescription:'모터가 연결되지 않았습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'5100',
-      operationName:'FRONT_LIDAR_CONNECT_FAIL',
-      alarmDetail:'',
-      alarmDescription:'전방 LiDAR 통신에 문제가 발생했습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'5101',
-      operationName:'BACK_LIDAR_CONNECT_FAIL',
-      alarmDetail:'',
-      alarmDescription:'후방 LiDAR 통신에 문제가 발생했습니다.',
-      isError: true
-    }
+      alarmCode: '2215',
+      operationName: 'CHARGE_FAIL',
+      alarmDetail: '',
+      alarmDescription: 'CHARGE명령을 받았지만 수행하지 못했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'5103',
-      operationName:'LIDAR_CLEAN',
-      alarmDetail:'',
-      alarmDescription:'라이다 센서에 오염이 감지되었습니다.',
-      isError: true
-    }
-    await this.alarmRepository.save(entity);
-    
-    entity = {
-      alarmCode:'10000',
-      operationName:'SERVER_ERROR',
-      alarmDetail:'',
-      alarmDescription:'서버에 에러가 발생했습니다.',
-      isError: true
-    }
+      alarmCode: '3000',
+      operationName: 'EMS',
+      alarmDetail: '',
+      alarmDescription: 'EMS 버튼이 눌렸습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'10001',
-      operationName:'SLAMNAV_CONNECT_FAIL',
-      alarmDetail:'',
-      alarmDescription:'SLAMNAV가 연결되지 않았습니다.',
-      isError: true
-    }
+      alarmCode: '3001',
+      operationName: 'FRONT_BUMPER_CRASH',
+      alarmDetail: '',
+      alarmDescription: '전면 범퍼에 충돌이 발생했습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
 
     entity = {
-      alarmCode:'10002',
-      operationName:'PAYLOAD_EMPTY',
-      alarmDetail:'',
-      alarmDescription:'명령이 비어있습니다.',
-      isError: true
-    }
+      alarmCode: '3002',
+      operationName: 'BACK_BUMPER_CRASH',
+      alarmDetail: '',
+      alarmDescription: '후면 범퍼에 충돌이 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '3004',
+      operationName: 'FRONT_OBSTACLE_DETECT',
+      alarmDetail: '',
+      alarmDescription: '전방에 물체가 감지되었습니다.',
+      isError: false,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '3005',
+      operationName: 'MOVE_STOP_OBSTACLE',
+      alarmDetail: '',
+      alarmDescription: '전방 물체 감지로 이동 불가합니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '3006',
+      operationName: 'BACK_OBSTACLE_DETECT',
+      alarmDetail: '',
+      alarmDescription: '후방에 물체가 감지되었습니다.',
+      isError: false,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '3007',
+      operationName: 'MOVE_STOP_OBSTACLE',
+      alarmDetail: '',
+      alarmDescription: '후방 물체 감지로 이동 불가합니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4000',
+      operationName: 'BATTERY_EMPTY',
+      alarmDetail: '',
+      alarmDescription: '배터리 저전압 이상입니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4001',
+      operationName: 'CHARGE_ERROR',
+      alarmDetail: '',
+      alarmDescription: '배터리 충전 이상입니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4002',
+      operationName: 'BATTERY_LOW',
+      alarmDetail: '',
+      alarmDescription: '배터리 부족으로 충전이 필요합니다.',
+      isError: false,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4003',
+      operationName: 'BATTERY_VERY_LOW',
+      alarmDetail: '',
+      alarmDescription: '배터리 방전으로 충전이 필요합니다.',
+      isError: false,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4500',
+      operationName: 'MOTOR_CURRENT_HIGH',
+      alarmDetail: '',
+      alarmDescription: '모터 전류가 너무 높습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4505',
+      operationName: 'TEMPERATURE_HIGH',
+      alarmDetail: '',
+      alarmDescription: '내부 온도가 높습니다.',
+      isError: false,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4512',
+      operationName: 'MOTOR_BIG_ERROR',
+      alarmDetail: '',
+      alarmDescription: 'Encoder 위치 편차가 큽니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4514',
+      operationName: 'LEFT_MOTOR_ERROR',
+      alarmDetail: '',
+      alarmDescription: '왼쪽 모터에 이상이 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4515',
+      operationName: 'RIGHT_MOTOR_ERROR',
+      alarmDetail: '',
+      alarmDescription: '오른쪽 모터에 이상이 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '4517',
+      operationName: 'MOTOR_CONNECT_FAIL',
+      alarmDetail: '',
+      alarmDescription: '모터가 연결되지 않았습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '5100',
+      operationName: 'FRONT_LIDAR_CONNECT_FAIL',
+      alarmDetail: '',
+      alarmDescription: '전방 LiDAR 통신에 문제가 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '5101',
+      operationName: 'BACK_LIDAR_CONNECT_FAIL',
+      alarmDetail: '',
+      alarmDescription: '후방 LiDAR 통신에 문제가 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '5103',
+      operationName: 'LIDAR_CLEAN',
+      alarmDetail: '',
+      alarmDescription: '라이다 센서에 오염이 감지되었습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '10000',
+      operationName: 'SERVER_ERROR',
+      alarmDetail: '',
+      alarmDescription: '서버에 에러가 발생했습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '10001',
+      operationName: 'SLAMNAV_CONNECT_FAIL',
+      alarmDetail: '',
+      alarmDescription: 'SLAMNAV가 연결되지 않았습니다.',
+      isError: true,
+    };
+    await this.alarmRepository.save(entity);
+
+    entity = {
+      alarmCode: '10002',
+      operationName: 'PAYLOAD_EMPTY',
+      alarmDetail: '',
+      alarmDescription: '명령이 비어있습니다.',
+      isError: true,
+    };
     await this.alarmRepository.save(entity);
   }
 
-  async resetAlarms():Promise<void>{
-    try{
+  async resetAlarms(): Promise<void> {
+    try {
       await this.alarmLogRepository.clear();
       return;
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[LOG] resetAlarms Error : ${errorToJson(error)}`);
-      throw new RpcException(`알람로그를 삭제할 수 없습니다.`) 
+      throw new RpcException(`알람로그를 삭제할 수 없습니다.`);
     }
   }
-  async getAlarmsAll():Promise<AlarmLogEntity[]>{
-    try{
+  async getAlarmsAll(): Promise<AlarmLogEntity[]> {
+    try {
       /// 1) alarm 전부 리스트로 추출
       const newAlarms = await this.alarmLogRepository.find({
         order: { time: 'DESC' }, // 최신순 정렬
       });
-      console.log(newAlarms)
+      console.log(newAlarms);
       /// 2) alarm 리스트 반환
       return newAlarms;
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[LOG] getAlarmsAll Error : ${errorToJson(error)}`);
-      throw new RpcException(`알람로그를 읽을 수 없습니다.`)
+      throw new RpcException(`알람로그를 읽을 수 없습니다.`);
     }
   }
 
-  async getAlarms():Promise<AlarmLogEntity[]>{
-    try{
+  async getAlarms(): Promise<AlarmLogEntity[]> {
+    try {
       /// 1) emitFlag가 false인 alarm만 리스트로 추출
       const newAlarms = await this.alarmLogRepository.find({
-        where: {emitFlag:false},
+        where: { emitFlag: false },
         order: { time: 'DESC' }, // 최신순 정렬
       });
       /// 2) alarm 리스트 반환
       return newAlarms;
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[LOG] getAlarms Error : ${errorToJson(error)}`);
-      throw new RpcException(`알람로그를 읽을 수 없습니다.`)
+      throw new RpcException(`알람로그를 읽을 수 없습니다.`);
     }
   }
 
-  async getLastAlarm(alarmCode:string):Promise<AlarmLogEntity | undefined>{
-    try{
+  async getLastAlarm(alarmCode: string): Promise<AlarmLogEntity | undefined> {
+    try {
       const allLogs = await this.alarmLogRepository.find({
         order: { time: 'DESC' }, // 최신순 정렬
-        where: {alarmCode: alarmCode}
+        where: { alarmCode: alarmCode },
       });
 
       const latestLogsByCode = new Map<string, AlarmLogEntity>();
@@ -783,26 +788,28 @@ export class LogService {
 
       const result = Array.from(latestLogsByCode.values());
       return result[0];
-    }catch(error){
+    } catch (error) {
       return;
     }
   }
-  
-  async setAlarmsFlag(list:AlarmLogEntity[]){
-    try{
+
+  async setAlarmsFlag(list: AlarmLogEntity[]) {
+    try {
       /// 1) emitFlag를 true로 수정하여 업데이트
       for (const alarm of list) {
         alarm.emitFlag = true;
       }
       await this.alarmLogRepository.save(list);
-    }catch(error){
+    } catch (error) {
       httpLogger.error(`[LOG] setAlarmsFlag Error : ${errorToJson(error)}`);
-      throw new RpcException(`알람로그를 저장할 수 없습니다.`)
+      throw new RpcException(`알람로그를 저장할 수 없습니다.`);
     }
   }
 
-  async getAlarms2(param: LogReadDto):Promise<PaginationResponse<AlarmLogEntity>>{
-    try{
+  async getAlarms2(
+    param: LogReadDto,
+  ): Promise<PaginationResponse<AlarmLogEntity>> {
+    try {
       const queryBuilder = this.alarmLogRepository.createQueryBuilder();
       const dateStart = new Date(param.startDt);
       const dateEnd = new Date(param.endDt);
@@ -836,37 +843,37 @@ export class LogService {
     }
   }
 
-  async setAlarm(param: AlarmDto){
-    try{
+  async setAlarm(param: AlarmDto) {
+    try {
       /// 1) param 검사
-      if(param.alarmCode === undefined || param.alarmCode === ""){
+      if (param.alarmCode === undefined || param.alarmCode === '') {
         throw new RpcException('alarmCode 값이 없습니다.');
       }
 
-      if(param.state === undefined){
+      if (param.state === undefined) {
         throw new RpcException('state 값이 없습니다.');
       }
 
       /// 2) AlarmLog에 값 업데이트
-      this.alarmLogRepository.save(param);      
-    }catch(error){
+      this.alarmLogRepository.save(param);
+    } catch (error) {
       httpLogger.error(`[LOG] setAlarm Error : ${errorToJson(error)}`);
       throw new RpcException('알람을 저장할 수 없습니다.');
     }
   }
 
-  async readGeneralLog(dir:string){
-    try{
-        console.log("readGeneralLog : ", dir);
-        if(fs.openSync(dir,"r")){
-          const filecontent = fs.readFileSync(dir, "utf-8");
-          return filecontent;
-        }else{
-          throw new RpcException('파일이 없습니다.')
-        }
-    }catch(error){
-        httpLogger.error(`[FILE] readJson: ${dir}, ${errorToJson(error)}`);
-        throw new RpcException('로그를 읽을 수 없습니다.');
+  async readGeneralLog(dir: string) {
+    try {
+      console.log('readGeneralLog : ', dir);
+      if (fs.openSync(dir, 'r')) {
+        const filecontent = fs.readFileSync(dir, 'utf-8');
+        return filecontent;
+      } else {
+        throw new RpcException('파일이 없습니다.');
+      }
+    } catch (error) {
+      httpLogger.error(`[FILE] readJson: ${dir}, ${errorToJson(error)}`);
+      throw new RpcException('로그를 읽을 수 없습니다.');
     }
   }
   async getLogs(
