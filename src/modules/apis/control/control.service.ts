@@ -2,6 +2,7 @@ import httpLogger from '@common/logger/http.logger';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ExternalCommandDto } from './dto/external.control.dto';
+import { stringifyAllValues } from '@common/util/network.util';
 
 @Injectable()
 export class ControlService {
@@ -73,8 +74,7 @@ export class ControlService {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.externalAccessory != null) {
         const data = { ...request, time: Date.now().toString() };
-
-        this.socketGateway.externalAccessory.emit('externalCommand', data);
+        this.socketGateway.externalAccessory.emit('externalCommand', stringifyAllValues(data));
         httpLogger.info(`[CONTROL] externalCommand: ${JSON.stringify(data)}`);
 
         this.socketGateway.externalAccessory.once(
