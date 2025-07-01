@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250701151332] - 2025-07-01
+- Release App: RRS, Branch: samsung, Version: rrs-20250701151332] release 배포
+
+
 ## [rrs-20250613173512] - 2025-06-13
 - [RRS] Branch: feat/samsung-em/log, Version: rrs-20250613173512] release 배포
 
