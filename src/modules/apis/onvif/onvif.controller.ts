@@ -189,7 +189,7 @@ export class OnvifDeviceController implements OnModuleInit {
   async getSnapshot(@Res() res: Response) {
     httpLogger.info(`[ONVIF] getSnapshot`);
 
-    fs.readFile(os.homedir() + '/snapshot.jpg', (err, data) => {
+    fs.readFile('/data/snapshot.jpg', (err, data) => {
       if (err) {
         res.status(500).send('Error reading snapshot');
         return;

@@ -53,6 +53,10 @@ import { LogService } from 'src/modules/apis/log/log.service';
 import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { AlarmDto } from '@sockets/dto/alarm.dto';
 import { SequenceDto } from '@sockets/dto/sequence.dto';
+import { MoveService } from 'src/modules/apis/move/move.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
+import { LessThan, Repository } from 'typeorm';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -78,6 +82,8 @@ export class SocketGateway
   constructor(
     private readonly networkService: NetworkService,
     private readonly logService: LogService
+    @InjectRepository(MoveLogEntity)
+    private readonly moveRepository: Repository<MoveLogEntity>,
     // private readonly influxService: InfluxDBService,
     // private readonly mqttService: MqttClientService,
     // private readonly kafakService: KafkaClientService,
@@ -235,6 +241,8 @@ export class SocketGateway
   frsSocket: ioClient.Socket = null;
   lidarCloud: any[] = [];
   debugMode: boolean = false;
+
+  lastData: Record<string, object | string> = {};
 
   //lastInputValue - SLAMNAV to RRS
   lastStatus: any;
@@ -584,7 +592,19 @@ export class SocketGateway
               return;
             }
 
-            socketLogger.info(`[COMMAND] FRS Move: ${JSON.stringify(json)}`);
+            this.saveLog({
+              command: json.command,
+              goal_id: json.goal_id,
+              goal_name: json.goal_name ?? null,
+              map_name: json.map_name ?? null,
+              x: json.x ? parseFloat(json.x) : null,
+              y: json.x ? parseFloat(json.y) : null,
+              rz: json.rz ? parseFloat(json.rz) : null,
+            });
+
+            socketLogger.info(
+              `[COMMAND] FRS Move2       : ${JSON.stringify(json)}`,
+            );
             if (this.slamnav) {
               this.slamnav?.emit('move', stringifyAllValues(json));
             } else {
@@ -600,7 +620,7 @@ export class SocketGateway
           }
         } catch (error) {
           socketLogger.error(
-            `[COMMAND] FRS Move: ${JSON.stringify(_data)}, ${errorToJson(error)}`,
+            `[COMMAND] FRS Move      : ${JSON.stringify(_data)}, ${errorToJson(error)}`,
           );
         }
       });
@@ -1275,6 +1295,49 @@ export class SocketGateway
     }
   }
 
+  async saveLog(data: {
+    command: string;
+    goal_id?: string;
+    goal_name?: string;
+    map_name?: string;
+    x?: number;
+    y?: number;
+    rz?: number;
+  }) {
+    if (
+      data.command === 'stop' ||
+      data.command === 'goal' ||
+      data.command === 'target' ||
+      data.command === 'pause' ||
+      data.command === 'resume'
+    ) {
+      socketLogger.info(`[MOVE] saveLog : ${JSON.stringify(data)}`);
+      //save Log--------------------------------
+      this.moveRepository.save(data);
+
+      //일주일 지난 기록 삭제
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      await this.moveRepository.delete({
+        time: LessThan(oneWeekAgo),
+      });
+
+      // 30개 초과 시 가장 오래된 거 삭제
+      // const count = await this.moveRepository.count();
+      // console.log('count : ', count);
+      // if (count >= 30) {
+      //   const oldest = await this.moveRepository.find({
+      //     order: { time: 'ASC' }, // createdAt이 있다면
+      //     take: count - 29,
+      //   });
+      //   await this.moveRepository.remove(oldest);
+      // }
+
+      //save Log--------------------------------
+    } else {
+      socketLogger.debug(`[ERROR] what?`);
+    }
+  }
   @SubscribeMessage('taskError')
   async handleTaskErrorMessage(
     @MessageBody()
@@ -1325,6 +1388,15 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
+      this.saveLog({
+        command: json.command,
+        goal_id: json.goal_id,
+        goal_name: json.goal_name ?? null,
+        map_name: json.map_name ?? null,
+        x: json.x ? parseFloat(json.x) : null,
+        y: json.x ? parseFloat(json.y) : null,
+        rz: json.rz ? parseFloat(json.rz) : null,
+      });
 
       socketLogger.debug(`[COMMAND] Move: ${JSON.stringify(json)}`);
       this.slamnav?.emit('move', stringifyAllValues(json));
@@ -1348,6 +1420,15 @@ export class SocketGateway
       }
 
       const json = JSON.parse(JSON.stringify(payload));
+      this.saveLog({
+        command: json.command,
+        goal_id: json.goal_id,
+        goal_name: json.goal_name ?? null,
+        map_name: json.map_name ?? null,
+        x: json.x ? parseFloat(json.x) : null,
+        y: json.x ? parseFloat(json.y) : null,
+        rz: json.rz ? parseFloat(json.rz) : null,
+      });
       // if(isEqual(json,this.lastMoveRequest)){
       //   socketLogger.warn(`[COMMAND] Move: Equal lastMoveRequest`);
       //   return;
@@ -1503,6 +1584,55 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('system_status')
+  async handleSystemStatusMessage(
+    @MessageBody() payload: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      if (client.id == this.slamnav?.id) {
+        if (payload == null || payload == undefined) {
+          socketLogger.warn(`[STATUS] System Status: NULL`);
+          return;
+        }
+
+        const json = JSON.parse(payload);
+        const compareJson = { ...json };
+
+        // time을 제거하지 않으면 어차피 밑에서 비교했을때 이전 값과 무조건 다름!!
+        delete compareJson.time;
+
+        // isEqual 대신 JSON.stringify 사용하여 CPU 사용량 줄임
+        if (
+          JSON.stringify(compareJson) ===
+          JSON.stringify(this.lastData['system_status'])
+        ) {
+          return;
+        }
+
+        // 이전 값을 하나의 객체에 키값으로 여러 값들을 관리 가능!
+        this.lastData['system_status'] = compareJson;
+
+        this.server
+          .to(['system_status', 'all', 'allStatus'])
+          .emit('system_status', json);
+
+        if (this.frsSocket?.connected) {
+          this.frsSocket.emit('system_status', {
+            robotSerial: global.robotSerial,
+            data: json,
+          });
+        }
+      } else {
+        socketLogger.warn(
+          `[STATUS] another slamnav system status ${this.slamnav?.id}, ${client.id}`,
+        );
+      }
+    } catch (error) {
+      socketLogger.error(`[STATUS] system status : ${errorToJson(error)}`);
+    }
+  }
+
   @SubscribeMessage('moveStatus')
   async handleWorkingStatusMessage(
     @MessageBody() payload: string,
@@ -1515,10 +1645,10 @@ export class SocketGateway
           return;
         }
 
-        const json: MoveStatusPayload = JSON.parse(payload);
-        const tempjson =  {...json};
-        delete tempjson.time;
-        if (isEqual(tempjson, this.lastMoveStatus)) {
+        const json = JSON.parse(payload);
+        // socketLogger.debug(`[STATUS] moveStatus in : ${JSON.stringify(json)}`);
+        // delete json.time;
+        if (isEqual(json, this.lastMoveStatus)) {
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
           return;
         }
@@ -2308,6 +2438,62 @@ export class SocketGateway
         operationName: GeneralOperationName.AUTORUN_END,
         operationStatus: GeneralOperationStatus.SET,
     })
+  @SubscribeMessage('swVersionInfo')
+  async handleSwVersionInfoMessage(@MessageBody() payload?: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload || '{}'));
+      this.slamnav?.emit('swVersionInfo', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swVersionInfo: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swVersionInfoResponse')
+  async handleSwVersionInfoResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['swVersionInfoResponse', 'all'])
+        .emit('swVersionInfoResponse', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swVersionInfoResponse: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swUpdate')
+  async handleSwUpdateMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(JSON.stringify(payload || '{}'));
+
+      if (!json.version) {
+        socketLogger.warn(`[COMMAND] swUpdate: version is null/undefined`);
+        return;
+      }
+
+      this.slamnav?.emit('swUpdate', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swUpdate: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('swUpdateResponse')
+  async handleSwUpdateResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(
+        payload ||
+          '{"applyReqUpdate": false, "version": "", "rejectReason": "Bad Response"}',
+      );
+
+      this.server
+        .to(['swUpdateResponse', 'all'])
+        .emit('swUpdateResponse', json);
+    } catch (error) {
+      socketLogger.error(`[INIT] swUpdateResponse: ${errorToJson(error)}`);
+      throw error();
+    }
   }
 
   /**

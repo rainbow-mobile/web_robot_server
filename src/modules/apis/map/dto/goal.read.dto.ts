@@ -16,27 +16,27 @@ export class GoalReadDto extends PaginationRequest {
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '노드 타입'
+    example: '',
+    required: false,
+    description: '노드 타입',
   })
   type?: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '검색단어'
+    example: '',
+    required: false,
+    description: '검색단어',
   })
   searchText?: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'id',
-    required:false,
-    description: '정렬옵션'
+    example: 'id',
+    required: false,
+    description: '정렬옵션',
   })
   sortOption?: string;
 }

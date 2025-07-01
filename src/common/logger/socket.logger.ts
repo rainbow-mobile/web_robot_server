@@ -1,4 +1,3 @@
-import { homedir } from 'os';
 import { createLogger, format, transports } from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
 

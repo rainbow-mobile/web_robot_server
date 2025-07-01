@@ -11,7 +11,7 @@ import { AlarmEntity } from './entity/alarm.entity';
 import { AlarmLogEntity } from './entity/alarmlog.entity';
 
 @Module({
-  imports:[
+  imports: [
     TypeOrmModule.forFeature([
       StateLogEntity,
       PowerLogEntity,
@@ -23,6 +23,6 @@ import { AlarmLogEntity } from './entity/alarmlog.entity';
   ],
   controllers: [LogController],
   providers: [LogService],
-  exports: [LogService]
+  exports: [LogService],
 })
 export class LogModule {}

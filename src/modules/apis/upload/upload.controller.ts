@@ -13,7 +13,6 @@ import httpLogger from '@common/logger/http.logger';
 import { UploadMapDto } from './dto/upload.map.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { homedir } from 'os';
-import * as path from 'path';
 import * as FormData from 'form-data';
 // const FormData = require('form-data');
 import * as fs from 'fs';
@@ -22,6 +21,7 @@ import { DownloadMapDto } from './dto/download.map.dto';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { uploadMiddleware } from '@middleware/upload.middleware';
 import { errorToJson } from '@common/util/error.util';
+import { join } from 'path';
 
 @ApiTags('파일 전송 관련 API (Upload)')
 @Controller('upload')
@@ -30,9 +30,18 @@ export class UploadController {
 
   @Post('map')
   async uploadMap(@Body() data: UploadMapDto, @Res() res: Response) {
-    const originalFilePath = homedir() + '/maps/' + data.mapNm;
+    const path = join(homedir(), 'maps', data.mapNm);
+    const path2 = join('/data/maps', data.mapNm);
     const zipFileName = `${data.name}.zip`;
-    const zipFilePath = path.join(homedir(), 'maps', zipFileName);
+    let originalFilePath;
+    let zipFilePath;
+    if (fs.existsSync(path2)) {
+      originalFilePath = path2;
+      zipFilePath = join(path2, zipFileName);
+    } else {
+      originalFilePath = path;
+      zipFilePath = join(path, zipFileName);
+    }
     try {
       httpLogger.info(`[UPLOAD] uploadMap: ${JSON.stringify(data)}`);
       await this.uploadService.zipFolder(originalFilePath, zipFilePath);
@@ -117,13 +126,16 @@ export class PublishController {
 
       try {
         httpLogger.info(`[UPLOAD] PublishMap: Download Done`);
-        const zipFilePath = path.join(
-          homedir(),
-          'upload',
-          req.file.originalname,
-        );
+        const zipFilePath = join(homedir(), 'upload', req.file.originalname);
 
-        const extractToPath = path.join(homedir(), 'maps', mapNm);
+        const path = join(homedir(), 'maps', mapNm);
+        const path2 = join('/data/maps', mapNm);
+        let extractToPath;
+        if (fs.existsSync(path2)) {
+          extractToPath = path2;
+        } else {
+          extractToPath = path;
+        }
         httpLogger.info(
           `[UPLOAD] PublishMap: ${zipFilePath}, ${extractToPath}`,
         );
