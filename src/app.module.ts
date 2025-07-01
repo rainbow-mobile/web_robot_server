@@ -19,10 +19,13 @@ import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
 import { AppService } from './app.service';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
+import { UpdateModule } from './modules/apis/update/update.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.development' : '.env',
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -56,6 +59,7 @@ import { AppService } from './app.service';
     UploadModule,
     SoundModule,
     OnvifDeviceModule
+    UpdateModule,
     // MotionModule,
     // ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
     //   ? [OnvifDeviceModule]

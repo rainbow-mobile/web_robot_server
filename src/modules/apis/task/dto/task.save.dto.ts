@@ -6,21 +6,21 @@ export class TaskSaveDto {
   @ApiProperty({
     description: 'Task 트리',
     example: [
-        {
-          "key": "0",
-          "label": "root",
-          "children": [
-            {
-              "label": "begin",
-              "children": []
-            },
-            {
-              "label": "end",
-              "children": []
-            }
-          ]
-        }
-      ],
+      {
+        key: '0',
+        label: 'root',
+        children: [
+          {
+            label: 'begin',
+            children: [],
+          },
+          {
+            label: 'end',
+            children: [],
+          },
+        ],
+      },
+    ],
   })
   data: [] = [];
 }

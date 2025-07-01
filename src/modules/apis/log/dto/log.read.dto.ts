@@ -34,48 +34,48 @@ export class LogReadDto extends PaginationRequest {
 
   @IsOptional()
   @IsArray()
-  @IsString({each:true})
+  @IsString({ each: true })
   @ApiProperty({
-    example:['error','warn','info','debug'],
-    required:false,
-    description: '로그 레벨'
+    example: ['error', 'warn', 'info', 'debug'],
+    required: false,
+    description: '로그 레벨',
   })
   @Expose()
-  levels?: string[]
+  levels?: string[];
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '로그 카테고리'
+    example: '',
+    required: false,
+    description: '로그 카테고리',
   })
   category?: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '검색옵션'
+    example: '',
+    required: false,
+    description: '검색옵션',
   })
   searchType?: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '검색단어'
+    example: '',
+    required: false,
+    description: '검색단어',
   })
   searchText?: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({
-    example:'',
-    required:false,
-    description: '정렬옵션'
+    example: '',
+    required: false,
+    description: '정렬옵션',
   })
   sortOption?: string;
 }

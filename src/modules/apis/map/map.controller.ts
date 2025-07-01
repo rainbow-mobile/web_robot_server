@@ -14,10 +14,14 @@ import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
+import * as fs from 'fs';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import { GoalReadDto } from './dto/goal.read.dto';
 import { errorToJson } from '@common/util/error.util';
 import { PaginationResponse } from '@common/pagination/pagination.response';
+import { join } from 'path';
+import { homedir } from 'os';
+import { HttpError } from '@influxdata/influxdb3-client';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -139,6 +143,103 @@ export class MapController {
     } catch (error) {
       httpLogger.error(
         `[MAP] saveCloud ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Get('tiles/:mapNm')
+  @ApiOperation({
+    summary: '맵 타일 존재 여부 요청',
+    description: '맵 tiles 디렉토리가 있는지 여부를 요청합니다.',
+  })
+  async getTilesExist(@Param('mapNm') mapNm: string) {
+    try {
+      if (mapNm === undefined || mapNm === '') {
+        throw new HttpError(
+          HttpStatus.BAD_REQUEST,
+          'mapNm이 지정되지 않았습니다.',
+        );
+      }
+      const path = join(homedir(), 'maps', mapNm, 'tiles');
+      const path2 = join('/data/maps', mapNm, 'tiles');
+      if (fs.existsSync(path)) {
+        return true;
+      } else if (fs.existsSync(path2)) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] getTilesExist : ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      throw new HttpError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        '요청을 수행하던 중 서버에 에러가 발생했습니다.',
+      );
+    }
+  }
+
+  @Get('tiles/:mapNm/:z/:x/:y')
+  @ApiOperation({
+    summary: '맵 타일 png 요청',
+    description: '맵 tiles 의 .png 파일을 요청합니다.',
+  })
+  async getTiles(
+    @Param('mapNm') mapNm: string,
+    @Param('z') z: string,
+    @Param('y') y: string,
+    @Param('x') x: string,
+    @Res() res: Response,
+  ) {
+    try {
+      httpLogger.debug(`[MAP] getTopogetTileslogy: ${mapNm}`);
+      if (mapNm == '') {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: '맵 이름이 지정되지 않았습니다' });
+      }
+      if (x === undefined || x === '') {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: 'x값이 없습니다' });
+      }
+      if (y === undefined || y === '') {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: 'y값이 없습니다' });
+      }
+      if (z === undefined || z === '') {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: 'z값이 없습니다' });
+      }
+      const path = join(homedir(), 'maps', mapNm, 'tiles', z, x, y + '.png');
+      const path2 = join('/data/maps', mapNm, 'tiles', z, x, y + '.png');
+      if (fs.existsSync(path)) {
+        const stream = fs.createReadStream(path);
+
+        res.set({
+          'Content-Type': 'image/png',
+        });
+
+        stream.pipe(res);
+      } else if (fs.existsSync(path2)) {
+        const stream = fs.createReadStream(path2);
+
+        res.set({
+          'Content-Type': 'image/png',
+        });
+
+        stream.pipe(res);
+      } else {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .send({ message: '파일을 찾을 수 없습니다' });
+      }
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] getTopology ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`,
       );
       return res.status(error.status).send(error.data);
     }

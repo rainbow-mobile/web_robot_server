@@ -1,4 +1,3 @@
-
 export const create_curversion = `CREATE TABLE curversion(
 	program varchar(32) not null primary key,
 	date datetime(3) not null default now(3) on update now(3),
@@ -80,4 +79,16 @@ export const create_alarmLog = `CREATE TABLE alarmLog(
 	state tinyint(1),
 	emitFlag tinyint(1),
 	time timestamp(3) not null default current_timestamp(3)
+);`;
+
+export const create_move = `CREATE TABLE move(
+	id varchar(128) not null primary key,
+	command varchar(32) not null,
+	goal_id varchar(128),
+	goal_name varchar(128),
+	map_name varchar(128),
+	x float,
+	y float,
+	rz float,
+	time datetime(3) not null default now(3)
 );`;
