@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250702155745] - 2025-07-02
+- Release App: RRS, Branch: wifi-list, Version: rrs-20250702155745] release 배포
+
+
 ## [rrs-20250702150805] - 2025-07-02
 - Release App: RRS, Branch: develop, Version: rrs-20250702150805] release 배포
 
