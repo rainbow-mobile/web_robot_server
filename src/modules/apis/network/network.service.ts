@@ -54,6 +54,8 @@ export class NetworkService {
           exec('sudo nmcli device wifi list --rescan yes', (err) => {
             if (err) {
               httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
+            } else {
+              httpLogger.debug('[TEST] success wifi list scan');
             }
             // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
             wifi.scan((error, networks) => {
