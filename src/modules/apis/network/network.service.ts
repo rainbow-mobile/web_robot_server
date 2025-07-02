@@ -51,40 +51,45 @@ export class NetworkService {
         } else if (this.isPlatformWindows) {
           reject('windows');
         } else {
-          exec('nmcli dev wifi rescan', (err) => {
-            if (err) {
-              httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
-            }
-            // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
-            wifi.scan((error, networks) => {
-              if (error) {
-                httpLogger.error(`[NETOWRK] WifiScan2: ${errorToJson(error)}`);
-                reject();
-              } else {
-                this.wifi_list = [];
-                for (const net of networks) {
-                  let flag = false;
-                  if (net.ssid != '') {
-                    for (let w of this.wifi_list) {
-                      if (w.ssid == net.ssid) {
-                        if (w.quality > net.quality) {
-                          flag = true;
-                        } else {
-                          w = net;
-                          flag = true;
+          exec(
+            'sudo nmcli device wifi rescan && nmcli device wifi list',
+            (err) => {
+              if (err) {
+                httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
+              }
+              // Wi-Fi 검색 및 연결된 네트워크 정보 가져오기
+              wifi.scan((error, networks) => {
+                if (error) {
+                  httpLogger.error(
+                    `[NETOWRK] WifiScan2: ${errorToJson(error)}`,
+                  );
+                  reject();
+                } else {
+                  this.wifi_list = [];
+                  for (const net of networks) {
+                    let flag = false;
+                    if (net.ssid != '') {
+                      for (let w of this.wifi_list) {
+                        if (w.ssid == net.ssid) {
+                          if (w.quality > net.quality) {
+                            flag = true;
+                          } else {
+                            w = net;
+                            flag = true;
+                          }
+                          break;
                         }
-                        break;
+                      }
+                      if (!flag) {
+                        this.wifi_list.push({ ...net });
                       }
                     }
-                    if (!flag) {
-                      this.wifi_list.push({ ...net });
-                    }
                   }
+                  resolve(this.wifi_list);
                 }
-                resolve(this.wifi_list);
-              }
-            });
-          });
+              });
+            },
+          );
         }
       } catch (error) {
         httpLogger.error(`[NETOWRK] WifiScan3: ${errorToJson(error)}`);
