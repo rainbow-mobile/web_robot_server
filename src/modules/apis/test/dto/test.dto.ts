@@ -5,10 +5,11 @@ import {
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { SubjectEnum, TestResult } from '../entities/test.entity';
+import { SubjectEnum, TestEntity, TestResult } from '../entities/test.entity';
 import { Transform } from 'class-transformer';
 
 export class GetTestResultBySubjectDto {
@@ -121,4 +122,38 @@ export class UpdateTestDataDto {
     required: false,
   })
   initTester?: string;
+}
+
+export class ResponseTestResultListDto {
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 10,
+    description: '페이지 크기',
+  })
+  pageSize?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 1,
+    description: '전체 페이지 수',
+  })
+  totalPage?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 100,
+    description: '전체 테스트 결과 수',
+  })
+  totalCount: number;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({
+    example: [],
+    description: '테스트 결과 목록',
+  })
+  items: TestEntity[];
 }

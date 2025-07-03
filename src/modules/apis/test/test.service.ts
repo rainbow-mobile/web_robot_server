@@ -9,6 +9,7 @@ import {
   GetRecentTestResultBySubjectDto,
   GetTestResultBySubjectDto,
   GetTestResultListDto,
+  ResponseTestResultListDto,
   UpdateTestDataDto,
 } from './dto/test.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
@@ -120,7 +121,7 @@ export class TestService {
 
   getTestResultAll(
     param: GetTestResultListDto,
-  ): Promise<PaginationResponse<TestEntity>> {
+  ): Promise<ResponseTestResultListDto> {
     return new Promise(async (resolve, reject) => {
       try {
         const queryBuilder = this.testRepository.createQueryBuilder('test');
@@ -149,6 +150,16 @@ export class TestService {
           queryBuilder.andWhere('test.init_tester LIKE :initTester', {
             initTester: `%${param.initTester}%`,
           });
+        }
+
+        if (!param.pageNo) {
+          const items = await queryBuilder.getMany();
+          const totalCount = items.length;
+          resolve({
+            totalCount,
+            items,
+          });
+          return;
         }
 
         queryBuilder.orderBy('test.testAt', param.orderBy);
