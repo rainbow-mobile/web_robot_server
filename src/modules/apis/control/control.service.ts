@@ -74,7 +74,10 @@ export class ControlService {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.externalAccessory != null) {
         const data = { ...request, time: Date.now().toString() };
-        this.socketGateway.externalAccessory.emit('externalCommand', stringifyAllValues(data));
+        this.socketGateway.externalAccessory.emit(
+          'externalCommand',
+          stringifyAllValues(data),
+        );
         httpLogger.info(`[CONTROL] externalCommand: ${JSON.stringify(data)}`);
 
         this.socketGateway.externalAccessory.once(
