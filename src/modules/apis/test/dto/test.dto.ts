@@ -75,22 +75,40 @@ export class GetRecentTestResultBySubjectDto {
 
 export class GetTestResultListDto extends PaginationRequest {
   @IsOptional()
-  @IsDateString()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      if (/^\d+$/.test(value)) return parseInt(value, 10);
+      return value;
+    }
+    return value;
+  })
+  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
+  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
   @ApiProperty({
-    example: '2025-01-01',
-    description: '테스트 시작일',
+    type: String,
+    description: '테스트 시작일 (timestamp 또는 ISO 문자열)',
+    example: '1719878400000',
     required: false,
   })
-  startDt?: string;
+  startDt?: number | string;
 
   @IsOptional()
-  @IsDateString()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      if (/^\d+$/.test(value)) return parseInt(value, 10);
+      return value;
+    }
+    return value;
+  })
+  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
+  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
   @ApiProperty({
-    example: '2025-01-31',
-    description: '테스트 종료일',
+    type: String,
+    description: '테스트 종료일 (timestamp 또는 ISO 문자열)',
+    example: '1719878400000',
     required: false,
   })
-  endDt?: string;
+  endDt?: number | string;
 
   @IsOptional()
   @IsArray()
