@@ -53,8 +53,19 @@ export class MoveService {
       data.command === 'resume'
     ) {
       httpLogger.info(`[MOVE] saveLog : ${JSON.stringify(data)}`);
+
+      //null 처리
+
       //save Log--------------------------------
-      this.moveRepository.save(data);
+      this.moveRepository.save({
+        command:data.command,
+        goal_id:data.goal_id ?? '',
+        goal_name: data.goal_name ?? '',
+        map_name: data.map_name ?? '',
+        x : data.x ?? 0,
+        y : data.y ?? 0,
+        rz : data.rz ?? 0,
+      });
 
       //일주일 지난 기록 삭제
       const oneWeekAgo = new Date();
