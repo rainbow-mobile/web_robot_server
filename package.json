@@ -45,6 +45,7 @@
     "express-xml-bodyparser": "^0.3.0",
     "helmet": "^8.0.0",
     "http-proxy-middleware": "^3.0.3",
+    "ini": "^5.0.0",
     "ioredis": "^5.4.1",
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
