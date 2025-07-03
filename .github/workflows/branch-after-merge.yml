@@ -1,0 +1,25 @@
+name: Delete branch after merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    if: github.event.pull_request.merged == true && 
+        (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'develop')
+    runs-on: self-hosted
+    permissions:
+      contents: write
+    steps:
+      - name: Delete head branch
+        run: |
+          BRANCH=${{ github.event.pull_request.head.ref }}
+          
+          if [[ "$BRANCH" == "main" || "$BRANCH" == "develop" ]]; then
+            echo "🚫 $BRANCH 브랜치는 보호 대상이므로 삭제하지 않음."
+          else
+            echo "🗑️ $BRANCH 브랜치를 삭제합니다."
+            git -c http.extraheader="Authorization: Basic $(echo -n x-access-token:${{ secrets.GITHUB_TOKEN }} | base64)" \
+            push origin --delete "$BRANCH"
+          fi
