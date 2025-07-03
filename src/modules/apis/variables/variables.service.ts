@@ -6,12 +6,14 @@ import { ConfigService } from '@nestjs/config';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
+import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 
 @Injectable()
 export class VariablesService {
   constructor(
     @InjectRepository(VariablesEntity)
     private readonly variablesRepository: Repository<VariablesEntity>,
+    private readonly socketGateway: SocketGateway,
     private readonly configService: ConfigService,
   ) {}
 
@@ -57,6 +59,13 @@ export class VariablesService {
             message: HttpStatusMessagesConstants.DB.SUCCESS_WRITE_201,
           },
         });
+
+        if (this.socketGateway.slamnav !== null) {
+          this.socketGateway.slamnav.emit('updateVariable', {
+            key: key,
+            value: value,
+          });
+        }
       } catch (error) {
         httpLogger.error(
           `[UPLOAD] upsertVariable : (${key}, ${value}) ${errorToJson(error)}`,
@@ -74,6 +83,7 @@ export class VariablesService {
   async updateVariable(key: string, value: string) {
     return new Promise(async (resolve, reject) => {
       const result = await this.variablesRepository.findOne({ where: { key } });
+      await this.variablesRepository.find({ where: { key } });
 
       if (result) {
         try {
@@ -85,6 +95,13 @@ export class VariablesService {
               message: HttpStatusMessagesConstants.DB.SUCCESS_WRITE_201,
             },
           });
+
+          if (this.socketGateway.slamnav !== null) {
+            this.socketGateway.slamnav.emit('updateVariable', {
+              key: key,
+              value: value,
+            });
+          }
         } catch (error) {
           httpLogger.error(
             `[UPLOAD] updateVariable: (${key}, ${value}) ${errorToJson(error)}`,
