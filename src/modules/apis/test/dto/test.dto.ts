@@ -8,9 +8,45 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
-import { SubjectEnum, TestEntity, TestResult } from '../entities/test.entity';
-import { Transform } from 'class-transformer';
+import { SubjectEnum, TestResult } from '../entities/test.entity';
+import { Transform, Type } from 'class-transformer';
+
+export class TestResultDto {
+  @ApiProperty({
+    example: 1,
+    description: '테스트 ID',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: SubjectEnum.DISPLAY,
+    description: '테스트 주제',
+    enum: SubjectEnum,
+  })
+  subject: SubjectEnum;
+
+  @ApiProperty({
+    example: TestResult.SUCCESS,
+    description: '테스트 결과',
+    enum: TestResult,
+  })
+  result: TestResult;
+
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+    nullable: true,
+  })
+  initTester: string | null;
+
+  @ApiProperty({
+    example: '1719878400000',
+    description: '테스트 수행 시간',
+  })
+  testAt: Date;
+}
 
 export class GetTestResultBySubjectDto {
   @IsEnum(SubjectEnum)
@@ -124,7 +160,21 @@ export class UpdateTestDataDto {
   initTester?: string;
 }
 
-export class ResponseTestResultListDto {
+export class ResponseTestResultDto {
+  @IsArray({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => TestResultDto)
+  @IsOptional()
+  @ApiProperty({
+    example: [],
+    description: '테스트 결과 목록',
+    type: TestResultDto,
+    isArray: true,
+  })
+  items: TestResultDto[];
+}
+
+export class ResponseTestResultListDto extends ResponseTestResultDto {
   @IsNumber()
   @IsOptional()
   @ApiProperty({
@@ -148,12 +198,4 @@ export class ResponseTestResultListDto {
     description: '전체 테스트 결과 수',
   })
   totalCount: number;
-
-  @IsArray()
-  @IsOptional()
-  @ApiProperty({
-    example: [],
-    description: '테스트 결과 목록',
-  })
-  items: TestEntity[];
 }

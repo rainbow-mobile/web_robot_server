@@ -9,6 +9,7 @@ import {
   GetRecentTestResultBySubjectDto,
   GetTestResultBySubjectDto,
   GetTestResultListDto,
+  ResponseTestResultDto,
   ResponseTestResultListDto,
   UpdateTestDataDto,
 } from './dto/test.dto';
@@ -39,8 +40,9 @@ export class TestService {
     return new Promise(async (resolve, reject) => {
       try {
         const test = this.testRepository.create(updateTestDataDto);
-        await this.testRepository.save(test);
-        resolve({ message: 'Test result updated' });
+        const result = await this.testRepository.save(test);
+
+        resolve(result);
       } catch (error) {
         httpLogger.error(
           `[TEST] upsertTestResult : (${updateTestDataDto}) ${errorToJson(error)}`,
@@ -56,7 +58,9 @@ export class TestService {
     });
   }
 
-  getRecentTestResultBySubject({ subjects }: GetRecentTestResultBySubjectDto) {
+  getRecentTestResultBySubject({
+    subjects,
+  }: GetRecentTestResultBySubjectDto): Promise<ResponseTestResultDto> {
     return new Promise(async (resolve, reject) => {
       try {
         const result = await this.testRepository
@@ -76,7 +80,9 @@ export class TestService {
           .orderBy('test.testAt', 'DESC')
           .getMany();
 
-        resolve(result);
+        resolve({
+          items: result,
+        });
       } catch (error) {
         httpLogger.error(`[TEST] getTestResult : ${errorToJson(error)}`);
 
@@ -93,16 +99,18 @@ export class TestService {
 
   getTestResultBySubject({
     subject,
-  }: GetTestResultBySubjectDto): Promise<TestEntity[]> {
+  }: GetTestResultBySubjectDto): Promise<ResponseTestResultDto> {
     return new Promise(async (resolve, reject) => {
       try {
-        const result = await this.testRepository
+        const items = await this.testRepository
           .createQueryBuilder('test')
           .where('test.subject = :subject', { subject })
           .orderBy('test.testAt', 'DESC')
           .getMany();
 
-        resolve(result);
+        resolve({
+          items,
+        });
       } catch (error) {
         httpLogger.error(
           `[TEST] getTestResultBySubject : ${errorToJson(error)}`,
