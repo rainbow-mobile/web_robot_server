@@ -7,7 +7,7 @@ export class ExternalCommandDto {
   @Length(1, 50)
   @ApiProperty({
     description:
-      '전달할 명령을 입력하세요. Foot명령의 경우 move, stop이 있습니다.',
+      '전달할 명령을 입력하세요. Foot명령의 경우 footMove, footStop이 있습니다.',
   })
   command: string;
 
