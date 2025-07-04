@@ -226,8 +226,8 @@ export class SocketsController implements OnModuleInit {
     res.send({
       ...this.socketGateway.robotState,
       slam: this.socketGateway.slamnav ? true : false,
-      task: this.socketGateway.taskState, 
-      external: this.socketGateway.lastExternalStatus
+      task: this.socketGateway.taskState,
+      external: this.socketGateway.lastExternalStatus,
     });
   }
 
