@@ -1492,7 +1492,7 @@ export class SocketGateway
         }
 
         const json = JSON.parse(payload);
-        console.log('footStatus : ', json);
+        // console.log('footStatus : ', json);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastExternalStatus)) {
