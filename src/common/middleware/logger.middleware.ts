@@ -13,7 +13,7 @@ export function loggerMiddleware(
 
     const message = `[${req.method}] ${req.url}: 응답(${res.statusCode}), 응답시간(${duration}ms), 요청자(${req.ip})`;
 
-    if(!req.url.includes('/sockets/status')){
+    if (!req.url.includes('/sockets/status')) {
       httpLogger.debug(message);
     }
   });
