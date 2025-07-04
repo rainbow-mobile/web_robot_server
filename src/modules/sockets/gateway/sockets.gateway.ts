@@ -1495,11 +1495,11 @@ export class SocketGateway
         console.log('footStatus : ', json);
         const tempjson = { ...json };
         delete tempjson.time;
-        if (isEqual(tempjson, this.lastExternalStatus.foot)) {
+        if (isEqual(tempjson, this.lastExternalStatus)) {
           return;
         }
 
-        this.lastExternalStatus.foot = tempjson;
+        this.lastExternalStatus = tempjson;
         this.server
           .to(['footStatus', 'all', 'allStatus'])
           .emit('footStatus', json);
