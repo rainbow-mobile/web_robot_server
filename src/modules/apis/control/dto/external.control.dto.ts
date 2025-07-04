@@ -1,6 +1,6 @@
 import { Optional } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, Length } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
 
 export class ExternalCommandDto {
   @IsString()
@@ -11,7 +11,8 @@ export class ExternalCommandDto {
   })
   command: string;
 
-  @Optional()
+  @IsNumber()
+  @IsOptional()
   @ApiProperty({
     description: '이동할 위치값을 입력하세요.',
     required: false,
