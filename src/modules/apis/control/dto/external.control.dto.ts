@@ -14,7 +14,7 @@ export class ExternalCommandDto {
   @Optional()
   @ApiProperty({
     description: '이동할 위치값을 입력하세요.',
-    required: false
+    required: false,
   })
   pose?: number;
 }
