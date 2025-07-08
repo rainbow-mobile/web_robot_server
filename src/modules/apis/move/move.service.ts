@@ -58,13 +58,13 @@ export class MoveService {
 
       //save Log--------------------------------
       this.moveRepository.save({
-        command:data.command,
-        goal_id:data.goal_id ?? '',
+        command: data.command,
+        goal_id: data.goal_id ?? '',
         goal_name: data.goal_name ?? '',
         map_name: data.map_name ?? '',
-        x : data.x ?? 0,
-        y : data.y ?? 0,
-        rz : data.rz ?? 0,
+        x: data.x ?? 0,
+        y: data.y ?? 0,
+        rz: data.rz ?? 0,
       });
 
       //일주일 지난 기록 삭제
@@ -96,8 +96,8 @@ export class MoveService {
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
-          goal_name: data.goal_name ?? null,
-          map_name: data.map_name ?? null,
+          // goal_name: data.goal_name ?? null,
+          // map_name: data.map_name ?? null,
           x: data.x ? parseFloat(data.x) : null,
           y: data.x ? parseFloat(data.y) : null,
           rz: data.rz ? parseFloat(data.rz) : null,
@@ -107,10 +107,10 @@ export class MoveService {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
           );
-          if(data2.result === 'accept'){
+          if (data2.result === 'accept') {
             resolve(data2);
-          }else{
-            reject({data:data2,status: HttpStatus.FORBIDDEN});
+          } else {
+            reject({ data: data2, status: HttpStatus.FORBIDDEN });
           }
           clearTimeout(timeoutId);
         });
