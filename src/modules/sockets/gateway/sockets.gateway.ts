@@ -300,27 +300,27 @@ export class SocketGateway
               this.tcpClient.write(data);
             } else if (param == 'map') {
               data =
-                this.robotState.map.map_name == ''
+                this.robotState.map?.map_name == ''
                   ? 'not loaded'
-                  : this.robotState.map.map_name;
+                  : this.robotState.map?.map_name;
               this.tcpClient.write(data);
             } else if (param == 'localization') {
-              data = this.robotState.robot_state.localization;
+              data = this.robotState.robot_state?.localization;
               this.tcpClient.write(data);
             } else if (param == 'charge') {
-              data = this.robotState.robot_state.charge;
+              data = this.robotState.robot_state?.charge;
               this.tcpClient.write(data);
             } else if (param == 'dock') {
-              data = this.robotState.robot_state.dock;
+              data = this.robotState.robot_state?.dock;
               this.tcpClient.write(data);
             } else if (param == 'auto_move') {
-              data = this.robotState.move_state.auto_move;
+              data = this.robotState.move_state?.auto_move;
               this.tcpClient.write(data);
             } else if (param == 'path') {
-              data = this.robotState.move_state.path;
+              data = this.robotState.move_state?.path;
               this.tcpClient.write(data);
             } else if (param == 'obs') {
-              data = this.robotState.move_state.obs;
+              data = this.robotState.move_state?.obs;
               this.tcpClient.write(data);
             } else if (param == 'cur_node_id') {
               data =
@@ -1519,6 +1519,74 @@ export class SocketGateway
     }
   }
 
+  parseStatus(status:any):any{
+    try{
+      /// 1) battey만 특별하게 파싱
+      if(status.battery){
+        if(status.battery.tabos_status){
+          status.battery.tabos_status = this.parseTabosStatus(parseInt(status.battery.tabos_status));
+        }
+      }
+      return status;
+    }catch(error){
+      console.error(error);
+      return status;
+    }
+  }
+
+  parseTabosStatus(status:number):any{
+    const tabos_status_error:{
+      error_over_voltage:boolean,
+      error_low_voltage:boolean,
+      error_high_charge_current:boolean,
+      error_high_discharge_current:boolean,
+      error_high_temperature:boolean,
+      error_low_temperature:boolean,
+      error_bmu:boolean
+    } = {
+      error_over_voltage:false,
+      error_low_voltage: false,
+      error_high_charge_current:false,
+      error_high_discharge_current:false,
+      error_high_temperature:false,
+      error_low_temperature:false,
+      error_bmu:false
+    };
+
+    const bits = this.getBits(status,16);
+    if(bits[0] === 1){
+      tabos_status_error.error_over_voltage = true;
+    }
+    if(bits[1] === 1){
+      tabos_status_error.error_low_voltage = true;
+    }
+    if(bits[2] === 1){
+      tabos_status_error.error_high_charge_current = true;
+    }
+    if(bits[3] === 1){
+      tabos_status_error.error_high_discharge_current = true;
+    }
+    if(bits[4] === 1){
+      tabos_status_error.error_high_temperature = true;
+    }
+    if(bits[5] === 1){
+      tabos_status_error.error_low_temperature = true;
+    }
+    if(bits[6] === 1){
+      tabos_status_error.error_bmu = true;
+    }
+    return tabos_status_error;
+  }
+
+  getBits(value: number, bitLength = 8): number[] {
+    return value
+      .toString(2) // 2진수 문자열로 변환
+      .padStart(bitLength, '0') // 앞을 0으로 채워서 bitLength 맞춤
+      .split('') // 문자 하나씩 분리
+      .map(bit => parseInt(bit)) // 숫자로 변환
+      .reverse();
+  }
+
   @SubscribeMessage('status')
   async handleStatusMessage(
     @MessageBody() payload: string,
@@ -1531,7 +1599,7 @@ export class SocketGateway
           return;
         }
 
-        const json = JSON.parse(payload);
+        const json = this.parseStatus(JSON.parse(payload));
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastStatus)) {
@@ -1539,7 +1607,7 @@ export class SocketGateway
         }
 
         //samsung
-        if (this.lastStatus?.map.map_name !== tempjson.map.map_name) {
+        if (this.lastStatus?.map?.map_name !== tempjson.map?.map_name) {
           if (tempjson.map.map_name !== '') {
             this.clearAlarmCode(2002);
             this.clearAlarmCode(2003);
@@ -1549,8 +1617,8 @@ export class SocketGateway
           }
         }
         if (
-          this.lastStatus?.robot_state.localization !==
-          tempjson.robot_state.localization
+          this.lastStatus?.robot_state?.localization !==
+          tempjson.robot_state?.localization
         ) {
           if (tempjson.robot_state.localization === 'good') {
             this.clearAlarmCode(2001);
@@ -1558,14 +1626,14 @@ export class SocketGateway
             this.setAlarmCode(2001);
           }
         }
-        if (this.lastStatus?.robot_state.emo !== tempjson.robot_state.emo) {
+        if (this.lastStatus?.robot_state?.emo !== tempjson.robot_state?.emo) {
           if (tempjson.robot_state.emo === 'false') {
             this.clearAlarmCode(3000);
           } else {
             this.setAlarmCode(3000);
           }
         }
-        if (this.lastStatus?.power.bat_out !== tempjson.power.bat_out) {
+        if (this.lastStatus?.power?.bat_out !== tempjson.power?.bat_out) {
           if (parseFloat(tempjson.power.bat_out) < 43.4) {
             this.setAlarmCode(4000);
             this.clearAlarmCode(4002);
@@ -1585,78 +1653,78 @@ export class SocketGateway
           }
         }
 
-        if (this.lastStatus?.motor[0].current !== tempjson.motor[0].current) {
-          if (
-            parseFloat(tempjson.motor[0].current) > 20 ||
-            parseFloat(tempjson.motor[1].current) > 20
-          ) {
-            this.setAlarmCode(4500);
-          } else {
-            this.clearAlarmCode(4500);
-          }
-        }
+        // if (this.lastStatus?.motor[0].current !== tempjson.motor[0].current) {
+        //   if (
+        //     parseFloat(tempjson.motor[0].current) > 20 ||
+        //     parseFloat(tempjson.motor[1].current) > 20
+        //   ) {
+        //     this.setAlarmCode(4500);
+        //   } else {
+        //     this.clearAlarmCode(4500);
+        //   }
+        // }
 
-        if (this.lastStatus?.motor[0].temp !== tempjson.motor[0].temp) {
-          if (
-            parseFloat(tempjson.motor[0].temp) > 60 ||
-            parseFloat(tempjson.motor[1].temp) > 60
-          ) {
-            this.setAlarmCode(4505);
-          } else {
-            this.clearAlarmCode(4505);
-          }
-        }
+        // if (this.lastStatus?.motor[0].temp !== tempjson.motor[0].temp) {
+        //   if (
+        //     parseFloat(tempjson.motor[0].temp) > 60 ||
+        //     parseFloat(tempjson.motor[1].temp) > 60
+        //   ) {
+        //     this.setAlarmCode(4505);
+        //   } else {
+        //     this.clearAlarmCode(4505);
+        //   }
+        // }
 
-        if (this.lastStatus?.motor[0].status !== tempjson.motor[0].status) {
-          if (tempjson.motor[0].status === '1') {
-            this.clearAlarmCode(4515);
-          } else {
-            this.setAlarmCode(4515);
-          }
-        }
+        // if (this.lastStatus?.motor[0].status !== tempjson.motor[0].status) {
+        //   if (tempjson.motor[0].status === '1') {
+        //     this.clearAlarmCode(4515);
+        //   } else {
+        //     this.setAlarmCode(4515);
+        //   }
+        // }
 
-        if (this.lastStatus?.motor[1].status !== tempjson.motor[1].status) {
-          if (tempjson.motor[1].status === '1') {
-            this.clearAlarmCode(4514);
-          } else {
-            this.setAlarmCode(4514);
-          }
-        }
+        // if (this.lastStatus?.motor[1].status !== tempjson.motor[1].status) {
+        //   if (tempjson.motor[1].status === '1') {
+        //     this.clearAlarmCode(4514);
+        //   } else {
+        //     this.setAlarmCode(4514);
+        //   }
+        // }
 
-        if (
-          this.lastStatus?.motor[0].connection !==
-            tempjson.motor[0].connection ||
-          this.lastStatus?.motor[1].connection !== tempjson.motor[1].connection
-        ) {
-          if (
-            tempjson.motor[0].connection === 'true' &&
-            tempjson.motor[1].connection === 'false'
-          ) {
-            this.clearAlarmCode(4517);
-          } else {
-            this.setAlarmCode(4517);
-          }
-        }
+        // if (
+        //   this.lastStatus?.motor[0].connection !==
+        //     tempjson.motor[0].connection ||
+        //   this.lastStatus?.motor[1].connection !== tempjson.motor[1].connection
+        // ) {
+        //   if (
+        //     tempjson.motor[0].connection === 'true' &&
+        //     tempjson.motor[1].connection === 'false'
+        //   ) {
+        //     this.clearAlarmCode(4517);
+        //   } else {
+        //     this.setAlarmCode(4517);
+        //   }
+        // }
 
-        if (
-          this.lastStatus?.lidar[0].connection !== tempjson.lidar[0].connection
-        ) {
-          if (tempjson.lidar[0].connection === '1') {
-            this.clearAlarmCode(5100);
-          } else {
-            this.setAlarmCode(5100);
-          }
-        }
+        // if (
+        //   this.lastStatus?.lidar[0].connection !== tempjson.lidar[0].connection
+        // ) {
+        //   if (tempjson.lidar[0].connection === '1') {
+        //     this.clearAlarmCode(5100);
+        //   } else {
+        //     this.setAlarmCode(5100);
+        //   }
+        // }
 
-        if (
-          this.lastStatus?.lidar[1].connection !== tempjson.lidar[1].connection
-        ) {
-          if (tempjson.lidar[1].connection === '1') {
-            this.clearAlarmCode(5101);
-          } else {
-            this.setAlarmCode(5101);
-          }
-        }
+        // if (
+        //   this.lastStatus?.lidar[1].connection !== tempjson.lidar[1].connection
+        // ) {
+        //   if (tempjson.lidar[1].connection === '1') {
+        //     this.clearAlarmCode(5101);
+        //   } else {
+        //     this.setAlarmCode(5101);
+        //   }
+        // }
 
         this.lastStatus = tempjson;
 
