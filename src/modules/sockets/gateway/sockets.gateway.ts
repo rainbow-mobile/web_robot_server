@@ -563,8 +563,8 @@ export class SocketGateway
             this.saveLog({
               command: json.command,
               goal_id: json.goal_id,
-              goal_name: json.goal_name ?? null,
-              map_name: json.map_name ?? null,
+              // goal_name: json.goal_name ?? null,
+              // map_name: json.map_name ?? null,
               x: json.x ? parseFloat(json.x) : null,
               y: json.x ? parseFloat(json.y) : null,
               rz: json.rz ? parseFloat(json.rz) : null,
@@ -1309,8 +1309,8 @@ export class SocketGateway
       this.saveLog({
         command: json.command,
         goal_id: json.goal_id,
-        goal_name: json.goal_name ?? null,
-        map_name: json.map_name ?? null,
+        // goal_name: json.goal_name ?? null,
+        // map_name: json.map_name ?? null,
         x: json.x ? parseFloat(json.x) : null,
         y: json.x ? parseFloat(json.y) : null,
         rz: json.rz ? parseFloat(json.rz) : null,
@@ -1341,8 +1341,8 @@ export class SocketGateway
       this.saveLog({
         command: json.command,
         goal_id: json.goal_id,
-        goal_name: json.goal_name ?? null,
-        map_name: json.map_name ?? null,
+        // goal_name: json.goal_name ?? null,
+        // map_name: json.map_name ?? null,
         x: json.x ? parseFloat(json.x) : null,
         y: json.x ? parseFloat(json.y) : null,
         rz: json.rz ? parseFloat(json.rz) : null,
