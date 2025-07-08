@@ -104,13 +104,14 @@ export class MoveService {
         });
 
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
+          const responseJson = JSON.parse(data2);
           httpLogger.info(
-            `[MOVE] moveCommand Response: ${data2.result}, ${JSON.stringify(data2)} `,
+            `[MOVE] moveCommand Response: ${responseJson.result}, ${JSON.stringify(data2)} `,
           );
-          if (data2.result === 'accept' || data2.result === "accept") {
-            resolve(data2);
+          if (responseJson.result === 'accept' || responseJson.result === 'accept') {
+            resolve(responseJson);
           } else {
-            reject({ data: data2, status: HttpStatus.FORBIDDEN });
+            reject({ data: responseJson, status: HttpStatus.FORBIDDEN });
           }
           clearTimeout(timeoutId);
         });
