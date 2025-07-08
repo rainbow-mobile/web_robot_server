@@ -1061,7 +1061,7 @@ export class SocketGateway
     this.connectChecker = setTimeout(() => {
       if (!this.slamnav) {
         socketLogger.error(`[CHECKER] connect Checker : Slamnav not connected`);
-        this.setAlarmCode(2000);
+        this.startAlarmCode(2000);
       } else {
         socketLogger.debug(`[CHECKER] connect Checker : Slamnav connected`);
       }
@@ -1519,60 +1519,62 @@ export class SocketGateway
     }
   }
 
-  parseStatus(status:any):any{
-    try{
+  parseStatus(status: any): any {
+    try {
       /// 1) battey만 특별하게 파싱
-      if(status.battery){
-        if(status.battery.tabos_status){
-          status.battery.tabos_status = this.parseTabosStatus(parseInt(status.battery.tabos_status));
+      if (status.battery) {
+        if (status.battery.tabos_status) {
+          status.battery.tabos_status = this.parseTabosStatus(
+            parseInt(status.battery.tabos_status),
+          );
         }
       }
       return status;
-    }catch(error){
+    } catch (error) {
       console.error(error);
       return status;
     }
   }
 
-  parseTabosStatus(status:number):any{
-    const tabos_status_error:{
-      error_over_voltage:boolean,
-      error_low_voltage:boolean,
-      error_high_charge_current:boolean,
-      error_high_discharge_current:boolean,
-      error_high_temperature:boolean,
-      error_low_temperature:boolean,
-      error_bmu:boolean
+  parseTabosStatus(status: number): any {
+    const tabos_status_error: {
+      error_over_voltage: boolean;
+      error_low_voltage: boolean;
+      error_high_charge_current: boolean;
+      error_high_discharge_current: boolean;
+      error_high_temperature: boolean;
+      error_low_temperature: boolean;
+      error_bmu: boolean;
     } = {
-      error_over_voltage:false,
+      error_over_voltage: false,
       error_low_voltage: false,
-      error_high_charge_current:false,
-      error_high_discharge_current:false,
-      error_high_temperature:false,
-      error_low_temperature:false,
-      error_bmu:false
+      error_high_charge_current: false,
+      error_high_discharge_current: false,
+      error_high_temperature: false,
+      error_low_temperature: false,
+      error_bmu: false,
     };
 
-    const bits = this.getBits(status,16);
-    if(bits[0] === 1){
+    const bits = this.getBits(status, 16);
+    if (bits[0] === 1) {
       tabos_status_error.error_over_voltage = true;
     }
-    if(bits[1] === 1){
+    if (bits[1] === 1) {
       tabos_status_error.error_low_voltage = true;
     }
-    if(bits[2] === 1){
+    if (bits[2] === 1) {
       tabos_status_error.error_high_charge_current = true;
     }
-    if(bits[3] === 1){
+    if (bits[3] === 1) {
       tabos_status_error.error_high_discharge_current = true;
     }
-    if(bits[4] === 1){
+    if (bits[4] === 1) {
       tabos_status_error.error_high_temperature = true;
     }
-    if(bits[5] === 1){
+    if (bits[5] === 1) {
       tabos_status_error.error_low_temperature = true;
     }
-    if(bits[6] === 1){
+    if (bits[6] === 1) {
       tabos_status_error.error_bmu = true;
     }
     return tabos_status_error;
@@ -1583,7 +1585,7 @@ export class SocketGateway
       .toString(2) // 2진수 문자열로 변환
       .padStart(bitLength, '0') // 앞을 0으로 채워서 bitLength 맞춤
       .split('') // 문자 하나씩 분리
-      .map(bit => parseInt(bit)) // 숫자로 변환
+      .map((bit) => parseInt(bit)) // 숫자로 변환
       .reverse();
   }
 
@@ -1613,9 +1615,10 @@ export class SocketGateway
             this.clearAlarmCode(2003);
             this.clearAlarmCode(2004);
           } else {
-            this.setAlarmCode(2003);
+            this.startAlarmCode(2003);
           }
         }
+
         if (
           this.lastStatus?.robot_state?.localization !==
           tempjson.robot_state?.localization
@@ -1623,27 +1626,29 @@ export class SocketGateway
           if (tempjson.robot_state.localization === 'good') {
             this.clearAlarmCode(2001);
           } else {
-            this.setAlarmCode(2001);
+            this.startAlarmCode(2001);
           }
         }
+
         if (this.lastStatus?.robot_state?.emo !== tempjson.robot_state?.emo) {
           if (tempjson.robot_state.emo === 'false') {
             this.clearAlarmCode(3000);
           } else {
-            this.setAlarmCode(3000);
+            this.startAlarmCode(3000);
           }
         }
+
         if (this.lastStatus?.power?.bat_out !== tempjson.power?.bat_out) {
           if (parseFloat(tempjson.power.bat_out) < 43.4) {
-            this.setAlarmCode(4000);
+            this.startAlarmCode(4000);
             this.clearAlarmCode(4002);
             this.clearAlarmCode(4003);
           } else if (parseFloat(tempjson.power.bat_percent) < 5) {
-            this.setAlarmCode(4003);
+            this.startAlarmCode(4003);
             this.clearAlarmCode(4000);
             this.clearAlarmCode(4002);
           } else if (parseFloat(tempjson.power.bat_percent) < 15) {
-            this.setAlarmCode(4002);
+            this.startAlarmCode(4002);
             this.clearAlarmCode(4000);
             this.clearAlarmCode(4003);
           } else {
@@ -1815,6 +1820,7 @@ export class SocketGateway
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
           return;
         }
+        
         this.lastMoveStatus = json;
 
         this.server
@@ -2042,9 +2048,18 @@ export class SocketGateway
 
   async setAlarmCode(alarmCode: number) {
     this.setAlarm({ alarmCode: alarmCode.toString(), state: true });
+    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
+  }
+  async startAlarmCode(alarmCode: number){
+    this.setAlarm({alarmCode:alarmCode.toString(),state:true})
+    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.START);
   }
   async clearAlarmCode(alarmCode: number) {
-    // this.setAlarm({alarmCode:alarmCode.toString(),state:false})
+    this.setAlarm({alarmCode:alarmCode.toString(),state:false})
+    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.END);
   }
 
   async setAlarm(data: AlarmDto) {
@@ -2083,9 +2098,9 @@ export class SocketGateway
       /// 5) save log
       this.logService.setAlarm(alarmDto);
 
-      /// 6) general log
-      const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
-      setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
+      // /// 6) general log
+      // const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
+      // setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
     } catch (error) {
       socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`);
       if (error instanceof RpcException) throw error;
