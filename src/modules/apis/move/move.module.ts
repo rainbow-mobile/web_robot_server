@@ -9,5 +9,6 @@ import { MoveLogEntity } from './entity/move.entity';
   imports: [SocketsModule, TypeOrmModule.forFeature([MoveLogEntity])],
   providers: [MoveService],
   controllers: [MoveController],
+  exports: [MoveService],
 })
 export class MoveModule {}

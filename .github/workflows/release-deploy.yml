@@ -51,6 +51,7 @@ jobs:
             echo "Error: 'dist' directory not found"
             exit 1
           fi
+
       - name: Install dependencies and compress node_modules
         run: |
           npm install
@@ -62,7 +63,12 @@ jobs:
           mkdir -p $TEMP_DIR
           
           cp -r dist $TEMP_DIR/
+          cp -r wsdl $TEMP_DIR/
           cp -r node_modules.zip $TEMP_DIR/
+
+          if [ -d "public" ]; then
+            cp -r public $TEMP_DIR/
+          fi
 
           cd $TEMP_DIR
           zip -r "../${{ env.VERSION }}.zip" .
