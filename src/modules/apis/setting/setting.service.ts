@@ -38,7 +38,9 @@ export class SettingService {
         newData,
       );
 
-      exec('pm2 restart SLAMNAV2');
+      if (this.socketGateway.slamnav != null) {
+        exec('pm2 restart SLAMNAV2');
+      }
 
       return response;
     } catch (error) {
