@@ -1,5 +1,47 @@
 # Release log
 
+## [rrs-20250704162515] - 2025-07-04
+- Release App: RRS, Branch: develop, Version: rrs-20250704162515] release 배포
+
+
+## [rrs-20250703153425] - 2025-07-03
+- Release App: RRS, Branch: develop, Version: rrs-20250703153425] release 배포
+
+
+## [rrs-20250702181503] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702181503] release 배포
+
+
+## [rrs-20250702180027] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702180027] release 배포
+
+
+## [rrs-20250702174817] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702174817] release 배포
+
+
+## [rrs-20250702174216] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702174216] release 배포
+
+
+## [rrs-20250702171103] - 2025-07-02
+- Release App: RRS, Branch: wifi-list, Version: rrs-20250702171103] release 배포
+
+
+## [rrs-20250702160351] - 2025-07-02
+- Release App: RRS, Branch: wifi-list, Version: rrs-20250702160351] release 배포
+
+
+## [rrs-20250702155745] - 2025-07-02
+- Release App: RRS, Branch: wifi-list, Version: rrs-20250702155745] release 배포
+
+
+## [rrs-20250702150805] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702150805] release 배포
+
+
+## [rrs-20250702150038] - 2025-07-02
+- Release App: RRS, Branch: develop, Version: rrs-20250702150038] release 배포
 ## [rrs-20250708135309] - 2025-07-08
 - Release App: RRS, Branch: main, Version: rrs-20250708135309] release 배포
 

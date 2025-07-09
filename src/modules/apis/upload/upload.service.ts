@@ -8,9 +8,16 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import { errorToJson } from '@common/util/error.util';
 import axios from 'axios';
 import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UploadService {
+  private dataBasePath: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.dataBasePath = this.configService.get('dataBasePath') as string;
+  }
+
   private storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, homedir() + '/upload/'); // 파일이 저장될 디렉토리
@@ -35,7 +42,7 @@ export class UploadService {
         );
 
         const path = join(homedir(), 'maps');
-        const path2 = join('/data/maps');
+        const path2 = join(this.dataBasePath, 'maps');
         let pathDir;
         if (fs.existsSync(path2)) {
           pathDir = path2;

@@ -1,0 +1,56 @@
+name: delete-branch-and-build-file
+
+on: delete
+
+permissions:
+  contents: write
+
+jobs:
+  clean-up-s3:
+    if: github.event.ref_type == 'branch'
+    runs-on: self-hosted
+
+    steps:
+      - name: Get Branch Name
+        run: |
+          BRANCH_NAME=${{ github.event.ref }}
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Delete Release App and Branch
+        env:
+            GH_TOKEN: ${{ secrets.RAINBOW_APPS_DEPLOY_TOKEN }}
+        run: |
+            git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
+            cd rainbow-release-apps
+
+            rm -rf web_robot_server
+            
+            # 원하는 브랜치가 있는지 확인하고 있으면 체크아웃
+            if git ls-remote --heads origin ${{ env.BRANCH_NAME }} | grep ${{ env.BRANCH_NAME }}; then
+                git checkout ${{ env.BRANCH_NAME }}
+
+                if [ -d "web_robot_server" ]; then
+                    rm -rf web_robot_server
+                fi
+
+                git config --global user.email "dfd1123@naver.com"
+                git config --global user.name "dfd1123"
+
+                git add .
+                git commit -m "Delete web_robot_server for branch: ${{ env.BRANCH_NAME }}" || echo "Nothing to commit"
+                git push origin ${{ env.BRANCH_NAME }}
+
+                CLEAN_COUNT=$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.github' | wc -l)
+
+                if [ "$CLEAN_COUNT" -eq 0 ]; then
+                    echo "🗑️ 브랜치에 남은 파일 없음 → 브랜치 삭제 시도"
+                    git push origin --delete ${{ env.BRANCH_NAME }} || echo "⚠️ 브랜치 삭제 실패"
+                else
+                    echo "⚠️ 브랜치에 파일 남아있음 → 삭제 안 함"
+                fi
+            else
+                echo "⚠️ 브랜치 ${{ env.BRANCH_NAME }} 없음, SKIP!"
+            fi
+            
+            cd ..
+        

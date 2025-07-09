@@ -1,5 +1,8 @@
+import { getDataBasePath } from 'src/modules/config/path.config';
 import { createLogger, format, transports } from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
+
+const LOG_DIR = getDataBasePath() + '/log';
 
 const customFormat = format.printf(({ timestamp, level, message }) => {
   return `${timestamp} [${level}] ${message}`;
@@ -13,7 +16,7 @@ const socketLogger = createLogger({
   ),
   transports: [
     new (DailyRotateFile as any)({
-      filename: '/data/log/socket/%DATE%.log',
+      filename: LOG_DIR + '/socket/%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       level: 'info',
     }),
