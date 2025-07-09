@@ -22,11 +22,15 @@ import { PaginationResponse } from '@common/pagination/pagination.response';
 import { join } from 'path';
 import { homedir } from 'os';
 import { HttpError } from '@influxdata/influxdb3-client';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
 export class MapController {
-  constructor(private readonly socketGateway: SocketGateway) {}
+  constructor(
+    private readonly socketGateway: SocketGateway,
+    private readonly configService: ConfigService,
+  ) {}
   @Inject()
   private readonly mapService: MapService;
 
@@ -161,8 +165,10 @@ export class MapController {
           'mapNm이 지정되지 않았습니다.',
         );
       }
+      const dataBasePath = this.configService.get('dataBasePath');
       const path = join(homedir(), 'maps', mapNm, 'tiles');
-      const path2 = join('/data/maps', mapNm, 'tiles');
+      const path2 = join(dataBasePath, 'maps', mapNm, 'tiles');
+
       if (fs.existsSync(path)) {
         return true;
       } else if (fs.existsSync(path2)) {
@@ -214,8 +220,17 @@ export class MapController {
           .status(HttpStatus.BAD_REQUEST)
           .send({ message: 'z값이 없습니다' });
       }
+      const dataBasePath = this.configService.get('dataBasePath');
       const path = join(homedir(), 'maps', mapNm, 'tiles', z, x, y + '.png');
-      const path2 = join('/data/maps', mapNm, 'tiles', z, x, y + '.png');
+      const path2 = join(
+        dataBasePath,
+        'maps',
+        mapNm,
+        'tiles',
+        z,
+        x,
+        y + '.png',
+      );
       if (fs.existsSync(path)) {
         const stream = fs.createReadStream(path);
 

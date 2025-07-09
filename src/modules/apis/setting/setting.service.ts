@@ -8,6 +8,7 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
 import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
+import { exec } from 'child_process';
 
 @Injectable()
 export class SettingService {
@@ -32,10 +33,16 @@ export class SettingService {
       const mergeData = await this.deepMerge(fileData, stringData);
       const newData = await this.transformSettingToFile(mergeData);
 
-      return await saveJson(
+      const response = await saveJson(
         Path.join(homedir(), 'slamnav2', 'config', type, 'config.json'),
         newData,
       );
+
+      if (this.socketGateway.slamnav != null) {
+        exec('pm2 restart SLAMNAV2');
+      }
+
+      return response;
     } catch (error) {
       httpLogger.error(`[SETTING] saveSetting: ${errorToJson(error)}`);
     }

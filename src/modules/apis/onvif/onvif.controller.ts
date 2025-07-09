@@ -19,10 +19,14 @@ import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
 import { exec } from 'child_process';
 import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('onvif')
 export class OnvifDeviceController implements OnModuleInit {
-  constructor(private readonly OnvifDeviceService: OnvifDeviceService) {}
+  constructor(
+    private readonly OnvifDeviceService: OnvifDeviceService,
+    private readonly configService: ConfigService,
+  ) {}
 
   onModuleInit() {}
 
@@ -35,7 +39,6 @@ export class OnvifDeviceController implements OnModuleInit {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    console.log('?');
     const parser = new xml2js.Parser({
       explicitArray: false,
       tagNameProcessors: [xml2js.processors.stripPrefix],
@@ -188,7 +191,8 @@ export class OnvifDeviceController implements OnModuleInit {
   async getSnapshot(@Res() res: Response) {
     httpLogger.info(`[ONVIF] getSnapshot`);
 
-    fs.readFile('/data/snapshot.jpg', (err, data) => {
+    const dataBasePath = this.configService.get('dataBasePath');
+    fs.readFile(dataBasePath + '/snapshot.jpg', (err, data) => {
       if (err) {
         res.status(500).send('Error reading snapshot');
         return;
