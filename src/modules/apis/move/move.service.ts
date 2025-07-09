@@ -108,7 +108,10 @@ export class MoveService {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${responseJson.result}, ${JSON.stringify(data2)} `,
           );
-          if (responseJson.result === 'accept' || responseJson.result === 'accept') {
+          if (
+            responseJson.result === 'accept' ||
+            responseJson.result === 'accept'
+          ) {
             resolve(responseJson);
           } else {
             reject({ data: responseJson, status: HttpStatus.FORBIDDEN });
