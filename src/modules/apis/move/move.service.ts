@@ -53,8 +53,19 @@ export class MoveService {
       data.command === 'resume'
     ) {
       httpLogger.info(`[MOVE] saveLog : ${JSON.stringify(data)}`);
+
+      //null 처리
+
       //save Log--------------------------------
-      this.moveRepository.save(data);
+      this.moveRepository.save({
+        command: data.command,
+        goal_id: data.goal_id ?? '',
+        goal_name: data.goal_name ?? '',
+        map_name: data.map_name ?? '',
+        x: data.x ?? 0,
+        y: data.y ?? 0,
+        rz: data.rz ?? 0,
+      });
 
       //일주일 지난 기록 삭제
       const oneWeekAgo = new Date();
@@ -85,17 +96,23 @@ export class MoveService {
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
-          goal_name: data.goal_name ?? null,
-          map_name: data.map_name ?? null,
+          // goal_name: data.goal_name ?? null,
+          // map_name: data.map_name ?? null,
           x: data.x ? parseFloat(data.x) : null,
           y: data.x ? parseFloat(data.y) : null,
           rz: data.rz ? parseFloat(data.rz) : null,
         });
+
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
+          const responseJson = JSON.parse(data2);
           httpLogger.info(
-            `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
+            `[MOVE] moveCommand Response: ${responseJson.result}, ${JSON.stringify(data2)} `,
           );
-          resolve(data2);
+          if (responseJson.result === 'accept' || responseJson.result === 'accept') {
+            resolve(responseJson);
+          } else {
+            reject({ data: responseJson, status: HttpStatus.FORBIDDEN });
+          }
           clearTimeout(timeoutId);
         });
 
