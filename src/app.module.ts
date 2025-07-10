@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from 'src/modules/apis/users/users.module';
+import { UsersModule } from './modules/apis/users/users.module';
 import { SocketsModule } from 'src/modules/sockets/sockets.module';
 import { TaskModule } from '@task/task.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -20,6 +20,7 @@ import config from './modules/config';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
 import { UpdateModule } from './modules/apis/update/update.module';
+import { TestModule } from './modules/apis/test/test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -64,6 +65,7 @@ import { UpdateModule } from './modules/apis/update/update.module';
     ...(!process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0'
       ? [OnvifDeviceModule]
       : []),
+    TestModule,
   ],
   providers: [],
   controllers: [],

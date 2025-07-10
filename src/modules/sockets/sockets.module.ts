@@ -10,9 +10,16 @@ import { NetworkService } from '../apis/network/network.service';
 import { SSHGateway } from './gateway/ssh.gateway';
 import { InfluxDBService } from '../apis/influx/influx.service';
 import { UploadService } from '../apis/upload/upload.service';
+import { MoveModule } from '../apis/move/move.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MoveLogEntity } from '../apis/move/entity/move.entity';
 
 @Module({
-  imports: [VariablesModule, LogModule],
+  imports: [
+    VariablesModule,
+    LogModule,
+    TypeOrmModule.forFeature([MoveLogEntity]),
+  ],
   controllers: [SocketsController],
   providers: [
     SocketGateway,
