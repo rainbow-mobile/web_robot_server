@@ -137,28 +137,28 @@ export class SoundService {
   async stop() {
     const platform = os.platform();
     this.isLooping = false;
-  
+
     if (this.curPlay) {
       this.curPlay.kill();
       this.curPlay = null;
     }
-  
+
     const killCommand =
       platform === 'linux' || platform === 'darwin'
         ? 'pkill -f mplayer'
         : platform === 'win32'
-        ? 'taskkill /IM mplayer.exe /F'
-        : '';
-  
+          ? 'taskkill /IM mplayer.exe /F'
+          : '';
+
     if (killCommand) {
       await new Promise<void>((resolve) => {
         exec(killCommand, () => resolve());
       });
     }
-  
+
     // 안전하게 200ms 기다리기
-    await new Promise(resolve => setTimeout(resolve, 200));
-  
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
     return 'Sound stopped';
   }
 
