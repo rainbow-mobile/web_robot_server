@@ -6,17 +6,24 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { errorToJson } from '@common/util/error.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { SoundPlayDto } from './dto/sound.play.dto';
 
 @Injectable()
 export class SoundService {
   private player = playSound();
-  private curPlay;
+  private curPlay: any = null;
+  private isLooping: boolean = false;
 
-  async play(body) {
+  async play(body: SoundPlayDto) {
     return new Promise(async (resolve, reject) => {
       try {
+        // 기존 재생 중인 음악이 있으면 먼저 정지
+        if (this.curPlay) {
+          await this.stop();
+        }
+
         const path = './public/sound/' + body.fileNm;
-        httpLogger.info(`[SOUND] Play: ${path}`);
+
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(
             path,
@@ -57,28 +64,57 @@ export class SoundService {
     });
   }
 
-  async playLoop(body) {
+  async playLoop(body: SoundPlayDto) {
     return new Promise(async (resolve, reject) => {
       try {
         const path = './public/sound/' + body.fileNm;
-        httpLogger.info(`[SOUND] Play: ${path}`);
-        if (fs.existsSync(path)) {
-          this.curPlay = this.player.play(
-            path,
-            { mplayer: ['-volume', body.volume] },
-            (err) => {
-              if (err) {
-                httpLogger.error(`[SOUND] Play: ${JSON.stringify(err)}`);
-                reject({
-                  status: HttpStatus.BAD_REQUEST,
-                  data: { message: err },
-                });
-              } else {
-                httpLogger.info(`[SOUND] Play: Done (${path})}`);
-                this.playLoop(body);
-              }
-            },
+
+        if (this.curPlay) {
+          httpLogger.info(
+            `[SOUND] Play spawnargs FileName: ${this.curPlay.spawnargs?.[1]}`,
           );
+          httpLogger.info(`[SOUND] Play Body FileNamess: ${path}`);
+
+          if (this.curPlay.spawnargs?.[1] === path) {
+            reject({
+              status: HttpStatus.BAD_REQUEST,
+              data: { message: 'Sound is already playing' },
+            });
+            return;
+          } else if (this.curPlay.spawnargs?.[1]) {
+            await this.stop();
+          }
+        }
+
+        if (fs.existsSync(path)) {
+          this.isLooping = true;
+
+          const playNext = () => {
+            if (!this.isLooping) return;
+
+            this.curPlay = this.player.play(
+              path,
+              { mplayer: ['-volume', body.volume] },
+              (err) => {
+                if (err) {
+                  httpLogger.error(`[SOUND] PlayLoop: ${JSON.stringify(err)}`);
+                  this.isLooping = false;
+                  reject({
+                    status: HttpStatus.BAD_REQUEST,
+                    data: { message: err },
+                  });
+                } else {
+                  httpLogger.info(`[SOUND] PlayLoop: Done (${path})}`);
+                  // 루프가 활성화되어 있으면 다시 재생
+                  if (this.isLooping) {
+                    playNext();
+                  }
+                }
+              },
+            );
+          };
+
+          playNext();
           resolve(path);
         } else {
           reject({
@@ -99,11 +135,31 @@ export class SoundService {
   }
 
   async stop() {
-    try {
-      this.curPlay?.kill();
-    } catch (error) {
-      httpLogger.error(`[SOUND] Stop: ${errorToJson(error)}`);
-    }
+    return new Promise((resolve) => {
+      try {
+        this.isLooping = false;
+
+        if (this.curPlay) {
+          this.curPlay.kill();
+          this.curPlay = null;
+          httpLogger.info(`[SOUND] Stop: Process killed`);
+        }
+
+        if (os.platform() === 'linux' || os.platform() === 'darwin') {
+          exec('pkill -f mplayer', (error) => {
+            if (!error) {
+              httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
+            }
+            resolve('Sound stopped');
+          });
+        } else {
+          resolve('Sound stopped');
+        }
+      } catch (error) {
+        httpLogger.error(`[SOUND] Stop: ${errorToJson(error)}`);
+        resolve('Sound stopped');
+      }
+    });
   }
 
   async getList(path: string): Promise<any[]> {
