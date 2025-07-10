@@ -19,7 +19,20 @@ export class SoundService {
       try {
         // 기존 재생 중인 음악이 있으면 먼저 정지
         if (this.curPlay) {
-          await this.stop();
+          httpLogger.info(
+            `[SOUND] Play spawnargs FileName: ${this.curPlay.spawnargs?.[1]}`,
+          );
+          httpLogger.info(`[SOUND] Play Body FileNamess: ${path}`);
+
+          if (this.curPlay.spawnargs?.[1] === path) {
+            reject({
+              status: HttpStatus.BAD_REQUEST,
+              data: { message: 'Sound is already playing' },
+            });
+            return;
+          } else {
+            await this.stop();
+          }
         }
 
         const path = './public/sound/' + body.fileNm;
@@ -81,7 +94,7 @@ export class SoundService {
               data: { message: 'Sound is already playing' },
             });
             return;
-          } else if (this.curPlay.spawnargs?.[1]) {
+          } else {
             await this.stop();
           }
         }
@@ -94,7 +107,7 @@ export class SoundService {
 
             this.curPlay = this.player.play(
               path,
-              { mplayer: ['-volume', body.volume] },
+              { mplayer: ['-ao', 'pulse', '-volume', body.volume] },
               (err) => {
                 if (err) {
                   httpLogger.error(`[SOUND] PlayLoop: ${JSON.stringify(err)}`);
