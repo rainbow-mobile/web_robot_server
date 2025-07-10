@@ -156,7 +156,6 @@ export class SoundService {
       });
     }
 
-    // 안전하게 200ms 기다리기
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     return 'Sound stopped';
