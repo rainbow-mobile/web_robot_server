@@ -138,13 +138,13 @@ export class SoundService {
     return new Promise((resolve) => {
       try {
         this.isLooping = false;
-
+  
         if (this.curPlay) {
           this.curPlay.kill();
           this.curPlay = null;
           httpLogger.info(`[SOUND] Stop: Process killed`);
         }
-
+  
         if (os.platform() === 'linux' || os.platform() === 'darwin') {
           exec('pkill -f mplayer', (error) => {
             if (!error) {
@@ -161,6 +161,7 @@ export class SoundService {
       }
     });
   }
+  
 
   async getList(path: string): Promise<any[]> {
     try {
