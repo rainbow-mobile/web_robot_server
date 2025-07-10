@@ -27,7 +27,7 @@ export class SoundService {
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(
             path,
-            { mplayer: ['-volume', body.volume] },
+            { mplayer: ['-ao', 'pulse', '-volume', body.volume] },
             (err) => {
               if (err) {
                 httpLogger.error(`[SOUND] Play: ${JSON.stringify(err)}`);
