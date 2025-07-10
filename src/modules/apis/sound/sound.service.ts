@@ -17,6 +17,8 @@ export class SoundService {
   async play(body: SoundPlayDto) {
     return new Promise(async (resolve, reject) => {
       try {
+        const path = './public/sound/' + body.fileNm;
+
         // 기존 재생 중인 음악이 있으면 먼저 정지
         if (this.curPlay) {
           httpLogger.info(
@@ -34,8 +36,6 @@ export class SoundService {
             await this.stop();
           }
         }
-
-        const path = './public/sound/' + body.fileNm;
 
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(
