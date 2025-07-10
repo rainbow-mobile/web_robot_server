@@ -17,12 +17,25 @@ export class SoundService {
   async play(body: SoundPlayDto) {
     return new Promise(async (resolve, reject) => {
       try {
+        const path = './public/sound/' + body.fileNm;
+
         // 기존 재생 중인 음악이 있으면 먼저 정지
         if (this.curPlay) {
-          await this.stop();
-        }
+          httpLogger.info(
+            `[SOUND] Play spawnargs FileName: ${this.curPlay.spawnargs?.[1]}`,
+          );
+          httpLogger.info(`[SOUND] Play Body FileNamess: ${path}`);
 
-        const path = './public/sound/' + body.fileNm;
+          if (this.curPlay.spawnargs?.[1] === path) {
+            reject({
+              status: HttpStatus.BAD_REQUEST,
+              data: { message: 'Sound is already playing' },
+            });
+            return;
+          } else {
+            await this.stop();
+          }
+        }
 
         if (fs.existsSync(path)) {
           this.curPlay = this.player.play(
@@ -81,7 +94,7 @@ export class SoundService {
               data: { message: 'Sound is already playing' },
             });
             return;
-          } else if (this.curPlay.spawnargs?.[1]) {
+          } else {
             await this.stop();
           }
         }
@@ -94,7 +107,7 @@ export class SoundService {
 
             this.curPlay = this.player.play(
               path,
-              { mplayer: ['-volume', body.volume] },
+              { mplayer: ['-ao', 'pulse', '-volume', body.volume] },
               (err) => {
                 if (err) {
                   httpLogger.error(`[SOUND] PlayLoop: ${JSON.stringify(err)}`);
@@ -135,31 +148,30 @@ export class SoundService {
   }
 
   async stop() {
-    return new Promise((resolve) => {
-      try {
-        this.isLooping = false;
+    const platform = os.platform();
+    this.isLooping = false;
 
-        if (this.curPlay) {
-          this.curPlay.kill();
-          this.curPlay = null;
-          httpLogger.info(`[SOUND] Stop: Process killed`);
-        }
+    if (this.curPlay) {
+      this.curPlay.kill();
+      this.curPlay = null;
+    }
 
-        if (os.platform() === 'linux' || os.platform() === 'darwin') {
-          exec('pkill -f mplayer', (error) => {
-            if (!error) {
-              httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
-            }
-            resolve('Sound stopped');
-          });
-        } else {
-          resolve('Sound stopped');
-        }
-      } catch (error) {
-        httpLogger.error(`[SOUND] Stop: ${errorToJson(error)}`);
-        resolve('Sound stopped');
-      }
-    });
+    const killCommand =
+      platform === 'linux' || platform === 'darwin'
+        ? 'pkill -f mplayer'
+        : platform === 'win32'
+          ? 'taskkill /IM mplayer.exe /F'
+          : '';
+
+    if (killCommand) {
+      await new Promise<void>((resolve) => {
+        exec(killCommand, () => resolve());
+      });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    return 'Sound stopped';
   }
 
   async getList(path: string): Promise<any[]> {
