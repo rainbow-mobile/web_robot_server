@@ -135,15 +135,16 @@ export class SoundService {
   }
 
   async stop() {
+    const platform = os.platform();
     this.isLooping = false;
-  
+
     if (this.curPlay) {
       this.curPlay.kill();
       this.curPlay = null;
       httpLogger.info(`[SOUND] Stop: Process killed`);
     }
-  
-    if (os.platform() === 'linux' || os.platform() === 'darwin') {
+
+    if (platform === 'linux' || platform === 'darwin') {
       await new Promise<void>((resolve) => {
         exec('pkill -f mplayer', (error) => {
           if (!error) {
@@ -152,7 +153,7 @@ export class SoundService {
           resolve();
         });
       });
-    } else if (os.platform() === 'win32') {
+    } else if (platform === 'win32') {
       await new Promise<void>((resolve) => {
         exec('taskkill /IM mplayer.exe /F', (error) => {
           if (!error) {
@@ -162,10 +163,9 @@ export class SoundService {
         });
       });
     }
-  
+
     return 'Sound stopped';
   }
-  
 
   async getList(path: string): Promise<any[]> {
     try {
