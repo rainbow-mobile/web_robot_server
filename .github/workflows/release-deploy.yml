@@ -68,7 +68,7 @@ jobs:
           if [ -d "public" ]; then
             cp -r public $TEMP_DIR/
           fi
-
+          
           if [ -d "wsdl" ]; then
             cp -r wsdl $TEMP_DIR/
           fi

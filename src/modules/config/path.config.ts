@@ -7,7 +7,7 @@ export const getDataBasePath = (): string => {
   if (os === 'win32') {
     return 'C:/data';
   } else if (os === 'darwin') {
-    return join(homedir(), 'data');
+    return join(homedir(), 'Documents/rainbow-robotics/data');
   } else {
     // default: linux/ubuntu
     return '/data';
