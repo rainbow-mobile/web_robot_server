@@ -135,32 +135,37 @@ export class SoundService {
   }
 
   async stop() {
-    return new Promise((resolve) => {
-      try {
-        this.isLooping = false;
-
-        if (this.curPlay) {
-          this.curPlay.kill();
-          this.curPlay = null;
-          httpLogger.info(`[SOUND] Stop: Process killed`);
-        }
-
-        if (os.platform() === 'linux' || os.platform() === 'darwin') {
-          exec('pkill -f mplayer', (error) => {
-            if (!error) {
-              httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
-            }
-            resolve('Sound stopped');
-          });
-        } else {
-          resolve('Sound stopped');
-        }
-      } catch (error) {
-        httpLogger.error(`[SOUND] Stop: ${errorToJson(error)}`);
-        resolve('Sound stopped');
-      }
-    });
+    this.isLooping = false;
+  
+    if (this.curPlay) {
+      this.curPlay.kill();
+      this.curPlay = null;
+      httpLogger.info(`[SOUND] Stop: Process killed`);
+    }
+  
+    if (os.platform() === 'linux' || os.platform() === 'darwin') {
+      await new Promise<void>((resolve) => {
+        exec('pkill -f mplayer', (error) => {
+          if (!error) {
+            httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
+          }
+          resolve();
+        });
+      });
+    } else if (os.platform() === 'win32') {
+      await new Promise<void>((resolve) => {
+        exec('taskkill /IM mplayer.exe /F', (error) => {
+          if (!error) {
+            httpLogger.info(`[SOUND] Stop: Killed all mplayer.exe processes`);
+          }
+          resolve();
+        });
+      });
+    }
+  
+    return 'Sound stopped';
   }
+  
 
   async getList(path: string): Promise<any[]> {
     try {
