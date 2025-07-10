@@ -137,33 +137,28 @@ export class SoundService {
   async stop() {
     const platform = os.platform();
     this.isLooping = false;
-
+  
     if (this.curPlay) {
       this.curPlay.kill();
       this.curPlay = null;
-      httpLogger.info(`[SOUND] Stop: Process killed`);
     }
-
-    if (platform === 'linux' || platform === 'darwin') {
+  
+    const killCommand =
+      platform === 'linux' || platform === 'darwin'
+        ? 'pkill -f mplayer'
+        : platform === 'win32'
+        ? 'taskkill /IM mplayer.exe /F'
+        : '';
+  
+    if (killCommand) {
       await new Promise<void>((resolve) => {
-        exec('pkill -f mplayer', (error) => {
-          if (!error) {
-            httpLogger.info(`[SOUND] Stop: Killed all mplayer processes`);
-          }
-          resolve();
-        });
-      });
-    } else if (platform === 'win32') {
-      await new Promise<void>((resolve) => {
-        exec('taskkill /IM mplayer.exe /F', (error) => {
-          if (!error) {
-            httpLogger.info(`[SOUND] Stop: Killed all mplayer.exe processes`);
-          }
-          resolve();
-        });
+        exec(killCommand, () => resolve());
       });
     }
-
+  
+    // 안전하게 200ms 기다리기
+    await new Promise(resolve => setTimeout(resolve, 200));
+  
     return 'Sound stopped';
   }
 
