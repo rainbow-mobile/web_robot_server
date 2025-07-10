@@ -51,7 +51,7 @@ export class NetworkService {
         } else if (this.isPlatformWindows) {
           reject('windows');
         } else {
-          exec('nmcli dev wifi rescan', (err) => {
+          exec('sudo nmcli device wifi list --rescan yes', (err) => {
             if (err) {
               httpLogger.error(`[NETOWRK] WifiScan1: ${errorToJson(err)}`);
             }

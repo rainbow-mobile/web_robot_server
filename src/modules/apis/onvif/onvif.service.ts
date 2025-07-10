@@ -24,7 +24,6 @@ export class OnvifDeviceService implements OnModuleInit {
   private service: any;
 
   async onModuleInit() {
-    console.log('Onvif Init!!!!!!!!!!!!!!!!');
     this.server = dgram.createSocket({ type: 'udp4', reuseAddr: true });
     this.getVariables();
     this.server.on('message', (msg, rinfo) => {
@@ -88,26 +87,18 @@ export class OnvifDeviceService implements OnModuleInit {
         'robotManufacturer',
         'RainbowRobotics',
       );
-      global.robotManufacturer =
-        await this.variableService.getVariable('robotManufacturer');
     }
 
-    if (!global.robotModel) {
-      await this.variableService.upsertVariable('robotModel', 'D400');
-      global.robotModel = await this.variableService.getVariable('robotModel');
-    }
+    global.robotManufacturer =
+      await this.variableService.getVariable('robotManufacturer');
 
-    if (!global.robotVersion) {
-      await this.variableService.upsertVariable('robotVersion', '1.0.0');
-      global.robotVersion =
-        await this.variableService.getVariable('robotVersion');
-    }
+    global.robotModel = await this.variableService.getVariable('robotModel');
 
-    if (!global.robotHardware) {
-      await this.variableService.upsertVariable('robotHardware', 'D400_TEST');
-      global.robotHardware =
-        await this.variableService.getVariable('robotHardware');
-    }
+    global.robotVersion =
+      await this.variableService.getVariable('robotVersion');
+
+    global.robotHardware =
+      await this.variableService.getVariable('robotHardware');
   }
 
   //wsdl파일 경로 반환
@@ -211,6 +202,8 @@ export class OnvifDeviceService implements OnModuleInit {
 
   /***************** Device ******************/
   async responseProbe(message, rinfo) {
+    await this.getVariables();
+
     let probeMatchMsg = fs
       .readFileSync(this.getWSDLPath('device', 'probematches.wsdl'))
       .toString();
@@ -333,14 +326,22 @@ export class OnvifDeviceService implements OnModuleInit {
   async responseDeviceInformation() {
     return new Promise(async (resolve, reject) => {
       try {
+        await this.getVariables();
+
         let query = fs
           .readFileSync(this.getWSDLPath('device', 'deviceinformation.wsdl'))
           .toString();
-        query = query.replace('__MANUFACTURER__', global.robotManufacturer);
-        query = query.replace('__MODEL__', global.robotModel);
-        query = query.replace('__FIRMWARE__VERSION__', global.robotVersion);
-        query = query.replace('__SERIAL_NUMBER__', global.robotSerial);
-        query = query.replace('__HARDWARE_ID__', global.robotHardware);
+        query = query.replace(
+          '__MANUFACTURER__',
+          global.robotManufacturer || 'RainbowRobotics',
+        );
+        query = query.replace('__MODEL__', global.robotModel || '');
+        query = query.replace(
+          '__FIRMWARE__VERSION__',
+          global.robotVersion || '1.0.0',
+        );
+        query = query.replace('__SERIAL_NUMBER__', global.robotSerial || '');
+        query = query.replace('__HARDWARE_ID__', global.robotHardware || '');
 
         httpLogger.debug(`[ONVIF] responseDeviceInformation: ${query}`);
         resolve(Buffer.from(query, 'utf-8'));
@@ -361,6 +362,8 @@ export class OnvifDeviceService implements OnModuleInit {
   async responseScopes() {
     return new Promise(async (resolve, reject) => {
       try {
+        await this.getVariables();
+
         let query = fs
           .readFileSync(this.getWSDLPath('device', 'scopes.wsdl'))
           .toString();
