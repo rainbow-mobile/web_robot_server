@@ -526,9 +526,9 @@ export class SocketGateway
           robotSerial: global.robotSerial,
         };
 
-        const newData = { command: 'resume', time: Date.now().toString() };
-        socketLogger.info(`[TEST] Frs connected and Move Resume`);
-        this.slamnav?.emit('move', stringifyAllValues(newData));
+        // const newData = { command: 'resume', time: Date.now().toString() };
+        // socketLogger.info(`[TEST] Frs connected and Move Resume`);
+        // this.slamnav?.emit('move', stringifyAllValues(newData));
 
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('init', sendData);
@@ -571,11 +571,12 @@ export class SocketGateway
             command: 'resume',
             time: Date.now().toString(),
           };
-          this.slamnav?.emit('move', stringifyAllValues(newData));
-          socketLogger.info(`[TEST] Frs connected and Resume`);
+          // this.slamnav?.emit('move', stringifyAllValues(newData));
+          // socketLogger.info(`[TEST] Frs connected and Resume`);
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
-          // this.kafakService.connect();
+          // this.kafakService.connect();  
+
         } catch (error) {
           socketLogger.error(
             `[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -1919,6 +1920,7 @@ export class SocketGateway
   ) {
     try {
       if (client.id == this.slamnav?.id) {
+        console.log('moveResponse : ',JSON.parse(payload))
         if (payload == null || payload == undefined) {
           this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
@@ -2749,9 +2751,9 @@ export class SocketGateway
             operationStatus: GeneralOperationStatus.START,
             data:
               'Foot_Position : ' +
-              json.orinData.toString() +
+              json.orinPose?.toString() +
               ', ' +
-              json.targetData.toString(),
+              json.goalPose?.toString(),
           });
         } else if (json.result === 'success') {
           generateGeneralLog({
@@ -2762,9 +2764,9 @@ export class SocketGateway
             operationStatus: GeneralOperationStatus.END,
             data:
               'Foot_Position : ' +
-              json.orinData.toString() +
+              json.orinPose?.toString() +
               ', ' +
-              json.targetData.toString(),
+              json.goalPose?.toString(),
           });
         } else if (json.result === 'fail') {
           generateGeneralLog({
@@ -2775,9 +2777,9 @@ export class SocketGateway
             operationStatus: GeneralOperationStatus.END,
             data:
               'Foot_Position : ' +
-              json.orinData.toString() +
+              json.orinPose?.toString() +
               ', ' +
-              json.targetData.toString(),
+              json.goalPose?.toString(),
           });
         }
       }
@@ -2951,6 +2953,8 @@ export class SocketGateway
     if (typeof payload === 'string') {
       payload = JSON.parse(payload);
     }
+
+    console.log("equipmentLog : ", payload.form)
 
     switch (payload.form) {
       case FormType.MANIPULATOR:
