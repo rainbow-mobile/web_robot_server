@@ -183,7 +183,12 @@ export class LogController {
   async getGeneralLog(@Param('date') date: string) {
     try {
       console.log('getGeneralLog : ', date);
-      const _path = path.join('/data', 'log', 'samsung-em', date + '_ROBOT.log');
+      const _path = path.join(
+        '/data',
+        'log',
+        'samsung-em',
+        date + '_ROBOT.log',
+      );
       // console.log('path : ', _path);
       return this.logService.readGeneralLog(_path);
     } catch (error) {
@@ -197,7 +202,12 @@ export class LogController {
   async deleteGeneralLog(@Param('date') date: string) {
     try {
       console.log('deleteGeneralLog : ', date);
-      const _path = path.join('/data', 'log', 'samsung-em', date + '_ROBOT.log');
+      const _path = path.join(
+        '/data',
+        'log',
+        'samsung-em',
+        date + '_ROBOT.log',
+      );
       // console.log('path : ', _path);
       return deleteFile(_path);
     } catch (error) {
