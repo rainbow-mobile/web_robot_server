@@ -126,4 +126,3 @@ exports.SoundService = SoundService;
 exports.SoundService = SoundService = __decorate([
     (0, common_1.Injectable)()
 ], SoundService);
-//# sourceMappingURL=sound.service.js.map

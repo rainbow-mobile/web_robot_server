@@ -21,4 +21,3 @@ exports.NetworkModule = NetworkModule = __decorate([
         providers: [network_service_1.NetworkService],
     })
 ], NetworkModule);
-//# sourceMappingURL=network.module.js.map

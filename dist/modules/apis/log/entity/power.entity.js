@@ -77,4 +77,3 @@ __decorate([
 exports.PowerLogEntity = PowerLogEntity = __decorate([
     (0, typeorm_1.Entity)('power')
 ], PowerLogEntity);
-//# sourceMappingURL=power.entity.js.map

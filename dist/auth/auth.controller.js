@@ -14,4 +14,3 @@ exports.AuthController = AuthController;
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth')
 ], AuthController);
-//# sourceMappingURL=auth.controller.js.map

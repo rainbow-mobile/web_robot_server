@@ -22,4 +22,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'inlier_error', type: 'double' }),
     __metadata("design:type", Number)
 ], StatusConditionEntity.prototype, "inlier_error", void 0);
-//# sourceMappingURL=condition.entity.js.map

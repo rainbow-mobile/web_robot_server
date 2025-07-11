@@ -42,4 +42,3 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], AlarmDto.prototype, "state", void 0);
-//# sourceMappingURL=alarm.dto.js.map

@@ -444,4 +444,3 @@ exports.LogController = LogController = __decorate([
     (0, common_1.Controller)('log'),
     __metadata("design:paramtypes", [log_service_1.LogService])
 ], LogController);
-//# sourceMappingURL=log.controller.js.map

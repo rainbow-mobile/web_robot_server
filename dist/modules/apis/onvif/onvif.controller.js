@@ -341,4 +341,3 @@ exports.OnvifDeviceController = OnvifDeviceController = __decorate([
     (0, common_1.Controller)('onvif'),
     __metadata("design:paramtypes", [onvif_service_1.OnvifDeviceService])
 ], OnvifDeviceController);
-//# sourceMappingURL=onvif.controller.js.map

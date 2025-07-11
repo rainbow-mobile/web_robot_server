@@ -46,4 +46,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], GoalReadDto.prototype, "sortOption", void 0);
-//# sourceMappingURL=goal.read.dto.js.map

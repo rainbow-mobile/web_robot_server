@@ -27,4 +27,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
 ], StatusTestDto.prototype, "time", void 0);
-//# sourceMappingURL=status.dto.js.map

@@ -18,4 +18,3 @@ class RedisIoAdapter extends platform_socket_io_1.IoAdapter {
     }
 }
 exports.RedisIoAdapter = RedisIoAdapter;
-//# sourceMappingURL=redis.adapter.js.map

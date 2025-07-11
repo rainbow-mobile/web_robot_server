@@ -19,4 +19,3 @@ exports.SoundModule = SoundModule = __decorate([
         providers: [sound_service_1.SoundService],
     })
 ], SoundModule);
-//# sourceMappingURL=sound.module.js.map

@@ -38,4 +38,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", Number)
 ], EmitOnOffDto.prototype, "frequency", void 0);
-//# sourceMappingURL=lidar.onoff.dto.js.map

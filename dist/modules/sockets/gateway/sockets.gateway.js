@@ -2633,4 +2633,3 @@ exports.SocketGateway = SocketGateway = __decorate([
         log_service_1.LogService,
         typeorm_2.Repository])
 ], SocketGateway);
-//# sourceMappingURL=sockets.gateway.js.map

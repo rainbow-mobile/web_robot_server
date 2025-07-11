@@ -130,4 +130,3 @@ exports.MoveService = MoveService = __decorate([
     __metadata("design:paramtypes", [typeorm_1.Repository,
         sockets_gateway_1.SocketGateway])
 ], MoveService);
-//# sourceMappingURL=move.service.js.map

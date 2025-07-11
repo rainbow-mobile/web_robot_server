@@ -108,4 +108,3 @@ exports.SSHController = SSHController = __decorate([
     (0, common_1.Controller)('ssh'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], SSHController);
-//# sourceMappingURL=ssh.controller.js.map

@@ -30,4 +30,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'power', type: 'boolean' }),
     __metadata("design:type", Boolean)
 ], StatusStateEntity.prototype, "power", void 0);
-//# sourceMappingURL=state.entity.js.map

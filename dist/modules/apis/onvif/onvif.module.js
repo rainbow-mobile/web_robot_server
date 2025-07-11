@@ -23,4 +23,3 @@ exports.OnvifDeviceModule = OnvifDeviceModule = __decorate([
         exports: [onvif_service_1.OnvifDeviceService],
     })
 ], OnvifDeviceModule);
-//# sourceMappingURL=onvif.module.js.map

@@ -45,4 +45,3 @@ exports.SocketsModule = SocketsModule = __decorate([
         exports: [sockets_gateway_1.SocketGateway],
     })
 ], SocketsModule);
-//# sourceMappingURL=sockets.module.js.map

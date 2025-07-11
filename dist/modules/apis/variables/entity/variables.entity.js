@@ -34,4 +34,3 @@ __decorate([
 exports.VariablesEntity = VariablesEntity = __decorate([
     (0, typeorm_1.Entity)('variables')
 ], VariablesEntity);
-//# sourceMappingURL=variables.entity.js.map

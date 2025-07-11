@@ -1644,4 +1644,3 @@ exports.LogService = LogService = __decorate([
         typeorm_2.Repository,
         typeorm_3.DataSource])
 ], LogService);
-//# sourceMappingURL=log.service.js.map

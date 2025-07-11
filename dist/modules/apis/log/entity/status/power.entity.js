@@ -42,4 +42,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'contact_voltage', type: 'double' }),
     __metadata("design:type", Number)
 ], StatusPowerEntity.prototype, "contact_voltage", void 0);
-//# sourceMappingURL=power.entity.js.map

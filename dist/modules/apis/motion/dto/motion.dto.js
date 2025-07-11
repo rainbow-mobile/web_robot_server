@@ -46,4 +46,3 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'motion 명령' }),
     __metadata("design:type", String)
 ], MotionCommandDto.prototype, "method", void 0);
-//# sourceMappingURL=motion.dto.js.map

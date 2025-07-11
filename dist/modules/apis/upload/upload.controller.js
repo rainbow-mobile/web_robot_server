@@ -159,4 +159,3 @@ exports.PublishController = PublishController = __decorate([
     (0, common_1.Controller)('publish'),
     __metadata("design:paramtypes", [upload_service_1.UploadService])
 ], PublishController);
-//# sourceMappingURL=upload.controller.js.map

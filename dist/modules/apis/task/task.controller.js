@@ -275,4 +275,3 @@ exports.TaskController = TaskController = __decorate([
     (0, common_1.Controller)('task'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], TaskController);
-//# sourceMappingURL=task.controller.js.map

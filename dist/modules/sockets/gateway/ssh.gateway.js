@@ -139,4 +139,3 @@ exports.SSHGateway = SSHGateway = __decorate([
         host: '0.0.0.0',
     })
 ], SSHGateway);
-//# sourceMappingURL=ssh.gateway.js.map

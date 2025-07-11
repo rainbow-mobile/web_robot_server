@@ -92,4 +92,3 @@ exports.create_move = `CREATE TABLE move(
 	rz float,
 	time datetime(3) not null default now(3)
 );`;
-//# sourceMappingURL=query.js.map

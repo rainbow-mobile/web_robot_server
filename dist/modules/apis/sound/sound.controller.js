@@ -172,4 +172,3 @@ exports.SoundController = SoundController = __decorate([
     (0, common_1.Controller)('sound'),
     __metadata("design:paramtypes", [sound_service_1.SoundService])
 ], SoundController);
-//# sourceMappingURL=sound.controller.js.map

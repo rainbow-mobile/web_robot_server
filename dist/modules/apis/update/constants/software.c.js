@@ -8,4 +8,3 @@ exports.SOFTWARE_DIR = {
     rrs: 'web_robot_server',
     'web-ui': 'web-rainbow-ui',
 };
-//# sourceMappingURL=software.c.js.map

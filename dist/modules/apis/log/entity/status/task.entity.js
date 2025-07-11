@@ -30,4 +30,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'id', type: 'int' }),
     __metadata("design:type", Number)
 ], StatusTaskEntity.prototype, "id", void 0);
-//# sourceMappingURL=task.entity.js.map

@@ -21,4 +21,3 @@ exports.SSHModule = SSHModule = __decorate([
         providers: [ssh_service_1.SSHService],
     })
 ], SSHModule);
-//# sourceMappingURL=ssh.module.js.map

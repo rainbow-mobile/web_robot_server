@@ -155,4 +155,3 @@ function generateGeneralLog(param) {
     writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
     return true;
 }
-//# sourceMappingURL=equipment.logger.js.map

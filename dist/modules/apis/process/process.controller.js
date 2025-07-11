@@ -53,4 +53,3 @@ exports.ProcessController = ProcessController = __decorate([
     (0, common_1.Controller)('process'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], ProcessController);
-//# sourceMappingURL=process.controller.js.map

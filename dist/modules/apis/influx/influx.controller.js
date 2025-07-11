@@ -56,4 +56,3 @@ exports.INFLUXController = INFLUXController = __decorate([
     (0, common_1.Controller)('influx'),
     __metadata("design:paramtypes", [influx_service_1.InfluxDBService])
 ], INFLUXController);
-//# sourceMappingURL=influx.controller.js.map

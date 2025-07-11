@@ -57,4 +57,3 @@ __decorate([
 exports.MoveLogEntity = MoveLogEntity = __decorate([
     (0, typeorm_1.Entity)('move')
 ], MoveLogEntity);
-//# sourceMappingURL=move.entity.js.map

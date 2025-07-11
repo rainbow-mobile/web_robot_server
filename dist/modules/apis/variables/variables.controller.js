@@ -119,4 +119,3 @@ exports.VariablesController = VariablesController = __decorate([
     (0, common_1.Controller)('variables'),
     __metadata("design:paramtypes", [variables_service_1.VariablesService])
 ], VariablesController);
-//# sourceMappingURL=variables.controller.js.map

@@ -172,4 +172,3 @@ exports.NetworkController = NetworkController = __decorate([
     __metadata("design:paramtypes", [network_service_1.NetworkService,
         variables_service_1.VariablesService])
 ], NetworkController);
-//# sourceMappingURL=network.controller.js.map

@@ -33,4 +33,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], UploadMapDto.prototype, "mapNm", void 0);
-//# sourceMappingURL=upload.map.dto.js.map

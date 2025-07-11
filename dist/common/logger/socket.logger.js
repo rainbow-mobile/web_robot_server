@@ -21,4 +21,3 @@ const socketLogger = (0, winston_1.createLogger)({
     ],
 });
 exports.default = socketLogger;
-//# sourceMappingURL=socket.logger.js.map

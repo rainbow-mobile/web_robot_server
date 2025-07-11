@@ -403,4 +403,3 @@ exports.ControlController = ControlController = __decorate([
     (0, common_1.Controller)('control'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], ControlController);
-//# sourceMappingURL=control.controller.js.map

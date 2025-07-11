@@ -54,4 +54,3 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], PaginationRequest.prototype, "pageSize", void 0);
-//# sourceMappingURL=pagination.request.js.map

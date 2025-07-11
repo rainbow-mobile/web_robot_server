@@ -81,4 +81,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", Array)
 ], NetworkDto.prototype, "dns", void 0);
-//# sourceMappingURL=network.dto.js.map

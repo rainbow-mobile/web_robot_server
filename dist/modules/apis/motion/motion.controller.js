@@ -45,4 +45,3 @@ exports.MotionController = MotionController = __decorate([
     (0, common_1.Controller)('motion'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], MotionController);
-//# sourceMappingURL=motion.controller.js.map

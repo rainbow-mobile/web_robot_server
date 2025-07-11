@@ -246,4 +246,3 @@ exports.MoveController = MoveController = __decorate([
     (0, common_1.Controller)('move'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], MoveController);
-//# sourceMappingURL=move.controller.js.map

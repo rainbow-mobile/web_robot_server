@@ -155,4 +155,3 @@ exports.UpdateService = UpdateService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], UpdateService);
-//# sourceMappingURL=update.service.js.map

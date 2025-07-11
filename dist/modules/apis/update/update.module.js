@@ -21,4 +21,3 @@ exports.UpdateModule = UpdateModule = __decorate([
         providers: [update_service_1.UpdateService],
     })
 ], UpdateModule);
-//# sourceMappingURL=update.module.js.map

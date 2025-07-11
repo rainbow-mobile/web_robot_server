@@ -47,4 +47,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], PingSendToTargetDto.prototype, "target", void 0);
-//# sourceMappingURL=update.get.dto.js.map

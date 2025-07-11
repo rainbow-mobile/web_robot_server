@@ -13,4 +13,3 @@ function loggerMiddleware(req, res, next) {
     });
     next();
 }
-//# sourceMappingURL=logger.middleware.js.map

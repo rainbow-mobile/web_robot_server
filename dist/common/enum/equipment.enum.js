@@ -80,4 +80,3 @@ var GeneralOperationStatus;
     GeneralOperationStatus["END"] = "END";
     GeneralOperationStatus["SET"] = "SET";
 })(GeneralOperationStatus || (exports.GeneralOperationStatus = GeneralOperationStatus = {}));
-//# sourceMappingURL=equipment.enum.js.map
