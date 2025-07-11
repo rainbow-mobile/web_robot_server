@@ -17,7 +17,6 @@ export class ExternalCommandDto {
   })
   command: string;
 
-  @IsNumber()
   @IsOptional()
   @ApiProperty({
     description: '이동할 위치값을 입력하세요.',
