@@ -3,7 +3,8 @@
 ## [rrs-20250711113125] - 2025-07-11
 - Release App: RRS, Branch: develop, Version: rrs-20250711113125] release 배포
 
-
+## [rrs-20250710155509] - 2025-07-10
+- Release App: RRS, Branch: main, Version: rrs-20250710155509] release 배포
 
 ## [rrs-20250710154017] - 2025-07-10
 - Release App: RRS, Branch: develop, Version: rrs-20250710154017] release 배포
