@@ -3,7 +3,7 @@ import {
   ManipulatoreOperationName,
 } from '@common/enum/equipment.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsString, Length } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 
 export class SequenceDto {
   @IsString()
@@ -25,4 +25,8 @@ export class SequenceDto {
     required: false,
   })
   operationStatus: string;
+
+  @IsString()
+  @IsOptional()
+  data?: string;
 }

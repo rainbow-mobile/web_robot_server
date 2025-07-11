@@ -1,0 +1,23 @@
+import { AmrDockingPrecisionPayload, AmrMovingPrecisionPayload, AmrObstaclePayload, AmrVelocityPayload, ManipulatorPositionPayload, TorsoPositionPayload } from '@interface/system/equipment.interface';
+import { GeneralLogType, GeneralOperationStatus, GeneralStatus } from '@common/enum/equipment.enum';
+import { AlarmEntity } from 'src/modules/apis/log/entity/alarm.entity';
+export declare function generateManipulatorLog(data: ManipulatorPositionPayload, suffix: string): void;
+export declare function generateTorsoLog(data: TorsoPositionPayload, suffix: string): void;
+export declare function generateAmrVelocityLog(data: AmrVelocityPayload, suffix: string): void;
+export declare function generateAmrObstacleLog(data: AmrObstaclePayload, suffix: string): void;
+export declare function generateAmrDockingPrecisionLog(data: AmrDockingPrecisionPayload, suffix: string): void;
+export declare function generateAmrMovingPrecisionLog(data: AmrMovingPrecisionPayload, suffix: string): void;
+export declare function setAlarmGeneralLog(alarm: AlarmEntity, status: GeneralOperationStatus): void;
+export declare function generateGeneralLog(param: {
+    dateTime?: string;
+    machineId?: string;
+    logType: GeneralLogType;
+    lotId?: string;
+    recipe?: string;
+    productId?: string;
+    status: GeneralStatus;
+    scope: string;
+    operationName: string;
+    operationStatus: GeneralOperationStatus;
+    data?: string;
+}): boolean;

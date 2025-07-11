@@ -39,6 +39,7 @@ import {
 } from '@common/logger/equipment.logger';
 import {
   AmrLogType,
+  FootOperationName,
   FormType,
   GeneralLogType,
   GeneralOperationName,
@@ -58,6 +59,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
 import { LessThan, Repository } from 'typeorm';
 import { ExternalStatusPayload } from '@common/interface/robot/foot.interface';
+import { FootCommand } from 'src/modules/apis/control/dto/external.control.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -537,7 +539,7 @@ export class SocketGateway
         global.frsConnect = false;
 
         //Test Techtaka (pause)
-        this.lastGoal = this.lastMoveStatus.goal_node.id;
+        this.lastGoal = this.lastMoveStatus?.goal_node?.id;
         const newData = { command: 'pause', time: Date.now().toString() };
         socketLogger.info(`[TEST] Frs disconnected and Move Pause`);
         this.slamnav?.emit('move', stringifyAllValues(newData));
@@ -1160,6 +1162,8 @@ export class SocketGateway
           this.frsSocket?.emit('slamUnregist');
           this.slamnav = null;
           this.setConnectChecker();
+          // slamnav 연결 해제 시 알람 상태 초기화
+          this.clearAllAlarmStates();
 
           this.moveState = {
             command: '',
@@ -1491,7 +1495,22 @@ export class SocketGateway
           return;
         }
 
-        const json = JSON.parse(payload);
+        const jsontemp = JSON.parse(payload);
+        let json = jsontemp;
+        try {
+          json = {
+            foot: {
+              connection: jsontemp.foot.connection === 'true' ? true : false,
+              foot_state: parseInt(jsontemp.foot.foot_state),
+              is_down: jsontemp.foot.is_down === 'true' ? true : false,
+              position: parseFloat(jsontemp.foot.position),
+            },
+            time: jsontemp.time,
+          };
+        } catch (error) {
+          console.error(error);
+          json = jsontemp;
+        }
         // console.log('footStatus : ', json);
         const tempjson = { ...json };
         delete tempjson.time;
@@ -1503,6 +1522,13 @@ export class SocketGateway
         this.server
           .to(['footStatus', 'all', 'allStatus'])
           .emit('footStatus', json);
+
+        if (this.slamnav) {
+          this.slamnav.emit('footStatus', stringifyAllValues(json));
+        } else {
+          // console.log("??????????");
+        }
+
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('footStatus', {
             robotSerial: global.robotSerial,
@@ -1522,10 +1548,10 @@ export class SocketGateway
   parseStatus(status: any): any {
     try {
       /// 1) battey만 특별하게 파싱
-      if (status.battery) {
-        if (status.battery.tabos_status) {
-          status.battery.tabos_status = this.parseTabosStatus(
-            parseInt(status.battery.tabos_status),
+      if (status.power) {
+        if (status.power.tabos_status) {
+          status.power.tabos_status = this.parseTabosStatus(
+            parseInt(status.power.tabos_status),
           );
         }
       }
@@ -1596,62 +1622,86 @@ export class SocketGateway
   ) {
     try {
       if (client.id == this.slamnav?.id) {
-        if (payload == null || payload == undefined) {
+        if (payload == null || payload == undefined || payload == '') {
           socketLogger.warn(`[STATUS] Status: NULL`);
           return;
         }
 
         const json = this.parseStatus(JSON.parse(payload));
+        // console.log(json);
+        // socketLogger.debug(`status in : ${JSON.stringify(json)}`);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastStatus)) {
           return;
         }
 
-        //samsung
+        //samsung - 맵 상태 변경 시 알람 처리
         if (this.lastStatus?.map?.map_name !== tempjson.map?.map_name) {
           if (tempjson.map.map_name !== '') {
+            // 맵이 로드된 경우 관련 알람 해제
             this.clearAlarmCode(2002);
             this.clearAlarmCode(2003);
             this.clearAlarmCode(2004);
           } else {
+            // 맵이 없는 경우 알람 발생
             this.startAlarmCode(2003);
           }
         }
 
+        // 로컬라이제이션 상태 변경 시 알람 처리
         if (
           this.lastStatus?.robot_state?.localization !==
           tempjson.robot_state?.localization
         ) {
           if (tempjson.robot_state.localization === 'good') {
+            // 로컬라이제이션 정상 시 알람 해제
             this.clearAlarmCode(2001);
           } else {
+            // 로컬라이제이션 실패 시 알람 발생
             this.startAlarmCode(2001);
           }
         }
 
+        // EMO 상태 변경 시 알람 처리
         if (this.lastStatus?.robot_state?.emo !== tempjson.robot_state?.emo) {
           if (tempjson.robot_state.emo === 'false') {
+            // EMO 비활성화 시 알람 해제
             this.clearAlarmCode(3000);
           } else {
+            // EMO 활성화 시 알람 발생
             this.startAlarmCode(3000);
           }
         }
 
-        if (this.lastStatus?.power?.bat_out !== tempjson.power?.bat_out) {
-          if (parseFloat(tempjson.power.bat_out) < 43.4) {
+        // 배터리 상태 변경 시 알람 처리 개선
+        if (
+          this.lastStatus?.power?.bat_out !== tempjson.power?.bat_out ||
+          this.lastStatus?.power?.bat_percent !== tempjson.power?.bat_percent
+        ) {
+          const batOut = parseFloat(tempjson.power.bat_out);
+          const batPercent = parseFloat(tempjson.power.bat_percent);
+
+          // 배터리 전압 낮음 (4000)
+          if (batOut < 43.4) {
             this.startAlarmCode(4000);
             this.clearAlarmCode(4002);
             this.clearAlarmCode(4003);
-          } else if (parseFloat(tempjson.power.bat_percent) < 5) {
-            this.startAlarmCode(4003);
+          }
+          // 배터리 잔량 5% 미만 (4003)
+          else if (batPercent < 5) {
             this.clearAlarmCode(4000);
+            this.startAlarmCode(4003);
             this.clearAlarmCode(4002);
-          } else if (parseFloat(tempjson.power.bat_percent) < 15) {
-            this.startAlarmCode(4002);
+          }
+          // 배터리 잔량 15% 미만 (4002)
+          else if (batPercent < 15) {
             this.clearAlarmCode(4000);
             this.clearAlarmCode(4003);
-          } else {
+            this.startAlarmCode(4002);
+          }
+          // 정상 상태 - 모든 배터리 알람 해제
+          else {
             this.clearAlarmCode(4000);
             this.clearAlarmCode(4002);
             this.clearAlarmCode(4003);
@@ -1734,6 +1784,8 @@ export class SocketGateway
         this.lastStatus = tempjson;
 
         this.server.to(['status', 'all', 'allStatus']).emit('status', json);
+        this.externalAccessory?.emit('status', payload);
+
         if (this.frsSocket?.connected) {
           this.frsSocket.emit('status', {
             robotSerial: global.robotSerial,
@@ -1820,12 +1872,13 @@ export class SocketGateway
           // socketLogger.warn(`[STATUS] MoveStatus: Equal`)
           return;
         }
-        
+
         this.lastMoveStatus = json;
 
         this.server
           .to(['moveStatus', 'all', 'allStatus'])
           .emit('moveStatus', json);
+        this.externalAccessory?.emit('moveStatus', payload);
 
         // socketLogger.debug(`[STATUS] MoveStatus : ${json.time}`)
         if (this.frsSocket?.connected) {
@@ -1930,33 +1983,37 @@ export class SocketGateway
               scope: GeneralScope.VEHICLE,
               operationName: VehicleOperationName.MOVE,
               operationStatus: GeneralOperationStatus.END,
+              data: global.orinGoalId + ' -> ' + global.targetGoalId,
             });
           } else if (json.result === 'accept') {
-            if (
-              generateGeneralLog({
-                logType: GeneralLogType.AUTO,
-                status: GeneralStatus.RUN,
-                scope: GeneralScope.VEHICLE,
-                operationName: VehicleOperationName.READY,
-                operationStatus: GeneralOperationStatus.END,
-              })
-            ) {
-              generateGeneralLog({
-                logType: GeneralLogType.AUTO,
-                status: GeneralStatus.RUN,
-                scope: GeneralScope.VEHICLE,
-                operationName: VehicleOperationName.MOVE,
-                operationStatus: GeneralOperationStatus.START,
-              });
-            }
-          } else if (json.result === 'reject') {
+            // if (
+            //   generateGeneralLog({
+            //     logType: GeneralLogType.AUTO,
+            //     status: GeneralStatus.RUN,
+            //     scope: GeneralScope.VEHICLE,
+            //     operationName: VehicleOperationName.READY,
+            //     operationStatus: GeneralOperationStatus.END,
+            //     data: global.orinGoalId +" -> "+global.targetGoalId
+            //   })
+            // ) {
             generateGeneralLog({
               logType: GeneralLogType.AUTO,
               status: GeneralStatus.RUN,
               scope: GeneralScope.VEHICLE,
-              operationName: VehicleOperationName.READY,
-              operationStatus: GeneralOperationStatus.END,
+              operationName: VehicleOperationName.MOVE,
+              operationStatus: GeneralOperationStatus.START,
+              data: global.orinGoalId + ' -> ' + global.targetGoalId,
             });
+            // }
+          } else if (json.result === 'reject') {
+            // generateGeneralLog({
+            //   logType: GeneralLogType.AUTO,
+            //   status: GeneralStatus.RUN,
+            //   scope: GeneralScope.VEHICLE,
+            //   operationName: VehicleOperationName.READY,
+            //   operationStatus: GeneralOperationStatus.END,
+            //   data: global.orinGoalId +" -> "+global.targetGoalId
+            // });
           }
         }
 
@@ -1986,13 +2043,13 @@ export class SocketGateway
       if (scope === undefined || scope === '') {
         throw new RpcException('scope 값이 없습니다.');
       }
-      if (
-        !Object.values(['manipulator', 'torso', 'acs']).includes(
-          scope.toLowerCase(),
-        )
-      ) {
-        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
-      }
+      // if (
+      //   !Object.values(['manipulator', 'torso', 'acs']).includes(
+      //     scope.toLowerCase(),
+      //   )
+      // ) {
+      //   throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
+      // }
 
       if (data.operationName === undefined || data.operationName === '') {
         throw new RpcException('operationName 값이 없습니다.');
@@ -2008,36 +2065,19 @@ export class SocketGateway
         throw new RpcException(
           'operationStatus 값이 형식과 일치하지 않습니다.',
         );
+      } else {
+        console.log(data);
       }
 
       /// 2) GeneralLog 저장
-      if (scope.toLowerCase() == 'manipulator') {
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.MANIPULATOR,
-          operationName: data.operationName,
-          operationStatus: data.operationStatus,
-        });
-      } else if (scope.toLowerCase() == 'torso') {
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.TORSO,
-          operationName: data.operationName,
-          operationStatus: data.operationStatus,
-        });
-      } else if (scope.toLowerCase() === 'acs') {
-        generateGeneralLog({
-          logType: GeneralLogType.AUTO,
-          status: GeneralStatus.RUN,
-          scope: GeneralScope.EVENT,
-          operationName: data.operationName,
-          operationStatus: data.operationStatus,
-        });
-      } else {
-        throw new RpcException('scope 값이 형식과 일치하지 않습니다.');
-      }
+      generateGeneralLog({
+        logType: GeneralLogType.AUTO,
+        status: GeneralStatus.RUN,
+        scope: scope,
+        operationName: data.operationName,
+        operationStatus: data.operationStatus as GeneralOperationStatus,
+        data: data.data ?? '',
+      });
       return;
     } catch (error) {
       socketLogger.error(`[LOG] setSequence : ${errorToJson(error)}`);
@@ -2046,20 +2086,110 @@ export class SocketGateway
     }
   }
 
+  // 알람 상태 추적을 위한 맵 추가
+  private activeAlarms: Map<number, boolean> = new Map();
+
+  // 알람 상태 확인 함수
+  private isAlarmActive(alarmCode: number): boolean {
+    return this.activeAlarms.get(alarmCode) || false;
+  }
+
+  // 알람 상태 설정 함수
+  private setAlarmState(alarmCode: number, active: boolean) {
+    this.activeAlarms.set(alarmCode, active);
+  }
+
+  // 알람 상태 초기화 함수
+  private clearAllAlarmStates() {
+    this.activeAlarms.clear();
+  }
+
   async setAlarmCode(alarmCode: number) {
-    this.setAlarm({ alarmCode: alarmCode.toString(), state: true });
-    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
-    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
+    try {
+      // 이미 활성화된 알람이면 중복 방지
+      if (this.isAlarmActive(alarmCode)) {
+        return;
+      }
+
+      await this.setAlarm({ alarmCode: alarmCode.toString(), state: true });
+      const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+      setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
+      this.setAlarmState(alarmCode, true);
+    } catch (error) {}
   }
-  async startAlarmCode(alarmCode: number){
-    this.setAlarm({alarmCode:alarmCode.toString(),state:true})
-    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
-    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.START);
+
+  async startAlarmCode(alarmCode: number) {
+    try {
+      // 이미 활성화된 알람이면 중복 방지
+      if (this.isAlarmActive(alarmCode)) {
+        return;
+      }
+
+      await this.setAlarm({ alarmCode: alarmCode.toString(), state: true });
+      const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+      setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.START);
+      this.setAlarmState(alarmCode, true);
+    } catch (error) {}
   }
+
   async clearAlarmCode(alarmCode: number) {
-    this.setAlarm({alarmCode:alarmCode.toString(),state:false})
-    const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
-    setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.END);
+    try {
+      // 이미 비활성화된 알람이면 중복 방지
+      if (!this.isAlarmActive(alarmCode)) {
+        return;
+      }
+
+      await this.clearAlarm({ alarmCode: alarmCode.toString(), state: false });
+      const alarmEntity = await this.logService.getAlarmDetail(alarmCode);
+      setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.END);
+      this.setAlarmState(alarmCode, false);
+    } catch (error) {}
+  }
+
+  async clearAlarm(data: AlarmDto) {
+    try {
+      /// 1) Get Alarm
+      const alarmDetail = await this.logService.getAlarmDetail(data.alarmCode);
+
+      /// 2) Check Before Alarm (중복 방지)
+      const lastAlarm = await this.logService.getLastAlarm(data.alarmCode);
+      if (lastAlarm) {
+        if (
+          data.alarmCode === lastAlarm.alarmCode &&
+          data.state === lastAlarm.state
+        ) {
+          // socketLogger.warn(
+          //   `[LOG] duplicate alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`,
+          // );
+          throw new RpcException('중복되는 알람코드');
+        }
+      }
+      socketLogger.info(
+        `[LOG] clear alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`,
+      );
+
+      /// 3) Generate AlarmDto
+      const alarmDto = {
+        alarmCode: data.alarmCode,
+        alarmDetail: data.alarmDetail,
+        emitFlag: false,
+        state: data.state,
+      };
+
+      /// 4) Emit alarm
+      this.server.to(['alarm', 'all']).emit('alarm', alarmDto);
+
+      /// 5) save log
+      this.logService.setAlarm(alarmDto);
+
+      // /// 6) general log
+      // const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
+      // setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
+    } catch (error) {
+      if (error instanceof RpcException) throw error;
+      socketLogger.error(`[LOG] clearAlarm? : ${errorToJson(error)}`);
+      throw new RpcException('서버에 에러가 발생했습니다.');
+    }
   }
 
   async setAlarm(data: AlarmDto) {
@@ -2074,10 +2204,10 @@ export class SocketGateway
           data.alarmCode === lastAlarm.alarmCode &&
           data.state === lastAlarm.state
         ) {
-          socketLogger.warn(
-            `[LOG] duplicate alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`,
-          );
-          return;
+          throw new RpcException('중복되는 알람코드');
+          // socketLogger.warn(
+          //   `[LOG] duplicate alarm : ${data.alarmCode} -> ${alarmDetail.alarmDescription}`,
+          // );
         }
       }
       socketLogger.warn(
@@ -2102,8 +2232,9 @@ export class SocketGateway
       // const alarmEntity = await this.logService.getAlarmDetail(data.alarmCode);
       // setAlarmGeneralLog(alarmEntity, GeneralOperationStatus.SET);
     } catch (error) {
-      socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`);
       if (error instanceof RpcException) throw error;
+      socketLogger.error(`[LOG] setAlarm : ${errorToJson(error)}`);
+
       throw new RpcException('서버에 에러가 발생했습니다.');
     }
   }
@@ -2603,6 +2734,50 @@ export class SocketGateway
           robotSerial: global.robotSerial,
           data: json,
         });
+      }
+
+      //삼성전기 일반LOG용 시퀀스 작성 (임시)
+      if (json.command === FootCommand.Move) {
+        if (json.result === 'accept') {
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.RUN,
+            scope: GeneralScope.FOOT,
+            operationName: FootOperationName.MOVE,
+            operationStatus: GeneralOperationStatus.START,
+            data:
+              'Foot_Position : ' +
+              json.orinData.toString() +
+              ', ' +
+              json.targetData.toString(),
+          });
+        } else if (json.result === 'success') {
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.RUN,
+            scope: GeneralScope.FOOT,
+            operationName: FootOperationName.MOVE,
+            operationStatus: GeneralOperationStatus.END,
+            data:
+              'Foot_Position : ' +
+              json.orinData.toString() +
+              ', ' +
+              json.targetData.toString(),
+          });
+        } else if (json.result === 'fail') {
+          generateGeneralLog({
+            logType: GeneralLogType.AUTO,
+            status: GeneralStatus.RUN,
+            scope: GeneralScope.FOOT,
+            operationName: FootOperationName.MOVE,
+            operationStatus: GeneralOperationStatus.END,
+            data:
+              'Foot_Position : ' +
+              json.orinData.toString() +
+              ', ' +
+              json.targetData.toString(),
+          });
+        }
       }
 
       socketLogger.debug(

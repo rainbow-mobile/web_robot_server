@@ -100,14 +100,37 @@ export class MoveService {
           rz: data.rz ? parseFloat(data.rz) : null,
         });
 
+        // goal_id를 전역 변수로 저장
+        if (data.goal_id) {
+          global.targetGoalId = data.goal_id;
+        } else {
+          global.targetGoalId = '';
+        }
+        if (this.socketGateway.robotState) {
+          global.orinGoalId = this.socketGateway.robotState.goal_node.id;
+        } else {
+          global.orinGoalId = 'INIT';
+        }
+
+        // generateGeneralLog({
+        //   logType: GeneralLogType.AUTO,
+        //   status: GeneralStatus.RUN,
+        //   scope: GeneralScope.VEHICLE,
+        //   operationName: 'READY',
+        //   operationStatus: GeneralOperationStatus.START,
+        //   data: global.orinGoalId +" -> "+global.targetGoalId
+        // })
+
         this.socketGateway.slamnav.once('moveResponse', (data2) => {
           httpLogger.info(
             `[MOVE] moveCommand Response: ${JSON.stringify(data2)}`,
           );
-          if (data2.result === 'accept') {
-            resolve(data2);
+          const json = JSON.parse(data2);
+          if (json.result === 'accept') {
+            console.log('here:', json);
+            resolve(json);
           } else {
-            reject({ data: data2, status: HttpStatus.FORBIDDEN });
+            reject({ data: json, status: HttpStatus.FORBIDDEN });
           }
           clearTimeout(timeoutId);
         });

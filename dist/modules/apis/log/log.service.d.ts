@@ -1,0 +1,91 @@
+import { Repository } from 'typeorm';
+import { StatusPayload } from '@common/interface/robot/status.interface';
+import { DataSource } from 'typeorm';
+import { StatusLogEntity } from './entity/status.entity';
+import { TaskPayload } from '@common/interface/robot/task.interface';
+import { LogReadDto } from './dto/log.read.dto';
+import { PaginationResponse } from '@common/pagination/pagination.response';
+import { NetworkUsagePayload, ProcessUsagePayload, SystemUsagePayload } from '@common/interface/system/usage.interface';
+import { SystemLogEntity } from './entity/system.entity';
+import { AlarmEntity } from './entity/alarm.entity';
+import { AlarmLogEntity } from './entity/alarmlog.entity';
+import { AlarmDto } from '@sockets/dto/alarm.dto';
+export declare class LogService {
+    private readonly statusRepository;
+    private readonly systemRepository;
+    private readonly alarmLogRepository;
+    private readonly alarmRepository;
+    private readonly dataSource;
+    constructor(statusRepository: Repository<StatusLogEntity>, systemRepository: Repository<SystemLogEntity>, alarmLogRepository: Repository<AlarmLogEntity>, alarmRepository: Repository<AlarmEntity>, dataSource: DataSource);
+    init(): Promise<void>;
+    private systemUsage;
+    private processUsage;
+    private networkUsage;
+    private alarmIndex;
+    addDisconForGaps(filteredArray: {
+        time: Date;
+        value: any;
+    }[]): Promise<{
+        time: string;
+        value: any;
+    }[]>;
+    getStatusParam(key: string): Promise<unknown>;
+    getStatusLog(key: string): Promise<unknown>;
+    readLogLines(filePath: string): Promise<string[]>;
+    parseLines(line: string, param: any): Promise<{
+        time: string;
+        level: string;
+        category: string;
+        text: string;
+    }>;
+    writeAlarmLog(alarmCode: string, alarmDetail: string | undefined, state: boolean): Promise<void>;
+    getAlarmDetail(alarmCode: string | number): Promise<AlarmEntity>;
+    getAlarmDetails(): Promise<AlarmEntity[]>;
+    generateAlarmDB(): Promise<void>;
+    resetAlarms(): Promise<void>;
+    getAlarmsAll(): Promise<AlarmLogEntity[]>;
+    getAlarms(): Promise<AlarmLogEntity[]>;
+    getLastAlarm(alarmCode: string): Promise<AlarmLogEntity | undefined>;
+    setAlarmsFlag(list: AlarmLogEntity[]): Promise<void>;
+    getAlarms2(param: LogReadDto): Promise<PaginationResponse<AlarmLogEntity>>;
+    setAlarm(param: AlarmDto): Promise<void>;
+    readGeneralLog(dir: string): Promise<string>;
+    getLogs(type: string, param: LogReadDto): Promise<PaginationResponse<any>>;
+    getSystemProcess(param: LogReadDto): Promise<{
+        time: Date;
+        slamnav: ProcessUsagePayload;
+        taskman: ProcessUsagePayload;
+        server: ProcessUsagePayload;
+        webui: ProcessUsagePayload;
+    }[]>;
+    getSystemCpu(param: LogReadDto): Promise<{
+        time: Date;
+        cpu: number;
+        cpu_cores: number[];
+        memory_free: number;
+        memory_total: number;
+    }[]>;
+    getStatus(type: string, param: LogReadDto): Promise<PaginationResponse<any>>;
+    readState(state: StatusPayload): Promise<"Charging" | "Power Off" | "Mapping" | "Not Ready" | "Obstacle" | "Moving" | "Paused" | "Ready" | "?">;
+    handleArchiving(): Promise<void>;
+    emitStatusTest(time: string): Promise<unknown>;
+    emitStatus(state: StatusPayload, slam: boolean, task: TaskPayload): Promise<unknown>;
+    checkTables(name: string, query: string): Promise<void>;
+    archiveOldDataDay(): Promise<void>;
+    getOldestTime(): Promise<Date>;
+    archiveOldDBData(type: string, date: string): Promise<void>;
+    archiveOldJSONData(type: string, date: string): Promise<void>;
+    optimizeTable(tableName: string): Promise<void>;
+    getCpuUsage(): Promise<SystemUsagePayload>;
+    getProcessUsage(): Promise<Map<string, ProcessUsagePayload>>;
+    private previousStats;
+    private previousTime;
+    getNetworkUsage(): Promise<Map<string, NetworkUsagePayload>>;
+    emitSystem(): Promise<void>;
+    getSystemCurrent(): Promise<{
+        system: any;
+        process: Map<string, any>;
+        network: any;
+    }>;
+    readMemoryUsage(): Promise<void>;
+}

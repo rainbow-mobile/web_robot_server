@@ -33,7 +33,7 @@ export class OnvifDeviceService implements OnModuleInit {
           explicitArray: false,
           tagNameProcessors: [xml2js.processors.stripPrefix],
         });
-        console.log('message in');
+        // console.log('message in');
         parser.parseString(msg, (err, result) => {
           if (err) {
             console.log('Error parsing XML:', err);
@@ -52,8 +52,8 @@ export class OnvifDeviceService implements OnModuleInit {
                 result['Envelope']['Body']['Probe']['Types'],
               ).includes('Device')
             ) {
-              console.log(rinfo);
-              console.log(`ONVIF Read : ${JSON.stringify(result)}`);
+              // console.log(rinfo);/
+              // console.log(`ONVIF Read : ${JSON.stringify(result)}`);
               this.responseProbe(result, rinfo);
             }
           }
@@ -174,7 +174,7 @@ export class OnvifDeviceService implements OnModuleInit {
     const ips: string[] = [];
     for (const iface of Object.values(interfaces)) {
       for (const config of iface || []) {
-        httpLogger.info(`[ONVIF] config : ${config}`);
+        // httpLogger.info(`[ONVIF] config : ${config}`);
         if (config.family === 'IPv4' && !config.internal) {
           // 같은 네트워크 대역대에 있는 IP만 반환
           httpLogger.info(`[ONVIF] getLocalIps :  ${config.address}`);
@@ -195,7 +195,7 @@ export class OnvifDeviceService implements OnModuleInit {
     helloMsg = helloMsg.replace('__ADDRESS__', global.robotSerial);
     helloMsg = helloMsg.replace('__XADDRS__', this.getXaddrs('device_service'));
 
-    httpLogger.debug(`[ONVIF] hello: ${helloMsg}`);
+    // httpLogger.debug(`[ONVIF] hello: ${helloMsg}`);
 
     await this.server.send(
       helloMsg,
@@ -232,7 +232,7 @@ export class OnvifDeviceService implements OnModuleInit {
     );
 
     const messageBuffer = Buffer.from(probeMatchMsg, 'utf-8');
-    httpLogger.info(`[ONVIF] responseProbe: ${probeMatchMsg}`);
+    // httpLogger.info(`[ONVIF] responseProbe: ${probeMatchMsg}`);
 
     this.server.send(
       messageBuffer,
@@ -445,7 +445,7 @@ export class OnvifDeviceService implements OnModuleInit {
           query = query.replace('__DNS__', dns_query);
         }
         httpLogger.debug(`[ONVIF] responseDNS: ${query}`);
-        console.log(query);
+        // console.log(query);
         resolve(Buffer.from(query, 'utf-8'));
       } catch (error) {
         httpLogger.error(`[ONVIF] responseDNS : ${errorToJson(error)}`);

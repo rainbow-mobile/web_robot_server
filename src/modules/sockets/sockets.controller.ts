@@ -50,6 +50,7 @@ export class SocketsController implements OnModuleInit {
         scope: GeneralScope.EVENT,
         operationName: GeneralOperationName.PROGRAM_START,
         operationStatus: GeneralOperationStatus.SET,
+        data: 'Program Start',
       });
     });
     setTimeout(() => {

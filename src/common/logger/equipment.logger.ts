@@ -29,7 +29,7 @@ function getCustomFilenameWithDate(suffix: string) {
   const DD = ('0' + now.getDate()).slice(-2);
   const HH = ('0' + now.getHours()).slice(-2);
 
-  const baseLogDir: string = path.join('data', 'log', 'samsung-em');
+  const baseLogDir: string = path.join('C:/data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
@@ -41,7 +41,7 @@ function getCustomFilenameWithoutDate(suffix: string) {
   const MM = ('0' + (now.getMonth() + 1)).slice(-2);
   const DD = ('0' + now.getDate()).slice(-2);
 
-  const baseLogDir: string = path.join('data', 'log', 'samsung-em');
+  const baseLogDir: string = path.join('C:/data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}_${suffix}.log`);
@@ -50,7 +50,7 @@ function getCustomFilenameWithoutDate(suffix: string) {
 function writeLog(filePath: string, header: string, row: string) {
   const logDir = path.dirname(filePath);
 
-  console.log(filePath);
+  // console.log(filePath);
   deleteOldLog(logDir, 30);
 
   if (!fs.existsSync(filePath)) {
@@ -195,22 +195,22 @@ export function generateGeneralLog(param: {
   recipe?: string;
   productId?: string;
   status: GeneralStatus;
-  scope: GeneralScope;
+  scope: string;
   operationName: string;
-  operationStatus: string;
+  operationStatus: GeneralOperationStatus;
   data?: string;
 }) {
   const header =
     'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
 
-  if (param.operationStatus === 'END') {
+  if (param.operationStatus === GeneralOperationStatus.END) {
     if (
       !lastGeneralLog ||
-      lastGeneralLog.operationStatus !== 'START' ||
+      lastGeneralLog.operationStatus !== GeneralOperationStatus.START ||
       lastGeneralLog.operationName !== param.operationName
     ) {
       socketLogger.warn(
-        `[LOG] generateGeneralLog : unknwon END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`,
+        `[LOG] generateGeneralLog : unknown END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`,
       );
       return false;
     }
