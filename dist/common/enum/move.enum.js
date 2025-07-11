@@ -25,4 +25,3 @@ var NodeState;
     NodeState["OBSTACLE"] = "obstacle";
     NodeState["CANCEL"] = "cancel";
 })(NodeState || (exports.NodeState = NodeState = {}));
-//# sourceMappingURL=move.enum.js.map

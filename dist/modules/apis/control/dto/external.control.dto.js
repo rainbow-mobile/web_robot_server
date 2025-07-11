@@ -39,4 +39,3 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], ExternalCommandDto.prototype, "pose", void 0);
-//# sourceMappingURL=external.control.dto.js.map

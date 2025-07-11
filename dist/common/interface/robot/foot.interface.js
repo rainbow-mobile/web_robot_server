@@ -10,4 +10,3 @@ var FootState;
     FootState[FootState["DownDone"] = 4] = "DownDone";
     FootState[FootState["UpDone"] = 5] = "UpDone";
 })(FootState || (exports.FootState = FootState = {}));
-//# sourceMappingURL=foot.interface.js.map

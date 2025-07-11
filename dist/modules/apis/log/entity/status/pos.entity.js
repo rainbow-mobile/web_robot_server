@@ -38,4 +38,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'wz', type: 'double' }),
     __metadata("design:type", Number)
 ], StatusPosEntity.prototype, "wz", void 0);
-//# sourceMappingURL=pos.entity.js.map

@@ -64,4 +64,3 @@ exports.KafkaClientService = KafkaClientService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [upload_service_1.UploadService])
 ], KafkaClientService);
-//# sourceMappingURL=kafka.service.js.map

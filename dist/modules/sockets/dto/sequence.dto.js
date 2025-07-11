@@ -43,4 +43,3 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], SequenceDto.prototype, "data", void 0);
-//# sourceMappingURL=sequence.dto.js.map

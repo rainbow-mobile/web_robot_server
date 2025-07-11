@@ -20,4 +20,3 @@ exports.InfluxDBModule = InfluxDBModule = __decorate([
         exports: [influx_service_1.InfluxDBService],
     })
 ], InfluxDBModule);
-//# sourceMappingURL=influx.module.js.map

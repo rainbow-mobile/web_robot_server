@@ -65,4 +65,3 @@ __decorate([
 exports.StateLogEntity = StateLogEntity = __decorate([
     (0, typeorm_1.Entity)('state')
 ], StateLogEntity);
-//# sourceMappingURL=state.entity.js.map

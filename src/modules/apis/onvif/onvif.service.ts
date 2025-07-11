@@ -125,7 +125,7 @@ export class OnvifDeviceService implements OnModuleInit {
     this.getLocalIps().map((ip) => {
       xaddrs += this.getXaddr(ip, url) + ' ';
     });
-    console.log(this.getLocalIps(), xaddrs);
+    // console.log(this.getLocalIps(), xaddrs);
     return xaddrs;
   }
 

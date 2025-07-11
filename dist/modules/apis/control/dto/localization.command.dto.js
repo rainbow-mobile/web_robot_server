@@ -71,4 +71,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
 ], LocalizationDto.prototype, "rz", void 0);
-//# sourceMappingURL=localization.command.dto.js.map

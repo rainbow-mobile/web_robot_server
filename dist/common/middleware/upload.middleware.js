@@ -23,4 +23,3 @@ const upload_sound = multer({
 });
 exports.uploadMiddleware = upload.single('file');
 exports.soundMiddleware = upload_sound.single('file');
-//# sourceMappingURL=upload.middleware.js.map

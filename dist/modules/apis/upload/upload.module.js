@@ -19,4 +19,3 @@ exports.UploadModule = UploadModule = __decorate([
         providers: [upload_service_1.UploadService],
     })
 ], UploadModule);
-//# sourceMappingURL=upload.module.js.map

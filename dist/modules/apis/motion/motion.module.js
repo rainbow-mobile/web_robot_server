@@ -21,4 +21,3 @@ exports.MotionModule = MotionModule = __decorate([
         providers: [motion_service_1.MotionService],
     })
 ], MotionModule);
-//# sourceMappingURL=motion.module.js.map

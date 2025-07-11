@@ -30,4 +30,3 @@ exports.SocketService = SocketService = __decorate([
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway,
         log_service_1.LogService])
 ], SocketService);
-//# sourceMappingURL=sockets.service.js.map

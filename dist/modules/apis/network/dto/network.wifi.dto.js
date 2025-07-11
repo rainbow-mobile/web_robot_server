@@ -37,4 +37,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
 ], NetworkWifiDto.prototype, "password", void 0);
-//# sourceMappingURL=network.wifi.dto.js.map

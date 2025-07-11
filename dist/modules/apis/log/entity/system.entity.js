@@ -101,4 +101,3 @@ __decorate([
 exports.SystemLogEntity = SystemLogEntity = __decorate([
     (0, typeorm_1.Entity)('system')
 ], SystemLogEntity);
-//# sourceMappingURL=system.entity.js.map

@@ -37,4 +37,3 @@ __decorate([
 exports.AlarmEntity = AlarmEntity = __decorate([
     (0, typeorm_1.Entity)('alarm')
 ], AlarmEntity);
-//# sourceMappingURL=alarm.entity.js.map

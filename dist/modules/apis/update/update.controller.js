@@ -85,4 +85,3 @@ exports.UpdateController = UpdateController = __decorate([
     (0, common_1.Controller)('update'),
     __metadata("design:paramtypes", [update_service_1.UpdateService])
 ], UpdateController);
-//# sourceMappingURL=update.controller.js.map

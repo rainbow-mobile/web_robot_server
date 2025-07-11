@@ -24,4 +24,3 @@ exports.MoveModule = MoveModule = __decorate([
         exports: [move_service_1.MoveService],
     })
 ], MoveModule);
-//# sourceMappingURL=move.module.js.map

@@ -42,4 +42,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], DownloadMapDto.prototype, "token", void 0);
-//# sourceMappingURL=download.map.dto.js.map

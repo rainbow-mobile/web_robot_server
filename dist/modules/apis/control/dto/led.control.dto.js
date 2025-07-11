@@ -38,4 +38,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
 ], LedControlDto.prototype, "led", void 0);
-//# sourceMappingURL=led.control.dto.js.map

@@ -45,4 +45,3 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], ReqUpdateSoftwareDto.prototype, "version", void 0);
-//# sourceMappingURL=update.update.dto.js.map

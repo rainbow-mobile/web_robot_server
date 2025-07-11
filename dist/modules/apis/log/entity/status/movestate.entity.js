@@ -38,4 +38,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'path', type: 'varchar', length: 32 }),
     __metadata("design:type", String)
 ], MoveStatusStateEntity.prototype, "path", void 0);
-//# sourceMappingURL=movestate.entity.js.map

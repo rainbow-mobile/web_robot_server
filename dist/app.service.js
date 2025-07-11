@@ -26,4 +26,3 @@ exports.AppService = AppService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [log_service_1.LogService])
 ], AppService);
-//# sourceMappingURL=app.service.js.map

@@ -27,4 +27,3 @@ exports.ExceptionFilterMiddleware = ExceptionFilterMiddleware;
 exports.ExceptionFilterMiddleware = ExceptionFilterMiddleware = __decorate([
     (0, common_1.Catch)()
 ], ExceptionFilterMiddleware);
-//# sourceMappingURL=exception-filter.middleware.js.map

@@ -23,4 +23,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], CommandDto.prototype, "command", void 0);
-//# sourceMappingURL=command.dto.js.map

@@ -90,4 +90,3 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], LogReadDto.prototype, "sortOption", void 0);
-//# sourceMappingURL=log.read.dto.js.map

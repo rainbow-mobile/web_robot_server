@@ -19,4 +19,3 @@ __decorate([
     (0, class_validator_1.Length)(1, 50),
     __metadata("design:type", String)
 ], SubscribeDto.prototype, "topic", void 0);
-//# sourceMappingURL=subscribe.dto.js.map

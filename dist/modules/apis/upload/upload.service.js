@@ -120,4 +120,3 @@ exports.UploadService = UploadService;
 exports.UploadService = UploadService = __decorate([
     (0, common_1.Injectable)()
 ], UploadService);
-//# sourceMappingURL=upload.service.js.map

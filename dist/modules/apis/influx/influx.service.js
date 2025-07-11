@@ -186,4 +186,3 @@ exports.InfluxDBService = InfluxDBService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], InfluxDBService);
-//# sourceMappingURL=influx.service.js.map

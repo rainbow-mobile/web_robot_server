@@ -371,4 +371,3 @@ exports.SocketsController = SocketsController = __decorate([
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway,
         variables_service_1.VariablesService])
 ], SocketsController);
-//# sourceMappingURL=sockets.controller.js.map

@@ -130,4 +130,3 @@ exports.MapService = MapService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], MapService);
-//# sourceMappingURL=map.service.js.map

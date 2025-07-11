@@ -170,4 +170,3 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
 ], MoveCommandDto.prototype, "time", void 0);
-//# sourceMappingURL=move.command.dto.js.map

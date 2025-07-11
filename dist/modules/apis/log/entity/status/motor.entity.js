@@ -30,4 +30,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'temp', type: 'double' }),
     __metadata("design:type", Number)
 ], StatusMotorEntity.prototype, "temp", void 0);
-//# sourceMappingURL=motor.entity.js.map

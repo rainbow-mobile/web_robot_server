@@ -260,4 +260,3 @@ exports.SettingController = SettingController = __decorate([
     (0, common_1.Controller)('setting'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], SettingController);
-//# sourceMappingURL=setting.controller.js.map

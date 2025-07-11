@@ -506,4 +506,3 @@ exports.TaskService = TaskService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], TaskService);
-//# sourceMappingURL=task.service.js.map

@@ -37,4 +37,3 @@ exports.LogModule = LogModule = __decorate([
         exports: [log_service_1.LogService],
     })
 ], LogModule);
-//# sourceMappingURL=log.module.js.map

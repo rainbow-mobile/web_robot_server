@@ -464,4 +464,3 @@ exports.MapController = MapController = __decorate([
     (0, common_1.Controller)('map'),
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway])
 ], MapController);
-//# sourceMappingURL=map.controller.js.map

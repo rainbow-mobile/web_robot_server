@@ -76,4 +76,3 @@ __decorate([
 exports.StatusLogEntity = StatusLogEntity = __decorate([
     (0, typeorm_1.Entity)('status')
 ], StatusLogEntity);
-//# sourceMappingURL=status.emit.entity.js.map

@@ -106,7 +106,6 @@ let OnvifDeviceService = class OnvifDeviceService {
         this.getLocalIps().map((ip) => {
             xaddrs += this.getXaddr(ip, url) + ' ';
         });
-        console.log(this.getLocalIps(), xaddrs);
         return xaddrs;
     }
     getXaddr(ip, url) {
@@ -651,4 +650,3 @@ exports.OnvifDeviceService = OnvifDeviceService = __decorate([
     __metadata("design:paramtypes", [sockets_gateway_1.SocketGateway,
         variables_service_1.VariablesService])
 ], OnvifDeviceService);
-//# sourceMappingURL=onvif.service.js.map

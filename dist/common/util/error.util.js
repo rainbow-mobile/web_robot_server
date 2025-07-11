@@ -20,4 +20,3 @@ function errorToJson(error) {
         return JSON.stringify(error);
     }
 }
-//# sourceMappingURL=error.util.js.map

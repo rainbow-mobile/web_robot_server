@@ -50,4 +50,3 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'imu_rz', type: 'double' }),
     __metadata("design:type", Number)
 ], StatusImuEntity.prototype, "imu_rz", void 0);
-//# sourceMappingURL=imu.entity.js.map
