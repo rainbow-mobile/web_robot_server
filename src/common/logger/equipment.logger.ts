@@ -231,6 +231,8 @@ export function generateGeneralLog(param: {
     typeof param.data === 'undefined' ? '' : param.data,
   ].join('\t');
 
+
+  socketLogger.debug(`[LOG] generalLog : ${row}`)
   lastGeneralLog = param;
   writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
   return true;
