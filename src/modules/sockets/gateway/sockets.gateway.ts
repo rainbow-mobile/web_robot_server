@@ -1104,6 +1104,7 @@ export class SocketGateway
         socketLogger.warn(`[CONNET] Slamnav already connected -> ignored `);
       } else {
         this.slamnav = client;
+        socketLogger.info(`[CONNECT] Slamnav connected`);
         this.frsSocket?.emit('slamRegist');
         clearTimeout(this.connectChecker);
         this.clearAlarmCode(2000);
@@ -2073,14 +2074,25 @@ export class SocketGateway
       }
 
       /// 2) GeneralLog 저장
-      generateGeneralLog({
-        logType: GeneralLogType.AUTO,
-        status: GeneralStatus.RUN,
-        scope: scope,
-        operationName: data.operationName,
-        operationStatus: data.operationStatus as GeneralOperationStatus,
-        data: data.data ?? '',
-      });
+      if (scope === 'acs') {
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: GeneralScope.EVENT,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus as GeneralOperationStatus,
+          data: data.data ?? '',
+        });
+      } else {
+        generateGeneralLog({
+          logType: GeneralLogType.AUTO,
+          status: GeneralStatus.RUN,
+          scope: scope,
+          operationName: data.operationName,
+          operationStatus: data.operationStatus as GeneralOperationStatus,
+          data: data.data ?? '',
+        });
+      }
       return;
     } catch (error) {
       socketLogger.error(`[LOG] setSequence : ${errorToJson(error)}`);

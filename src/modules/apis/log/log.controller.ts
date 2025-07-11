@@ -184,7 +184,7 @@ export class LogController {
     try {
       console.log('getGeneralLog : ', date);
       const _path = path.join(
-        'C:/data',
+        'data',
         'log',
         'samsung-em',
         date + '_ROBOT.log',
@@ -203,7 +203,7 @@ export class LogController {
     try {
       console.log('deleteGeneralLog : ', date);
       const _path = path.join(
-        'C:/data',
+        'data',
         'log',
         'samsung-em',
         date + '_ROBOT.log',
