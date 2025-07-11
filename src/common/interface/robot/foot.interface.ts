@@ -1,19 +1,20 @@
 export enum FootState {
   Idle = 0,
   Init,
-  Processing,
   Moving,
-  Done,
+  EmoStop,
+  DownDone,
+  UpDone,
 }
 
 export interface FootStatus {
-  id: number;
   connection: boolean;
   position: number;
-  current: number;
+  is_down: boolean;
+  // current: number;
   foot_state: number;
 }
 
 export interface ExternalStatusPayload {
-  foot: FootStatus[];
+  foot: FootStatus;
 }

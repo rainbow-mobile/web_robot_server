@@ -21,5 +21,6 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "extends": ["./tsconfig.paths.json"]
+  "extends": ["./tsconfig.paths.json"],
+  "include": ["src/**/*", "src/types/**/*"]
 }

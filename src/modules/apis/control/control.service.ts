@@ -3,6 +3,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ExternalCommandDto } from './dto/external.control.dto';
 import { stringifyAllValues } from '@common/util/network.util';
+import { generateGeneralLog } from '@common/logger/equipment.logger';
+import {
+  FootOperationName,
+  GeneralLogType,
+  GeneralScope,
+  GeneralStatus,
+  GeneralOperationStatus,
+} from '@common/enum/equipment.enum';
 
 @Injectable()
 export class ControlService {

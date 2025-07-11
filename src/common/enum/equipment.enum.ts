@@ -31,19 +31,25 @@ export enum GeneralOperationName {
 
 export enum VehicleOperationName {
   AMR_SERVO_OFF = 'AMR_SERVO_OFF',
-  MOVE = 'MOVE',
+  MOVE = 'Move',
+  READY = 'READY',
+}
+
+export enum FootOperationName {
+  MOVE = 'Move',
   READY = 'READY',
 }
 
 export enum ManipulatoreOperationName {
-  MOVE = 'MOVE',
+  MOVE = 'Move',
   READY = 'READY',
 }
 
 export enum TorsoOperationName {
-  MOVE = 'MOVE',
+  MOVE = 'Move',
   READY = 'READY',
 }
+
 export enum GeneralLogType {
   AUTO = 'A',
   MANUAL = 'M',
@@ -61,7 +67,7 @@ export enum GeneralScope {
   VEHICLE = 'Vehicle',
   MANIPULATOR = 'Manipulator',
   TORSO = 'Torso',
-  // ERROR = 'ERROR',
+  FOOT = 'Foot',
   ALARM = 'ALARM',
 }
 
