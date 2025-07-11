@@ -575,8 +575,7 @@ export class SocketGateway
           // socketLogger.info(`[TEST] Frs connected and Resume`);
           //disabled(25-05-07, for traffic test)
           // this.mqttService.connect();
-          // this.kafakService.connect();  
-
+          // this.kafakService.connect();
         } catch (error) {
           socketLogger.error(
             `[INIT] FrsSocket init Error : ${JSON.stringify(_data)}, ${errorToJson(error)}`,
@@ -1920,7 +1919,7 @@ export class SocketGateway
   ) {
     try {
       if (client.id == this.slamnav?.id) {
-        console.log('moveResponse : ',JSON.parse(payload))
+        console.log('moveResponse : ', JSON.parse(payload));
         if (payload == null || payload == undefined) {
           this.setAlarmLog(10002);
           socketLogger.warn(`[RESPONSE] moveResponse: NULL`);
@@ -2954,7 +2953,7 @@ export class SocketGateway
       payload = JSON.parse(payload);
     }
 
-    console.log("equipmentLog : ", payload.form)
+    console.log('equipmentLog : ', payload.form);
 
     switch (payload.form) {
       case FormType.MANIPULATOR:
