@@ -29,7 +29,7 @@ function getCustomFilenameWithDate(suffix: string) {
   const DD = ('0' + now.getDate()).slice(-2);
   const HH = ('0' + now.getHours()).slice(-2);
 
-  const baseLogDir: string = path.join('C:/data', 'log', 'samsung-em');
+  const baseLogDir: string = path.join('/data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}${HH}_${suffix}.log`);
@@ -41,7 +41,7 @@ function getCustomFilenameWithoutDate(suffix: string) {
   const MM = ('0' + (now.getMonth() + 1)).slice(-2);
   const DD = ('0' + now.getDate()).slice(-2);
 
-  const baseLogDir: string = path.join('C:/data', 'log', 'samsung-em');
+  const baseLogDir: string = path.join('/data', 'log', 'samsung-em');
   // }
 
   return path.join(baseLogDir, `${YYYY}${MM}${DD}_${suffix}.log`);
