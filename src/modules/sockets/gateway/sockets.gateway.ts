@@ -60,6 +60,8 @@ import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
 import { LessThan, Repository } from 'typeorm';
 import { ExternalStatusPayload } from '@common/interface/robot/foot.interface';
 import { FootCommand } from 'src/modules/apis/control/dto/external.control.dto';
+import { IsNumber, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1391,7 +1393,7 @@ export class SocketGateway
       this.server.to(['taskError', 'all', 'task']).emit('taskError', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Error: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -1410,7 +1412,7 @@ export class SocketGateway
       this.server.to(['taskId', 'all', 'task']).emit('taskId', payload);
     } catch (error) {
       socketLogger.error(`[RESPONSE] Task Id Change: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -1442,7 +1444,7 @@ export class SocketGateway
       this.slamnav?.emit('move', stringifyAllValues(json));
     } catch (error) {
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -1479,7 +1481,7 @@ export class SocketGateway
       this.slamnav?.emit('move', stringifyAllValues(json));
     } catch (error) {
       socketLogger.error(`[COMMAND] Move: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2033,7 +2035,7 @@ export class SocketGateway
     } catch (error) {
       this.setAlarmLog(10000);
       socketLogger.error(`[RESPONSE] SLAMNAV Move: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2316,7 +2318,7 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV loadResponse: ${errorToJson(error)}`,
       );
-      throw error();
+      throw error;
     }
   }
 
@@ -2372,7 +2374,7 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV mappingResponse: ${errorToJson(error)}`,
       );
-      throw error();
+      throw error;
     }
   }
 
@@ -2417,7 +2419,7 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV localizationResponse: ${errorToJson(error)}`,
       );
-      throw error();
+      throw error;
     }
   }
 
@@ -2456,7 +2458,7 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV randomseqResponse: ${errorToJson(error)}`,
       );
-      throw error();
+      throw error;
     }
   }
 
@@ -2506,7 +2508,7 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV dockResponse: ${errorToJson(error)}`,
       );
-      throw error();
+      throw error;
     }
   }
 
@@ -2531,7 +2533,7 @@ export class SocketGateway
       }
     } catch (error) {
       socketLogger.error(`[STATUS] Lidar: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2552,7 +2554,7 @@ export class SocketGateway
       this.server.to(['mappingCloud', 'all']).emit('mappingCloud', payload);
     } catch (error) {
       socketLogger.error(`[STATUS] Mapping Cloud: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2601,7 +2603,7 @@ export class SocketGateway
       // }
     } catch (error) {
       socketLogger.error(`[STATUS] localPath: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2631,7 +2633,7 @@ export class SocketGateway
       // }
     } catch (error) {
       socketLogger.error(`[STATUS] globalPath: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2654,7 +2656,7 @@ export class SocketGateway
         .emit('taskInit', this.taskState);
     } catch (error) {
       socketLogger.error(`[INIT] Task Init: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2668,7 +2670,7 @@ export class SocketGateway
         .emit('taskVariables', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Task Variables:  ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2682,7 +2684,7 @@ export class SocketGateway
       });
     } catch (error) {
       socketLogger.error(`[INIT] Task Dock:  ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2696,7 +2698,7 @@ export class SocketGateway
       });
     } catch (error) {
       socketLogger.error(`[INIT] Task UnDock:  ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2713,7 +2715,7 @@ export class SocketGateway
       socketLogger.debug(`[COMMAND] Motion: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[INIT] Motion:  ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2785,7 +2787,7 @@ export class SocketGateway
       );
     } catch (error) {
       socketLogger.error(`[RESPONSE] externalResponse : ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2818,7 +2820,7 @@ export class SocketGateway
       socketLogger.debug(`[RESPONSE] SLAMNAV Motion: ${JSON.stringify(json)}`);
     } catch (error) {
       socketLogger.error(`[RESPONSE] SLAMNAV Motion: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2851,7 +2853,7 @@ export class SocketGateway
       this.slamnav?.emit('swVersionInfo', json);
     } catch (error) {
       socketLogger.error(`[INIT] swVersionInfo: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2864,7 +2866,7 @@ export class SocketGateway
         .emit('swVersionInfoResponse', json);
     } catch (error) {
       socketLogger.error(`[INIT] swVersionInfoResponse: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2881,7 +2883,7 @@ export class SocketGateway
       this.slamnav?.emit('swUpdate', json);
     } catch (error) {
       socketLogger.error(`[INIT] swUpdate: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2898,7 +2900,7 @@ export class SocketGateway
         .emit('swUpdateResponse', json);
     } catch (error) {
       socketLogger.error(`[INIT] swUpdateResponse: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2919,7 +2921,7 @@ export class SocketGateway
       this.server.to(['Webinit', 'all']).emit('Webinit', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 
@@ -2938,7 +2940,7 @@ export class SocketGateway
       );
     } catch (error) {
       socketLogger.error(`[LOG] alarmLog: ${errorToJson(error)}`);
-      throw error();
+      throw error;
     }
   }
 

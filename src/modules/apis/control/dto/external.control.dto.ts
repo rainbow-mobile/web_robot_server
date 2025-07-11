@@ -23,5 +23,5 @@ export class ExternalCommandDto {
     description: '이동할 위치값을 입력하세요.',
     required: false,
   })
-  pose?: number;
+  pose?: number | string;
 }
