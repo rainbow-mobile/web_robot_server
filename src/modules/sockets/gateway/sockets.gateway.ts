@@ -1524,7 +1524,8 @@ export class SocketGateway
         this.lastExternalStatus = tempjson;
         this.server
           .to(['footStatus', 'all', 'allStatus'])
-          .emit('footStatus', json);
+          // .emit('footStatus', json);
+          .emit('footStatus', stringifyAllValues(json));
 
         if (this.slamnav) {
           this.slamnav.emit('footStatus', stringifyAllValues(json));
@@ -2752,48 +2753,48 @@ export class SocketGateway
       }
 
       //삼성전기 일반LOG용 시퀀스 작성 (임시)
-      if (json.command === FootCommand.Move) {
-        if (json.result === 'accept') {
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.FOOT,
-            operationName: FootOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.START,
-            data:
-              'Foot_Position : ' +
-              json.orinPose?.toString() +
-              ', ' +
-              json.goalPose?.toString(),
-          });
-        } else if (json.result === 'success') {
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.FOOT,
-            operationName: FootOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.END,
-            data:
-              'Foot_Position : ' +
-              json.orinPose?.toString() +
-              ', ' +
-              json.goalPose?.toString(),
-          });
-        } else if (json.result === 'fail') {
-          generateGeneralLog({
-            logType: GeneralLogType.AUTO,
-            status: GeneralStatus.RUN,
-            scope: GeneralScope.FOOT,
-            operationName: FootOperationName.MOVE,
-            operationStatus: GeneralOperationStatus.END,
-            data:
-              'Foot_Position : ' +
-              json.orinPose?.toString() +
-              ', ' +
-              json.goalPose?.toString(),
-          });
-        }
-      }
+      // if (json.command === FootCommand.Move) {
+      //   if (json.result === 'accept') {
+      //     generateGeneralLog({
+      //       logType: GeneralLogType.AUTO,
+      //       status: GeneralStatus.RUN,
+      //       scope: GeneralScope.FOOT,
+      //       operationName: FootOperationName.MOVE,
+      //       operationStatus: GeneralOperationStatus.START,
+      //       data:
+      //         'Foot_Position : ' +
+      //         json.orinPose?.toString() +
+      //         ', ' +
+      //         json.goalPose?.toString(),
+      //     });
+      //   } else if (json.result === 'success') {
+      //     generateGeneralLog({
+      //       logType: GeneralLogType.AUTO,
+      //       status: GeneralStatus.RUN,
+      //       scope: GeneralScope.FOOT,
+      //       operationName: FootOperationName.MOVE,
+      //       operationStatus: GeneralOperationStatus.END,
+      //       data:
+      //         'Foot_Position : ' +
+      //         json.orinPose?.toString() +
+      //         ', ' +
+      //         json.goalPose?.toString(),
+      //     });
+      //   } else if (json.result === 'fail') {
+      //     generateGeneralLog({
+      //       logType: GeneralLogType.AUTO,
+      //       status: GeneralStatus.RUN,
+      //       scope: GeneralScope.FOOT,
+      //       operationName: FootOperationName.MOVE,
+      //       operationStatus: GeneralOperationStatus.END,
+      //       data:
+      //         'Foot_Position : ' +
+      //         json.orinPose?.toString() +
+      //         ', ' +
+      //         json.goalPose?.toString(),
+      //     });
+      //   }
+      // }
 
       socketLogger.debug(
         `[RESPONSE] externalResponse : ${JSON.stringify(json)}`,
