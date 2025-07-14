@@ -224,6 +224,7 @@ export class SocketsController implements OnModuleInit {
       'SLAMNAV에서 송신하는 status에 Task state, slam connection 추가하여 조회',
   })
   async getStatus(@Res() res: Response) {
+    // console.log("get Status")
     res.send({
       ...this.socketGateway.robotState,
       slam: this.socketGateway.slamnav ? true : false,
