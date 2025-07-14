@@ -117,13 +117,13 @@ export class ControlService {
   async dockCommand(data: { command: string; time: string }) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit(data.command, data);
+        this.socketGateway.server.to('slamnav').emit('dock', data);
         httpLogger.info(`[CONTROL] dock: ${JSON.stringify(data)}`);
 
-        this.socketGateway.slamnav.once(data.command, (data2) => {
+        this.socketGateway.slamnav.once('dockResponse', (data2) => {
           httpLogger.info(`[CONTROL] dock Response: ${JSON.stringify(data2)}`);
-          resolve(data2);
           clearTimeout(timeoutId);
+          resolve(data2);
         });
 
         const timeoutId = setTimeout(() => {
@@ -131,7 +131,7 @@ export class ControlService {
             status: HttpStatus.GATEWAY_TIMEOUT,
             data: { message: '프로그램이 응답하지 않습니다' },
           });
-        }, 5000); // 5초 타임아웃
+        }, 30000); // 30초 타임아웃
       } else {
         reject({
           status: HttpStatus.GATEWAY_TIMEOUT,

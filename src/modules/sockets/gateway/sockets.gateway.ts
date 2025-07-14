@@ -1508,13 +1508,17 @@ export class SocketGateway
               is_down: jsontemp.foot.is_down === 'true' ? true : false,
               position: parseFloat(jsontemp.foot.position),
             },
+            temperature_sensor:{
+              connection: jsontemp.temperature_sensor.connection === 'true' ? true: false,
+              temperature_value: parseFloat(jsontemp.temperature_sensor.temperature_value)  
+            },
             time: jsontemp.time,
           };
         } catch (error) {
           console.error(error);
           json = jsontemp;
         }
-        // console.log('footStatus : ', json);
+        // console.log('footStatus : ', payload, json);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastExternalStatus)) {
@@ -1524,7 +1528,6 @@ export class SocketGateway
         this.lastExternalStatus = tempjson;
         this.server
           .to(['footStatus', 'all', 'allStatus'])
-          // .emit('footStatus', json);
           .emit('footStatus', stringifyAllValues(json));
 
         if (this.slamnav) {
