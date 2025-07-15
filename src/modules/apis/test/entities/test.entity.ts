@@ -29,8 +29,10 @@ export class TestEntity {
     name: 'result',
     type: 'enum',
     enum: TestResult,
+    nullable: true,
+    default: null,
   })
-  result: TestResult;
+  result: TestResult | null;
 
   @Column({
     name: 'init_tester',
