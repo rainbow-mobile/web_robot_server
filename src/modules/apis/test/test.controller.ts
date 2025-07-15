@@ -6,6 +6,7 @@ import {
   GetTestResultListDto,
   ResponseTestResultDto,
   ResponseTestResultListDto,
+  TestResultDto,
   UpdateTestDataDto,
 } from './dto/test.dto';
 import {
@@ -113,16 +114,7 @@ export class TestController {
   @ApiResponse({
     status: 201,
     description: '테스트 결과 생성/수정 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'number' },
-        subject: { type: 'string' },
-        result: { type: 'string' },
-        initTester: { type: 'string' },
-        testAt: { type: 'string', format: 'date-time' },
-      },
-    },
+    type: TestResultDto,
   })
   @ApiResponse({
     status: 400,
