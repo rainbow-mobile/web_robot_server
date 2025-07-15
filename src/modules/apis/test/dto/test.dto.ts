@@ -31,13 +31,16 @@ export class TestResultDto {
     example: TestResult.SUCCESS,
     description: '테스트 결과',
     enum: TestResult,
+    nullable: true,
+    default: null,
   })
-  result: TestResult;
+  result: TestResult | null;
 
   @ApiProperty({
     example: 'tester1',
     description: '테스트 수행자',
     nullable: true,
+    default: null,
   })
   initTester: string | null;
 
