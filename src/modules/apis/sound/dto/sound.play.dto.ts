@@ -7,7 +7,7 @@ import {
   Length,
   ValidateIf,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
 export class SoundPlayDto {
@@ -31,14 +31,13 @@ export class SoundPlayDto {
   volume: number;
 
   @IsBoolean()
+  @IsOptional()
   @ApiProperty({
     description:
       '응답을 오디오 재생 끝나고나서 받을지(true), 재생 시작하고 받을지(false)',
-    example: false,
-    required: true,
   })
   @Expose()
-  waitDone: boolean;
+  waitDone?: boolean;
 
   @IsBoolean()
   @ApiProperty({

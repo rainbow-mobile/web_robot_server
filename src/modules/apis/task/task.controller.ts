@@ -31,11 +31,19 @@ import { TaskSaveDto } from './dto/task.save.dto';
 import { errorToJson } from '@common/util/error.util';
 import * as fs from 'fs';
 import { homedir } from 'os';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('태스크 관련 API (task)')
 @Controller('task')
 export class TaskController {
-  constructor(private readonly socketGateway: SocketGateway) {}
+  private dataBasePath: string;
+
+  constructor(
+    private readonly socketGateway: SocketGateway,
+    private readonly configService: ConfigService,
+  ) {
+    this.dataBasePath = this.configService.get('dataBasePath') as string;
+  }
   @Inject()
   private readonly taskService: TaskService;
 
@@ -125,7 +133,7 @@ export class TaskController {
       httpLogger.info(`loadTask : ${mapName}, ${taskName}`);
 
       const path = join(homedir(), 'maps', mapName, taskName);
-      const path2 = join('/data/maps', mapName, taskName);
+      const path2 = join(this.dataBasePath, 'maps', mapName, taskName);
       if (fs.existsSync(path2)) {
         const data = await this.taskService.loadTask(path2);
         return res.send(data);
@@ -217,7 +225,7 @@ export class TaskController {
       httpLogger.info(`[TASK] readTaskList: ${mapName}`);
 
       const path = join(homedir(), 'maps', mapName);
-      const path2 = join('/data/maps', mapName);
+      const path2 = join(this.dataBasePath, 'maps', mapName);
       if (fs.existsSync(path2)) {
         const data = await this.taskService.getTaskList(path2);
         return res.send(data);
@@ -267,7 +275,7 @@ export class TaskController {
       }
 
       const path = join(homedir(), 'maps', mapName, taskName);
-      const path2 = join('/data/maps', mapName, taskName);
+      const path2 = join(this.dataBasePath, 'maps', mapName, taskName);
       if (fs.existsSync(path2)) {
         const data = await this.taskService.parse(path2);
         return res.send(data);
@@ -316,7 +324,7 @@ export class TaskController {
       }
 
       const path = join(homedir(), 'maps', mapName, taskName);
-      const path2 = join('/data/maps', mapName, taskName);
+      const path2 = join(this.dataBasePath, 'maps', mapName, taskName);
       if (fs.existsSync(path2)) {
         const task = await this.taskService.save(path2, data.data);
         return res.send(task);
