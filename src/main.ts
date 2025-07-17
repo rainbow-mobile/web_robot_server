@@ -106,7 +106,10 @@ async function bootstrap() {
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
-  app.use('/docs/socket', express.static(join(__dirname, '..', 'public', 'docs')));
+  app.use(
+    '/docs/socket',
+    express.static(join(__dirname, '..', 'public', 'docs')),
+  );
 
   app.use('/docs/api', (req, res, next) => {
     res.removeHeader('Content-Security-Policy');
