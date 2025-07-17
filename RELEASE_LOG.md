@@ -1,5 +1,46 @@
 # Release log
 
+## [rrs-20250716173358] - 2025-07-16
+- Release App: RRS, Branch: develop, Version: rrs-20250716173358] release 배포
+
+
+## [rrs-20250716160632] - 2025-07-16
+- Release App: RRS, Branch: develop, Version: rrs-20250716160632] release 배포
+
+
+## [rrs-20250715180727] - 2025-07-15
+- Release App: RRS, Branch: develop, Version: rrs-20250715180727] release 배포
+
+
+## [rrs-20250711113125] - 2025-07-11
+- Release App: RRS, Branch: develop, Version: rrs-20250711113125] release 배포
+
+## [rrs-20250710155509] - 2025-07-10
+- Release App: RRS, Branch: main, Version: rrs-20250710155509] release 배포
+
+## [rrs-20250710154017] - 2025-07-10
+- Release App: RRS, Branch: develop, Version: rrs-20250710154017] release 배포
+
+## [rrs-20250710151241] - 2025-07-10
+- Release App: RRS, Branch: main, Version: rrs-20250710151241] release 배포
+
+## [rrs-20250710134652] - 2025-07-10
+- Release App: RRS, Branch: develop, Version: rrs-20250710134652] release 배포
+
+
+## [rrs-20250710125656] - 2025-07-10
+- Release App: RRS, Branch: develop, Version: rrs-20250710125656] release 배포
+
+
+## [rrs-20250626124721] - 2025-06-26
+- Release App: RRS, Branch: main, Version: rrs-20250626124721] release 배포
+
+
+## [rrs-20250626110226] - 2025-06-26
+- Release App: RRS, Branch: develop, Version: rrs-20250626110226] release 배포
+
+- Release App: RRS, Branch: main, Version: rrs-20250626110329] release 배포
+
 ## [rrs-20250625194832] - 2025-06-25
 - Release App: RRS, Branch: develop, Version: rrs-20250625194832] release 배포
 

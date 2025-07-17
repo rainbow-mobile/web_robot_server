@@ -22,16 +22,24 @@ import { HttpStatusMessagesConstants } from '@constants/http-status-messages.con
 import { uploadMiddleware } from '@middleware/upload.middleware';
 import { errorToJson } from '@common/util/error.util';
 import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('파일 전송 관련 API (Upload)')
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  private dataBasePath: string;
+
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly configService: ConfigService,
+  ) {
+    this.dataBasePath = this.configService.get('dataBasePath') as string;
+  }
 
   @Post('map')
   async uploadMap(@Body() data: UploadMapDto, @Res() res: Response) {
     const path = join(homedir(), 'maps', data.mapNm);
-    const path2 = join('/data/maps', data.mapNm);
+    const path2 = join(this.dataBasePath, 'maps', data.mapNm);
     const zipFileName = `${data.name}.zip`;
     let originalFilePath;
     let zipFilePath;
@@ -108,7 +116,14 @@ export class DownloadController {
 @ApiTags('파일 전송 관련 API (Publish)')
 @Controller('publish')
 export class PublishController {
-  constructor(private readonly uploadService: UploadService) {}
+  private dataBasePath: string;
+
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly configService: ConfigService,
+  ) {
+    this.dataBasePath = this.configService.get('dataBasePath') as string;
+  }
 
   @Post('map/:mapNm')
   async publishedMap(
@@ -129,7 +144,7 @@ export class PublishController {
         const zipFilePath = join(homedir(), 'upload', req.file.originalname);
 
         const path = join(homedir(), 'maps', mapNm);
-        const path2 = join('/data/maps', mapNm);
+        const path2 = join(this.dataBasePath, 'maps', mapNm);
         let extractToPath;
         if (fs.existsSync(path2)) {
           extractToPath = path2;

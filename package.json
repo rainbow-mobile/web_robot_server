@@ -9,6 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "start:dev-win": "nest start --watch",
     "start:dev": "NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -18,7 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {
     "@asyncapi/generator-react-sdk": "^1.1.2",
@@ -39,11 +40,13 @@
     "axios": "^1.7.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cross-env": "^7.0.3",
     "csv": "^6.3.11",
     "date-fns": "^4.1.0",
     "express-xml-bodyparser": "^0.3.0",
     "helmet": "^8.0.0",
     "http-proxy-middleware": "^3.0.3",
+    "ini": "^5.0.0",
     "ioredis": "^5.4.1",
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
