@@ -1,29 +1,25 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Put, Param } from '@nestjs/common';
 import { TestService } from './test.service';
 import {
-  GetRecentTestResultBySubjectDto,
+  GetRecentTestResultDto,
+  GetTestRecordListDto,
   GetTestResultBySubjectDto,
-  GetTestResultListDto,
+  InsertTestRecordDto,
+  ResponseTestRecordListDto,
   ResponseTestResultDto,
-  ResponseTestResultListDto,
+  TestRecordDto,
   TestResultDto,
   UpdateTestDataDto,
+  UpdateTestRecordDto,
 } from './dto/test.dto';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiQuery,
-  ApiBody,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('테스트 관리')
 @Controller('test')
 export class TestController {
   constructor(private readonly testService: TestService) {}
 
-  @Get('list')
+  @Get('record/list')
   @ApiOperation({
     summary: '테스트 결과 목록 조회',
     description:
@@ -32,7 +28,7 @@ export class TestController {
   @ApiResponse({
     status: 200,
     description: '테스트 결과 목록 조회 성공',
-    type: ResponseTestResultListDto,
+    type: ResponseTestRecordListDto,
   })
   @ApiResponse({
     status: 400,
@@ -42,8 +38,22 @@ export class TestController {
     status: 500,
     description: '서버 내부 오류',
   })
-  getTestResultList(@Query() param: GetTestResultListDto) {
-    return this.testService.getTestResultAll(param);
+  getTestRecordList(@Query() param: GetTestRecordListDto) {
+    return this.testService.getTestRecordAll(param);
+  }
+
+  @Get('record/:id')
+  @ApiOperation({
+    summary: '테스트 레코드 조회',
+    description: '테스트 레코드를 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 레코드 조회 성공',
+    type: TestRecordDto,
+  })
+  getTestRecord(@Param('id') id: string) {
+    return this.testService.getTestRecord(Number(id));
   }
 
   @Get('get-recent')
@@ -60,10 +70,8 @@ export class TestController {
     status: 400,
     description: '잘못된 요청 파라미터',
   })
-  getRecentTestResultBySubject(
-    @Query() param: GetRecentTestResultBySubjectDto,
-  ) {
-    return this.testService.getRecentTestResultBySubject(param);
+  getRecentTestResult(@Query() param: GetRecentTestResultDto) {
+    return this.testService.getRecentTestResult(param);
   }
 
   @Get('get-by-subject')
@@ -82,6 +90,58 @@ export class TestController {
   })
   getTestResultBySubject(@Query() param: GetTestResultBySubjectDto) {
     return this.testService.getTestResultBySubject(param);
+  }
+
+  @Post('record')
+  @ApiOperation({
+    summary: '테스트 레코드 생성',
+    description: '새로운 테스트 레코드를 생성합니다.',
+  })
+  @ApiBody({
+    type: InsertTestRecordDto,
+    description: '테스트 레코드 데이터',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 레코드 생성 성공',
+    type: TestRecordDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 데이터',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  insertTestRecord(@Body() insertTestRecordDto: InsertTestRecordDto) {
+    return this.testService.insertTestRecord(insertTestRecordDto);
+  }
+
+  @Put('record')
+  @ApiOperation({
+    summary: '테스트 레코드 수정',
+    description: '기존 테스트 레코드를 수정합니다.',
+  })
+  @ApiBody({
+    type: UpdateTestRecordDto,
+    description: '테스트 레코드 데이터',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 레코드 수정 성공',
+    type: TestRecordDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 데이터',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  updateTestRecord(@Body() updateTestRecordDto: UpdateTestRecordDto) {
+    return this.testService.updateTestRecord(updateTestRecordDto);
   }
 
   @Post()
