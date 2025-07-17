@@ -21,6 +21,12 @@ export class TestResultDto {
   id: number;
 
   @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  testRecordId: number;
+
+  @ApiProperty({
     example: SubjectEnum.DISPLAY,
     description: '테스트 주제',
     enum: SubjectEnum,
@@ -37,18 +43,46 @@ export class TestResultDto {
   result: TestResult | null;
 
   @ApiProperty({
+    example: '2025-07-16T07:56:52.000Z',
+    description: '테스트 수행 시간',
+  })
+  testAt: Date;
+}
+
+export class TestRecordDto {
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: [],
+    description: '테스트 결과 목록',
+    type: TestResultDto,
+    isArray: true,
+  })
+  tests: TestResultDto[];
+
+  @ApiProperty({
     example: 'tester1',
     description: '테스트 수행자',
     nullable: true,
     default: null,
   })
-  initTester: string | null;
+  tester: string;
 
   @ApiProperty({
-    example: '1719878400000',
-    description: '테스트 수행 시간',
+    example: '2025-07-16T07:56:52.000Z',
+    description: '테스트 레코드 생성 시간',
   })
-  testAt: Date;
+  createdAt: Date;
+
+  @ApiProperty({
+    example: '2025-07-16T07:56:52.000Z',
+    description: '테스트 레코드 수정 시간',
+  })
+  updatedAt: Date;
 }
 
 export class GetTestResultBySubjectDto {
@@ -60,8 +94,9 @@ export class GetTestResultBySubjectDto {
   subject: SubjectEnum;
 }
 
-export class GetRecentTestResultBySubjectDto {
+export class GetRecentTestResultDto {
   @IsArray()
+  @IsOptional()
   @IsEnum(SubjectEnum, { each: true })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
@@ -72,11 +107,14 @@ export class GetRecentTestResultBySubjectDto {
   @ApiProperty({
     example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
     description: '테스트 주제 배열 (쉼표로 구분된 문자열도 지원)',
+    required: false,
+    isArray: true,
+    enum: SubjectEnum,
   })
-  subjects: SubjectEnum[];
+  subjects?: SubjectEnum[];
 }
 
-export class GetTestResultListDto extends PaginationRequest {
+export class GetTestRecordListDto extends PaginationRequest {
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
@@ -90,7 +128,7 @@ export class GetTestResultListDto extends PaginationRequest {
   @ApiProperty({
     type: String,
     description: '테스트 시작일 (timestamp 또는 ISO 문자열)',
-    example: '1719878400000',
+    example: '2025-07-16T07:56:52.000Z',
     required: false,
   })
   startDt?: number | string;
@@ -108,7 +146,7 @@ export class GetTestResultListDto extends PaginationRequest {
   @ApiProperty({
     type: String,
     description: '테스트 종료일 (timestamp 또는 ISO 문자열)',
-    example: '1719878400000',
+    example: '2025-07-16T07:56:52.000Z',
     required: false,
   })
   endDt?: number | string;
@@ -138,7 +176,7 @@ export class GetTestResultListDto extends PaginationRequest {
     description: '테스트 수행자',
     required: false,
   })
-  initTester?: string;
+  tester?: string;
 
   @IsOptional()
   @IsEnum(['DESC', 'ASC'])
@@ -152,7 +190,7 @@ export class GetTestResultListDto extends PaginationRequest {
   orderBy?: 'DESC' | 'ASC' = 'DESC';
 }
 
-export class UpdateTestDataDto {
+export class InsertTestDataDto {
   @IsEnum(SubjectEnum)
   @IsNotEmpty()
   @ApiProperty({
@@ -170,15 +208,16 @@ export class UpdateTestDataDto {
     enum: TestResult,
   })
   result: TestResult;
+}
 
-  @IsString()
-  @IsOptional()
+export class UpdateTestDataDto extends InsertTestDataDto {
+  @IsNumber()
+  @IsNotEmpty()
   @ApiProperty({
-    example: 'tester1',
-    description: '테스트 수행자',
-    required: false,
+    example: 1,
+    description: '테스트 레코드 ID',
   })
-  initTester?: string;
+  testRecordId: number;
 }
 
 export class ResponseTestResultDto {
@@ -195,7 +234,21 @@ export class ResponseTestResultDto {
   items: TestResultDto[];
 }
 
-export class ResponseTestResultListDto extends ResponseTestResultDto {
+export class ResponseTestRecordDto {
+  @IsArray({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => TestRecordDto)
+  @IsOptional()
+  @ApiProperty({
+    example: [],
+    description: '테스트 레코드 목록',
+    type: TestRecordDto,
+    isArray: true,
+  })
+  items: TestRecordDto[];
+}
+
+export class ResponseTestRecordListDto extends ResponseTestRecordDto {
   @IsNumber()
   @IsOptional()
   @ApiProperty({
@@ -219,4 +272,49 @@ export class ResponseTestResultListDto extends ResponseTestResultDto {
     description: '전체 테스트 결과 수',
   })
   totalCount: number;
+}
+
+export class InsertTestRecordDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+    required: false,
+    nullable: true,
+    default: null,
+  })
+  tester?: string | null;
+
+  @IsArray()
+  @IsNotEmpty()
+  @IsEnum(SubjectEnum, { each: true })
+  @ApiProperty({
+    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    description: '테스트 주제 배열',
+    enum: SubjectEnum,
+    isArray: true,
+  })
+  subjects: SubjectEnum[];
+}
+
+export class UpdateTestRecordDto {
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  id: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+    nullable: true,
+    required: false,
+    default: null,
+  })
+  tester?: string | null;
 }

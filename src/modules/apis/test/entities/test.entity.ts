@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 export enum SubjectEnum {
   DISPLAY = 'DISPLAY',
@@ -13,10 +20,50 @@ export enum TestResult {
   FAIL = 'FAIL',
 }
 
+@Entity('test_record')
+export class TestRecordEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    name: 'tester',
+    type: 'varchar',
+    length: 128,
+  })
+  tester: string;
+
+  @Column({
+    name: 'createdAt',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdAt: Date;
+
+  @Column({
+    name: 'updatedAt',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
+  @OneToMany(() => TestEntity, (test) => test.testRecord)
+  tests: TestEntity[];
+}
+
 @Entity('test')
 export class TestEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({
+    name: 'test_record_id',
+    type: 'int',
+  })
+  testRecordId: number;
+
+  @ManyToOne(() => TestRecordEntity, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'test_record_id' })
+  testRecord: TestRecordEntity;
 
   @Column({
     name: 'subject',
@@ -33,15 +80,6 @@ export class TestEntity {
     default: null,
   })
   result: TestResult | null;
-
-  @Column({
-    name: 'init_tester',
-    type: 'varchar',
-    length: 128,
-    nullable: true,
-    default: null,
-  })
-  initTester: string | null;
 
   @Column({
     name: 'testAt',
