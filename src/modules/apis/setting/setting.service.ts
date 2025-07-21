@@ -406,7 +406,9 @@ export class SettingService {
         this.socketGateway.server.to('slamnav').emit('cameraInfo');
 
         this.socketGateway.slamnav.once('cameraInfoResponse', (res) => {
-          if (res.status === '200') {
+          const parsedRes = JSON.parse(res);
+
+          if (parsedRes.status === '200') {
             httpLogger.info(
               `[Setting] cameraInfoResponse: ${JSON.stringify(res)}`,
             );
@@ -437,7 +439,9 @@ export class SettingService {
             `[Setting] cameraOrderChange Response:  status: ${JSON.stringify(res.status)}, ${res.status === '200'}`,
           );
 
-          if (res.status === '200') {
+          const parsedRes = JSON.parse(res);
+
+          if (parsedRes.status === '200') {
             resolve(res);
           }
           clearTimeout(timeoutId);
