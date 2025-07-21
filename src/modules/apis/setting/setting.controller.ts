@@ -20,7 +20,11 @@ import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SettingJSONPayload } from '@common/interface/robot/setting.interface';
 import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
-import { CameraOrderChangeDto } from './dto/setting.camera.dto';
+import {
+  CameraInfoDto,
+  CameraOrderChangeDto,
+  CameraOrderInfoDto,
+} from './dto/setting.camera.dto';
 
 @ApiTags('세팅 관련 API (setting)')
 @Controller('setting')
@@ -248,6 +252,28 @@ export class SettingController {
     }
   }
 
+  @Get('cam/info')
+  @ApiOperation({
+    summary: '카메라 정보 요청',
+    description: '카메라 정보를 요청합니다',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '카메라 정보 요청 성공',
+    type: CameraInfoDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 데이터',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  async getCameraInfo() {
+    return this.settingService.getCameraInfo();
+  }
+
   @Post('cam/order-change')
   @ApiOperation({
     summary: '카메라 순서 변경',
@@ -260,7 +286,7 @@ export class SettingController {
   @ApiResponse({
     status: 200,
     description: '카메라 순서 변경 성공',
-    type: CameraOrderChangeDto,
+    type: CameraOrderInfoDto,
   })
   @ApiResponse({
     status: 400,
