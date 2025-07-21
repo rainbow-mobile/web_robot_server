@@ -284,9 +284,9 @@ export class SettingController {
     description: '카메라 순서 변경 데이터',
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: '카메라 순서 변경 성공',
-    type: CameraOrderInfoDto,
+    type: CameraInfoDto,
   })
   @ApiResponse({
     status: 400,
