@@ -408,7 +408,7 @@ export class SettingService {
         this.socketGateway.slamnav.once('cameraInfoResponse', (res) => {
           if (res.status === '200') {
             httpLogger.info(
-              `[Setting] cameraInfoResponse: ${JSON.stringify(res.cameraInfo)}`,
+              `[Setting] cameraInfoResponse: ${JSON.stringify(res)}`,
             );
 
             resolve(res.info);
@@ -429,12 +429,12 @@ export class SettingService {
         this.socketGateway.server.to('slamnav').emit('cameraOrderChange', data);
 
         this.socketGateway.slamnav.once('cameraOrderChangeResponse', (res) => {
-          if (res.status === '200') {
-            httpLogger.info(
-              `[Setting] cameraOrderChange Response: ${JSON.stringify(res.orderInfo)}`,
-            );
+          httpLogger.info(
+            `[Setting] cameraOrderChange Response: ${JSON.stringify(res)}`,
+          );
 
-            resolve(res.orderInfo);
+          if (res.status === '200') {
+            resolve(res.info);
           }
           clearTimeout(timeoutId);
         });
