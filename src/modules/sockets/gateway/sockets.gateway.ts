@@ -2069,6 +2069,36 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('cameraInfoResponse')
+  async handleCameraInfoResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['cameraInfoResponse', 'all'])
+        .emit('cameraInfoResponse', json);
+    } catch (error) {
+      socketLogger.error(
+        `[Setting] Camera Info Response: ${errorToJson(error)}`,
+      );
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('cameraOrderChangeResponse')
+  async handleCameraOrderChangeResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['cameraOrderChangeResponse', 'all'])
+        .emit('cameraOrderChangeResponse', json);
+    } catch (error) {
+      socketLogger.error(
+        `[Setting] Camera Order Change Response: ${errorToJson(error)}`,
+      );
+      throw error();
+    }
+  }
+
   /**
    * @description 웹 변수 초기화를 처리하는 함수
    * @param socket
@@ -2086,59 +2116,6 @@ export class SocketGateway
       this.server.to(['Webinit', 'all']).emit('Webinit', payload);
     } catch (error) {
       socketLogger.error(`[INIT] Web Init: ${errorToJson(error)}`);
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('cameraInfo')
-  async handleCameraInfoMessage() {
-    try {
-      this.slamnav?.emit('cameraInfo');
-    } catch (error) {
-      socketLogger.error(`[Setting] Req Camera Info: ${errorToJson(error)}`);
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('cameraInfoResponse')
-  async handleCameraInfoResponseMessage(@MessageBody() payload: string) {
-    try {
-      const json = JSON.parse(payload || '{}');
-      this.server
-        .to(['cameraInfoResponse', 'all'])
-        .emit('cameraInfoResponse', json);
-    } catch (error) {
-      socketLogger.error(
-        `[Setting] Camera Info Response: ${errorToJson(error)}`,
-      );
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('cameraOrderChange')
-  async handleCameraOrderChangeMessage(@MessageBody() payload: string) {
-    try {
-      const json = JSON.parse(payload || '{}');
-      this.slamnav?.emit('cameraOrderChange', json);
-    } catch (error) {
-      socketLogger.error(
-        `[Setting] Camera Order Change: ${errorToJson(error)}`,
-      );
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('cameraOrderChangeResponse')
-  async handleCameraOrderChangeResponseMessage(@MessageBody() payload: string) {
-    try {
-      const json = JSON.parse(payload || '{}');
-      this.server
-        .to(['cameraOrderChangeResponse', 'all'])
-        .emit('cameraOrderChangeResponse', json);
-    } catch (error) {
-      socketLogger.error(
-        `[Setting] Camera Order Change Response: ${errorToJson(error)}`,
-      );
       throw error();
     }
   }

@@ -403,7 +403,7 @@ export class SettingService {
   async getCameraInfo() {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('cameraInfo');
+        this.socketGateway.server.to('slamnav').emit('cameraInfo', {});
 
         this.socketGateway.slamnav.once('cameraInfoResponse', (res) => {
           const parsedRes = JSON.parse(res);
