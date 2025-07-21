@@ -403,7 +403,7 @@ export class SettingService {
   async cameraOrderChange(data: CameraOrderChangeDto) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('swUpdate', data);
+        this.socketGateway.server.to('slamnav').emit('cameraOrderChange', data);
 
         this.socketGateway.slamnav.once('cameraOrderChangeResponse', (res) => {
           if (res.status === 200) {
