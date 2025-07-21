@@ -2090,6 +2090,59 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('cameraInfo')
+  async handleCameraInfoMessage() {
+    try {
+      this.slamnav?.emit('cameraInfo');
+    } catch (error) {
+      socketLogger.error(`[Setting] Req Camera Info: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('cameraInfoResponse')
+  async handleCameraInfoResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['cameraInfoResponse', 'all'])
+        .emit('cameraInfoResponse', json);
+    } catch (error) {
+      socketLogger.error(
+        `[Setting] Camera Info Response: ${errorToJson(error)}`,
+      );
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('cameraOrderChange')
+  async handleCameraOrderChangeMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.slamnav?.emit('cameraOrderChange', json);
+    } catch (error) {
+      socketLogger.error(
+        `[Setting] Camera Order Change: ${errorToJson(error)}`,
+      );
+      throw error();
+    }
+  }
+
+  @SubscribeMessage('cameraOrderChangeResponse')
+  async handleCameraOrderChangeResponseMessage(@MessageBody() payload: string) {
+    try {
+      const json = JSON.parse(payload || '{}');
+      this.server
+        .to(['cameraOrderChangeResponse', 'all'])
+        .emit('cameraOrderChangeResponse', json);
+    } catch (error) {
+      socketLogger.error(
+        `[Setting] Camera Order Change Response: ${errorToJson(error)}`,
+      );
+      throw error();
+    }
+  }
+
   //****************************************************** functions */
   getConnection() {
     // console.log(this.slamnav, this.taskman);

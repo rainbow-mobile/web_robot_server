@@ -411,7 +411,7 @@ export class SettingService {
               `[Setting] cameraInfoResponse: ${JSON.stringify(res)}`,
             );
 
-            resolve(res.info);
+            resolve(res);
           }
           clearTimeout(timeoutId);
         });
@@ -433,8 +433,12 @@ export class SettingService {
             `[Setting] cameraOrderChange Response: ${JSON.stringify(res)}`,
           );
 
+          httpLogger.info(
+            `[Setting] cameraOrderChange Response:  status: ${JSON.stringify(res.status)}, ${res.status === '200'}`,
+          );
+
           if (res.status === '200') {
-            resolve(res.info);
+            resolve(res);
           }
           clearTimeout(timeoutId);
         });
