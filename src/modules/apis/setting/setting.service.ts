@@ -406,9 +406,9 @@ export class SettingService {
         this.socketGateway.server.to('slamnav').emit('cameraOrderChange', data);
 
         this.socketGateway.slamnav.once('cameraOrderChangeResponse', (res) => {
-          if (res.status === 200) {
+          if (res.status === '200') {
             httpLogger.info(
-              `[UPDATE] cameraOrderChange Response: ${JSON.stringify(res.orderInfo)}`,
+              `[Setting] cameraOrderChange Response: ${JSON.stringify(res.orderInfo)}`,
             );
 
             resolve(res.orderInfo);
