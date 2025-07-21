@@ -400,6 +400,29 @@ export class SettingService {
     return result;
   }
 
+  async getCameraInfo() {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        this.socketGateway.server.to('slamnav').emit('cameraInfo');
+
+        this.socketGateway.slamnav.once('cameraInfoResponse', (res) => {
+          if (res.status === '200') {
+            httpLogger.info(
+              `[Setting] cameraInfoResponse: ${JSON.stringify(res.cameraInfo)}`,
+            );
+
+            resolve(res.info);
+          }
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
+        }, 5000);
+      }
+    });
+  }
+
   async cameraOrderChange(data: CameraOrderChangeDto) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
