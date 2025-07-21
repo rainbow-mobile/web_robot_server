@@ -17,9 +17,10 @@ import { Response } from 'express';
 import httpLogger from '@common/logger/http.logger';
 import { SettingService } from './setting.service';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SettingJSONPayload } from '@common/interface/robot/setting.interface';
 import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
+import { CameraOrderChangeDto } from './dto/setting.camera.dto';
 
 @ApiTags('세팅 관련 API (setting)')
 @Controller('setting')
@@ -245,5 +246,31 @@ export class SettingController {
       );
       return res.status(error.status).send(error.data);
     }
+  }
+
+  @Post('cam/order-change')
+  @ApiOperation({
+    summary: '카메라 순서 변경',
+    description: '카메라 순서를 변경합니다',
+  })
+  @ApiBody({
+    type: CameraOrderChangeDto,
+    description: '카메라 순서 변경 데이터',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '카메라 순서 변경 성공',
+    type: CameraOrderChangeDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 데이터',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  async orderChange(@Body() data: CameraOrderChangeDto) {
+    return this.settingService.cameraOrderChange(data);
   }
 }

@@ -1,5 +1,9 @@
 import { deleteFile, readJson, saveJson } from '@common/util/file.util';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+  GatewayTimeoutException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import { homedir } from 'os';
 import * as Path from 'path';
@@ -9,6 +13,7 @@ import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
 import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
 import { exec } from 'child_process';
+import { CameraOrderChangeDto } from './dto/setting.camera.dto';
 
 @Injectable()
 export class SettingService {
@@ -393,5 +398,28 @@ export class SettingService {
     }
 
     return result;
+  }
+
+  async cameraOrderChange(data: CameraOrderChangeDto) {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        this.socketGateway.server.to('slamnav').emit('swUpdate', data);
+
+        this.socketGateway.slamnav.once('cameraOrderChangeResponse', (res) => {
+          if (res.status === 200) {
+            httpLogger.info(
+              `[UPDATE] cameraOrderChange Response: ${JSON.stringify(res.orderInfo)}`,
+            );
+
+            resolve(res.orderInfo);
+          }
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          reject(new GatewayTimeoutException('프로그램이 연결되지 않았습니다'));
+        }, 5000); // 5초 타임아웃
+      }
+    });
   }
 }
