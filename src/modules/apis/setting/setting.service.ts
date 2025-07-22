@@ -1,5 +1,6 @@
 import { deleteFile, readJson, saveJson } from '@common/util/file.util';
 import {
+  BadRequestException,
   GatewayTimeoutException,
   HttpStatus,
   Injectable,
@@ -414,7 +415,12 @@ export class SettingService {
             );
 
             resolve(res);
+          } else {
+            reject(
+              new BadRequestException('카메라 정보를 가져오는데 실패했습니다'),
+            );
           }
+
           clearTimeout(timeoutId);
         });
 
@@ -443,7 +449,10 @@ export class SettingService {
 
           if (parsedRes.status === '200') {
             resolve(res);
+          } else {
+            reject(new BadRequestException('카메라 순서 변경에 실패했습니다'));
           }
+
           clearTimeout(timeoutId);
         });
 
