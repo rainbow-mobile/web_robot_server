@@ -2099,6 +2099,25 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('linear')
+  async handleCameraOrderChangeMessage(@MessageBody() payload: string) {
+    try {
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[Move] linear: NULL`);
+        return;
+      }
+
+      socketLogger.debug(`[Move] linear: ${JSON.stringify(payload)}`);
+
+      const json = JSON.parse(JSON.stringify(payload));
+
+      this.slamnav?.emit('linear', json);
+    } catch (error) {
+      socketLogger.error(`[Move] linear: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
   /**
    * @description 웹 변수 초기화를 처리하는 함수
    * @param socket
