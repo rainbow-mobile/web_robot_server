@@ -2069,6 +2069,25 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('cameraInfo')
+  async handleCameraInfoMessage(@MessageBody() payload: string) {
+    try {
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[Setting] cameraInfo: NULL`);
+        return;
+      }
+
+      socketLogger.debug(`[Setting] cameraInfo: ${JSON.stringify(payload)}`);
+
+      const json = JSON.parse(JSON.stringify(payload));
+
+      this.slamnav?.emit('cameraInfo', json);
+    } catch (error) {
+      socketLogger.error(`[Setting] cameraInfo: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
   @SubscribeMessage('cameraInfoResponse')
   async handleCameraInfoResponseMessage(@MessageBody() payload: string) {
     try {
@@ -2084,6 +2103,27 @@ export class SocketGateway
     }
   }
 
+  @SubscribeMessage('cameraOrderChange')
+  async handleCameraOrderChangeMessage(@MessageBody() payload: string) {
+    try {
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[Setting] cameraOrderChange: NULL`);
+        return;
+      }
+
+      socketLogger.debug(
+        `[Setting] cameraOrderChange: ${JSON.stringify(payload)}`,
+      );
+
+      const json = JSON.parse(JSON.stringify(payload));
+
+      this.slamnav?.emit('cameraOrderChange', json);
+    } catch (error) {
+      socketLogger.error(`[Setting] cameraOrderChange: ${errorToJson(error)}`);
+      throw error();
+    }
+  }
+
   @SubscribeMessage('cameraOrderChangeResponse')
   async handleCameraOrderChangeResponseMessage(@MessageBody() payload: string) {
     try {
@@ -2095,25 +2135,6 @@ export class SocketGateway
       socketLogger.error(
         `[Setting] Camera Order Change Response: ${errorToJson(error)}`,
       );
-      throw error();
-    }
-  }
-
-  @SubscribeMessage('linear')
-  async handleCameraOrderChangeMessage(@MessageBody() payload: string) {
-    try {
-      if (payload == null || payload == undefined) {
-        socketLogger.warn(`[Move] linear: NULL`);
-        return;
-      }
-
-      socketLogger.debug(`[Move] linear: ${JSON.stringify(payload)}`);
-
-      const json = JSON.parse(JSON.stringify(payload));
-
-      this.slamnav?.emit('linear', json);
-    } catch (error) {
-      socketLogger.error(`[Move] linear: ${errorToJson(error)}`);
       throw error();
     }
   }
