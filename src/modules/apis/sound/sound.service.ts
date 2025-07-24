@@ -26,7 +26,15 @@ export class SoundService {
           );
           httpLogger.info(`[SOUND] Play Body FileNamess: ${path}`);
 
-          await this.stop();
+          if (this.curPlay.spawnargs?.[1] === path) {
+            reject({
+              status: HttpStatus.BAD_REQUEST,
+              data: { message: 'Sound is already playing' },
+            });
+            return;
+          } else {
+            await this.stop();
+          }
         }
 
         if (fs.existsSync(path)) {
@@ -80,7 +88,15 @@ export class SoundService {
           );
           httpLogger.info(`[SOUND] Play Body FileNamess: ${path}`);
 
-          await this.stop();
+          if (this.curPlay.spawnargs?.[1] === path) {
+            reject({
+              status: HttpStatus.BAD_REQUEST,
+              data: { message: 'Sound is already playing' },
+            });
+            return;
+          } else {
+            await this.stop();
+          }
         }
 
         if (fs.existsSync(path)) {
