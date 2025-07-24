@@ -1819,21 +1819,15 @@ export class SocketGateway
   }
 
   @SubscribeMessage('pathResponse')
-  async handlePathResponse(@MessageBody() payload: { time: string }) {
-    if (
-      payload == null ||
-      payload == undefined ||
-      payload.time == null ||
-      payload.time == undefined ||
-      payload.time == ''
-    ) {
+  async handlePathResponse(@MessageBody() payload: string) {
+    if (payload == null || payload == undefined) {
       socketLogger.warn(`[STATUS] pathResponse: NULL`);
       return;
     }
 
     const sendData = {
       robotSerial: global.robotSerial,
-      data: payload,
+      data: JSON.parse(payload),
     };
     this.frsSocket?.emit('pathResponse', sendData);
   }
