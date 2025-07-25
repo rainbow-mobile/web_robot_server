@@ -255,16 +255,22 @@ export class UpdateService {
       });
     }
 
-    execSync('git pull', {
-      cwd: rainbowDeployKitDir,
-      stdio: 'pipe',
-    });
+    try {
+      execSync('git pull', {
+        cwd: rainbowDeployKitDir,
+        stdio: 'pipe',
+      });
 
-    execSync(
-      `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
-    );
+      execSync(
+        `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
+      );
 
-    return { applyReqAdd: true, rejectReason: '' };
+      return { result: true };
+    } catch (error) {
+      throw new BadRequestException({
+        message: error.message,
+      });
+    }
   }
 
   /**
@@ -287,13 +293,19 @@ export class UpdateService {
       });
     }
 
-    execSync('git pull', {
-      cwd: rainbowDeployKitDir,
-      stdio: 'pipe',
-    });
+    try {
+      execSync('git pull', {
+        cwd: rainbowDeployKitDir,
+        stdio: 'pipe',
+      });
 
-    execSync(`nohup bash ${appDeleteScript} ${appNames.join(' ')}`);
+      execSync(`nohup bash ${appDeleteScript} ${appNames.join(' ')}`);
 
-    return { applyReqDelete: true, rejectReason: '' };
+      return { result: true };
+    } catch (error) {
+      throw new BadRequestException({
+        message: error.message,
+      });
+    }
   }
 }
