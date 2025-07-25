@@ -262,10 +262,10 @@ export class UpdateService {
       });
 
       execSync(
-        `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
+        `bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
       );
 
-      return { result: true };
+      return { appNames, branch, fo };
     } catch (error) {
       throw new BadRequestException({
         message: error.message,
@@ -299,9 +299,9 @@ export class UpdateService {
         stdio: 'pipe',
       });
 
-      execSync(`nohup bash ${appDeleteScript} ${appNames.join(' ')}`);
+      execSync(`bash ${appDeleteScript} ${appNames.join(' ')}`);
 
-      return { result: true };
+      return { appNames };
     } catch (error) {
       throw new BadRequestException({
         message: error.message,

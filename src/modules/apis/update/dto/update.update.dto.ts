@@ -74,20 +74,36 @@ export class WebUIAppDeleteDto {
 
 export class ResponseWebUIAppAddDto {
   @ApiProperty({
-    description: '앱 추가 요청 결과',
-    example: true,
+    description: '추가한 앱 이름 배열',
+    example: ['app1', 'app2'],
   })
-  @IsBoolean()
+  @IsArray()
   @IsNotEmpty()
-  result: boolean;
+  appNames: string[];
+
+  @ApiProperty({
+    description: '브랜치 이름',
+    example: 'main',
+  })
+  @IsString()
+  @IsNotEmpty()
+  branch: string;
+
+  @ApiProperty({
+    description: '로봇 UI에 노출할 첫페이지 URL',
+    example: '/S100',
+  })
+  @IsString()
+  @IsNotEmpty()
+  fo: string;
 }
 
 export class ResponseWebUIAppDeleteDto {
   @ApiProperty({
-    description: '앱 삭제 요청 결과',
-    example: true,
+    description: '삭제한 앱 이름 배열',
+    example: ['app1', 'app2'],
   })
-  @IsBoolean()
+  @IsArray()
   @IsNotEmpty()
-  result: boolean;
+  appNames: string[];
 }
