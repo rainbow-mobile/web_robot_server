@@ -79,15 +79,7 @@ export class ResponseWebUIAppAddDto {
   })
   @IsBoolean()
   @IsNotEmpty()
-  applyReqAdd: boolean;
-
-  @ApiProperty({
-    description: '앱 추가 요청 거절 이유',
-    example: '앱 추가 요청 거절 이유',
-  })
-  @IsString()
-  @IsOptional()
-  rejectReason?: string;
+  result: boolean;
 }
 
 export class ResponseWebUIAppDeleteDto {
@@ -97,13 +89,5 @@ export class ResponseWebUIAppDeleteDto {
   })
   @IsBoolean()
   @IsNotEmpty()
-  applyReqDelete: boolean;
-
-  @ApiProperty({
-    description: '앱 삭제 요청 거절 이유',
-    example: '앱 삭제 요청 거절 이유',
-  })
-  @IsString()
-  @IsOptional()
-  rejectReason?: string;
+  result: boolean;
 }
