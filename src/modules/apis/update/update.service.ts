@@ -260,8 +260,8 @@ export class UpdateService {
       stdio: 'pipe',
     });
 
-    exec(
-      `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}> /tmp/fe-add-app.log 2>&1 &`,
+    execSync(
+      `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
     );
 
     return { applyReqAdd: true, rejectReason: '' };
@@ -292,9 +292,7 @@ export class UpdateService {
       stdio: 'pipe',
     });
 
-    exec(
-      `nohup bash ${appDeleteScript} ${appNames.join(' ')}> /tmp/fe-delete-app.log 2>&1 &`,
-    );
+    execSync(`nohup bash ${appDeleteScript} ${appNames.join(' ')}`);
 
     return { applyReqDelete: true, rejectReason: '' };
   }
