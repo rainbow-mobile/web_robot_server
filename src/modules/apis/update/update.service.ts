@@ -4,7 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
+import {
+  ReqUpdateSoftwareDto,
+  WebUIAppAddDto,
+  WebUIAppDeleteDto,
+} from './dto/update.update.dto';
 import * as path from 'path';
 import { homedir } from 'os';
 import * as fs from 'fs';
@@ -227,5 +231,71 @@ export class UpdateService {
         message: `[${software}] ${branch} 브랜치의 version.json 파일을 찾을 수 없습니다.`,
       });
     }
+  }
+
+  /**
+   * 웹 UI 앱 추가
+   * @param appNames 앱 이름 배열
+   * @param branch 브랜치 이름
+   * @param fo 프로젝트 이름
+   * @returns 앱 추가 요청 결과
+   */
+  async webUIAppAdd({ appNames, branch, fo }: WebUIAppAddDto) {
+    const appAddScript = path.join(
+      homedir(),
+      `rainbow-deploy-kit/web-ui`,
+      'fe-add-app.sh',
+    );
+
+    const rainbowDeployKitDir = path.join(homedir(), 'rainbow-deploy-kit');
+
+    if (!fs.existsSync(appAddScript)) {
+      throw new NotFoundException({
+        message: `~/rainbow-deploy-kit/web-ui/fe-add-app.sh 파일을 찾을 수 없습니다.`,
+      });
+    }
+
+    execSync('git pull', {
+      cwd: rainbowDeployKitDir,
+      stdio: 'pipe',
+    });
+
+    exec(
+      `nohup bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}> /tmp/fe-add-app.log 2>&1 &`,
+    );
+
+    return { applyReqAdd: true, rejectReason: '' };
+  }
+
+  /**
+   * 웹 UI 앱 삭제
+   * @param appNames 앱 이름 배열
+   * @returns 앱 삭제 요청 결과
+   */
+  async webUIAppDelete({ appNames }: WebUIAppDeleteDto) {
+    const appDeleteScript = path.join(
+      homedir(),
+      `rainbow-deploy-kit/web-ui`,
+      'fe-delete-app.sh',
+    );
+
+    const rainbowDeployKitDir = path.join(homedir(), 'rainbow-deploy-kit');
+
+    if (!fs.existsSync(appDeleteScript)) {
+      throw new NotFoundException({
+        message: `~/rainbow-deploy-kit/web-ui/fe-delete-app.sh 파일을 찾을 수 없습니다.`,
+      });
+    }
+
+    execSync('git pull', {
+      cwd: rainbowDeployKitDir,
+      stdio: 'pipe',
+    });
+
+    exec(
+      `nohup bash ${appDeleteScript} ${appNames.join(' ')}> /tmp/fe-delete-app.log 2>&1 &`,
+    );
+
+    return { applyReqDelete: true, rejectReason: '' };
   }
 }
