@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class ReqUpdateSoftwareDto {
   @ApiProperty({
@@ -28,4 +34,76 @@ export class ReqUpdateSoftwareDto {
   @IsString()
   @IsOptional()
   version?: string;
+}
+
+export class WebUIAppAddDto {
+  @ApiProperty({
+    description: '앱 이름 배열',
+    example: ['app1', 'app2'],
+  })
+  @IsArray()
+  @IsNotEmpty()
+  appNames: string[];
+
+  @ApiProperty({
+    description: '브랜치 이름',
+    example: 'main',
+  })
+  @IsString()
+  @IsOptional()
+  branch?: string;
+
+  @ApiProperty({
+    description: '로봇 UI에 노출할 첫페이지 URL',
+    example: '/S100',
+  })
+  @IsString()
+  @IsOptional()
+  fo?: string;
+}
+
+export class WebUIAppDeleteDto {
+  @ApiProperty({
+    description: '앱 이름 배열',
+    example: ['app1', 'app2'],
+  })
+  @IsArray()
+  @IsNotEmpty()
+  appNames: string[];
+}
+
+export class ResponseWebUIAppAddDto {
+  @ApiProperty({
+    description: '앱 추가 요청 결과',
+    example: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  applyReqAdd: boolean;
+
+  @ApiProperty({
+    description: '앱 추가 요청 거절 이유',
+    example: '앱 추가 요청 거절 이유',
+  })
+  @IsString()
+  @IsOptional()
+  rejectReason?: string;
+}
+
+export class ResponseWebUIAppDeleteDto {
+  @ApiProperty({
+    description: '앱 삭제 요청 결과',
+    example: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  applyReqDelete: boolean;
+
+  @ApiProperty({
+    description: '앱 삭제 요청 거절 이유',
+    example: '앱 삭제 요청 거절 이유',
+  })
+  @IsString()
+  @IsOptional()
+  rejectReason?: string;
 }
