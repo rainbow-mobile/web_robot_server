@@ -154,7 +154,7 @@ export class MapService {
           } else {
             resolve({
               status: HttpStatus.OK,
-              data: { message: 'Map deleted successfully' },
+              data: { mapNm, mapDir },
             });
           }
         });
