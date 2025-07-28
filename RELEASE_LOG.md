@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250728114808] - 2025-07-28
+- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250728114808] release 배포
+
+
 ## [rrs-20250728112430] - 2025-07-28
 - Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250728112430] release 배포
 
