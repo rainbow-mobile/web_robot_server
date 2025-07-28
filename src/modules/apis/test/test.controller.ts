@@ -1,14 +1,17 @@
 import { Controller, Get, Post, Body, Query, Put, Param } from '@nestjs/common';
 import { TestService } from './test.service';
 import {
+  CheckTestRunningDto,
   GetRecentTestResultDto,
   GetTestRecordListDto,
   GetTestResultBySubjectDto,
   InsertTestRecordDto,
   ResponseTestRecordListDto,
   ResponseTestResultDto,
+  StartTestDto,
   TestRecordDto,
   TestResultDto,
+  TestRunningInfoDto,
   UpdateTestDataDto,
   UpdateTestRecordDto,
 } from './dto/test.dto';
@@ -90,6 +93,64 @@ export class TestController {
   })
   getTestResultBySubject(@Query() param: GetTestResultBySubjectDto) {
     return this.testService.getTestResultBySubject(param);
+  }
+
+  @Get('check-test-running')
+  @ApiOperation({
+    summary: '테스트 진행 여부 확인',
+    description: '테스트 진행 여부를 확인합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 진행 여부 확인 성공',
+    type: CheckTestRunningDto,
+  })
+  checkTestRunning() {
+    return this.testService.checkTestRunning();
+  }
+
+  @Post('start')
+  @ApiOperation({
+    summary: '테스트 시작',
+    description: '테스트를 시작합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 시작 성공',
+    type: TestRunningInfoDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이미 진행중인 테스트가 있습니다.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  startTest(@Body() param: StartTestDto) {
+    return this.testService.startTest(param);
+  }
+
+  @Post('end')
+  @ApiOperation({
+    summary: '테스트 종료',
+    description: '테스트를 종료합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 종료 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  endTest() {
+    return this.testService.endTest();
   }
 
   @Post('record')

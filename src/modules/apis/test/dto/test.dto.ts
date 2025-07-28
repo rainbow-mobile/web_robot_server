@@ -2,6 +2,7 @@ import { PaginationRequest } from '@common/pagination/pagination.request';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsNotEmpty,
@@ -317,4 +318,80 @@ export class UpdateTestRecordDto {
     default: null,
   })
   tester?: string | null;
+}
+
+export class StartTestDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+  })
+  tester: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  testRecordId: number;
+}
+
+export class TestRunningInfoDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+  })
+  tester: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  testRecordId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 종료 시간',
+  })
+  testEndTimestamp: number;
+}
+
+export class CheckTestRunningDto {
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+    required: false,
+    nullable: true,
+    default: undefined,
+  })
+  testRecordId?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+    required: false,
+    nullable: true,
+    default: undefined,
+  })
+  tester?: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: true,
+    description: '테스트 진행 여부',
+  })
+  isRunning: boolean;
 }
