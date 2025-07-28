@@ -495,11 +495,19 @@ export class TestService {
   checkTestRunning(): Promise<CheckTestRunningDto> {
     return new Promise(async (resolve) => {
       if (this.runningTestInfo) {
-        resolve({
-          isRunning: true,
-          testRecordId: this.runningTestInfo.testRecordId,
-          tester: this.runningTestInfo.tester,
-        });
+        if (this.runningTestInfo.testEndTimestamp < Date.now()) {
+          await this.endTest();
+          resolve({
+            isRunning: false,
+          });
+          return;
+        } else {
+          resolve({
+            isRunning: true,
+            testRecordId: this.runningTestInfo.testRecordId,
+            tester: this.runningTestInfo.tester,
+          });
+        }
       } else {
         resolve({
           isRunning: false,
