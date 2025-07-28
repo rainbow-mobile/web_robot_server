@@ -1499,7 +1499,7 @@ export class SocketGateway
         }
 
         const jsontemp = JSON.parse(payload);
-        console.log('footStatus : ',jsontemp);
+        console.log('footStatus : ', jsontemp);
         let json = jsontemp;
         try {
           json = {

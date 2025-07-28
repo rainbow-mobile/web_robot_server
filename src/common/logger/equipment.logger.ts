@@ -54,8 +54,8 @@ function writeLog(filePath: string, header: string, row: string) {
   // deleteOldLog(logDir, 30);
 
   // if (!fs.existsSync(filePath)) {
-    // fs.mkdirSync(logDir, { recursive: true });
-    // fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
+  // fs.mkdirSync(logDir, { recursive: true });
+  // fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
   // }
   // fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
 }
