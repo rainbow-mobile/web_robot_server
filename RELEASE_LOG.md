@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250728171824] - 2025-07-28
+- Release App: RRS, Branch: develop, Version: rrs-20250728171824] release 배포
+
+
 ## [rrs-20250728153717] - 2025-07-28
 - Release App: RRS, Branch: develop, Version: rrs-20250728153717] release 배포
 
