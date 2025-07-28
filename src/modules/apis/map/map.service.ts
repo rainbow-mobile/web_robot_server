@@ -143,13 +143,18 @@ export class MapService {
 
     return new Promise((resolve, reject) => {
       if (fs.existsSync(mapDir)) {
-        fs.rm(mapDir, (err) => {
+        fs.rm(mapDir, { recursive: true, force: true }, (err) => {
           if (err) {
-            reject(err);
+            reject({
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
+              data: {
+                error: err.message,
+              },
+            });
           } else {
             resolve({
               status: HttpStatus.OK,
-              data: { message: 'Map deleted successfully' },
+              data: { mapNm, mapDir },
             });
           }
         });

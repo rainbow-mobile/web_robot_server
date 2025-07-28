@@ -1,7 +1,21 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { UpdateService } from './update.service';
-import { ReqUpdateSoftwareDto } from './dto/update.update.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ReqUpdateSoftwareDto,
+  ResponseWebUIAppAddDto,
+  ResponseWebUIAppDeleteDto,
+  WebUIAppAddDto,
+  WebUIAppDeleteDto,
+} from './dto/update.update.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetNewVersionDto, PingSendToTargetDto } from './dto/update.get.dto';
 
 @ApiTags('업데이트 관련 API (update)')
@@ -46,5 +60,49 @@ export class UpdateController {
   })
   getCurrentVersion(@Param('software') software: string) {
     return this.updateService.getCurrentVersion(software);
+  }
+
+  @Post('web-ui/app/add')
+  @ApiOperation({
+    summary: '웹 UI 앱 추가',
+    description: '웹 UI 앱을 추가합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '웹 UI 앱 추가 성공',
+    type: ResponseWebUIAppAddDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '웹 UI 앱 추가 실패',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '웹 UI 앱 추가 스크립트 파일을 찾을 수 없습니다.',
+  })
+  webUIAppAdd(@Body() webUIAppAddDto: WebUIAppAddDto) {
+    return this.updateService.webUIAppAdd(webUIAppAddDto);
+  }
+
+  @Delete('web-ui/app/delete')
+  @ApiOperation({
+    summary: '웹 UI 앱 삭제',
+    description: '웹 UI 앱을 삭제합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '웹 UI 앱 삭제 성공',
+    type: ResponseWebUIAppDeleteDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '웹 UI 앱 삭제 실패',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '웹 UI 앱 삭제 스크립트 파일을 찾을 수 없습니다.',
+  })
+  webUIAppDelete(@Body() webUIAppDeleteDto: WebUIAppDeleteDto) {
+    return this.updateService.webUIAppDelete(webUIAppDeleteDto);
   }
 }
