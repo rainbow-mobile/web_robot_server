@@ -145,7 +145,12 @@ export class MapService {
       if (fs.existsSync(mapDir)) {
         fs.rm(mapDir, (err) => {
           if (err) {
-            reject(err);
+            reject({
+              status: err.code,
+              data: {
+                error: err.message,
+              },
+            });
           } else {
             resolve({
               status: HttpStatus.OK,
