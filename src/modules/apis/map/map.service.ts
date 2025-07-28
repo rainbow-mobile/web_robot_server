@@ -146,7 +146,7 @@ export class MapService {
         fs.rm(mapDir, { recursive: true, force: true }, (err) => {
           if (err) {
             reject({
-              status: err.code,
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
               data: {
                 error: err.message,
               },
