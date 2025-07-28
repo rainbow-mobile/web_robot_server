@@ -143,7 +143,7 @@ export class MapService {
 
     return new Promise((resolve, reject) => {
       if (fs.existsSync(mapDir)) {
-        fs.rm(mapDir, (err) => {
+        fs.rm(mapDir, { recursive: true, force: true }, (err) => {
           if (err) {
             reject({
               status: err.code,
