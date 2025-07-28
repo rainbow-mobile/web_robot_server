@@ -51,13 +51,13 @@ function writeLog(filePath: string, header: string, row: string) {
   const logDir = path.dirname(filePath);
 
   // console.log(filePath);
-  deleteOldLog(logDir, 30);
+  // deleteOldLog(logDir, 30);
 
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
-  }
-  fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
+  // if (!fs.existsSync(filePath)) {
+    // fs.mkdirSync(logDir, { recursive: true });
+    // fs.appendFileSync(filePath, header + '\n', { encoding: 'utf8' });
+  // }
+  // fs.appendFileSync(filePath, row + '\n', { encoding: 'utf8' });
 }
 
 function deleteOldLog(baseDir: string, days: number = 30) {
@@ -200,39 +200,39 @@ export function generateGeneralLog(param: {
   operationStatus: GeneralOperationStatus;
   data?: string;
 }) {
-  const header =
-    'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
+  // const header =
+  //   'SEM_LOG_VERSION=2.0\nDateTime\tMachineID\tLogType\tLotID\tRecipe\tProductID\tStatus\tScope\tOperationName\tOperationStatus\tData';
 
-  if (param.operationStatus === GeneralOperationStatus.END) {
-    if (
-      !lastGeneralLog ||
-      lastGeneralLog.operationStatus !== GeneralOperationStatus.START ||
-      lastGeneralLog.operationName !== param.operationName
-    ) {
-      socketLogger.warn(
-        `[LOG] generateGeneralLog : unknown END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`,
-      );
-      return false;
-    }
-  }
+  // if (param.operationStatus === GeneralOperationStatus.END) {
+  //   if (
+  //     !lastGeneralLog ||
+  //     lastGeneralLog.operationStatus !== GeneralOperationStatus.START ||
+  //     lastGeneralLog.operationName !== param.operationName
+  //   ) {
+  //     socketLogger.warn(
+  //       `[LOG] generateGeneralLog : unknown END (${param.operationName}, ${param.operationStatus}) (${lastGeneralLog?.operationName}, ${lastGeneralLog?.operationStatus})`,
+  //     );
+  //     return false;
+  //   }
+  // }
 
-  const row = [
-    param.dateTime ??
-      `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
-    param.machineId ?? global.robotSerial ?? '-',
-    param.logType ?? '-',
-    param.lotId ?? '-',
-    param.recipe ?? '-',
-    param.productId ?? '-',
-    param.status ?? '-',
-    param.scope ?? '-',
-    param.operationName ?? '-',
-    param.operationStatus ?? '-',
-    typeof param.data === 'undefined' ? '' : param.data,
-  ].join('\t');
+  // const row = [
+  //   param.dateTime ??
+  //     `${new Date().getFullYear()}-${('0' + (new Date().getMonth() + 1)).slice(-2)}-${('0' + new Date().getDate()).slice(-2)} ${('0' + new Date().getHours()).slice(-2)}:${('0' + new Date().getMinutes()).slice(-2)}:${('0' + new Date().getSeconds()).slice(-2)}.${('00' + new Date().getMilliseconds()).slice(-3)}`,
+  //   param.machineId ?? global.robotSerial ?? '-',
+  //   param.logType ?? '-',
+  //   param.lotId ?? '-',
+  //   param.recipe ?? '-',
+  //   param.productId ?? '-',
+  //   param.status ?? '-',
+  //   param.scope ?? '-',
+  //   param.operationName ?? '-',
+  //   param.operationStatus ?? '-',
+  //   typeof param.data === 'undefined' ? '' : param.data,
+  // ].join('\t');
 
-  socketLogger.debug(`[LOG] generalLog : ${row}`);
-  lastGeneralLog = param;
-  writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
+  // socketLogger.debug(`[LOG] generalLog : ${row}`);
+  // lastGeneralLog = param;
+  // writeLog(getCustomFilenameWithoutDate('ROBOT'), header, row);
   return true;
 }

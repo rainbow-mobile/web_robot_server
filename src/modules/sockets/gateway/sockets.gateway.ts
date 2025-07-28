@@ -1499,7 +1499,7 @@ export class SocketGateway
         }
 
         const jsontemp = JSON.parse(payload);
-        // console.log('footStatus : ',jsontemp);
+        console.log('footStatus : ',jsontemp);
         let json = jsontemp;
         try {
           json = {
@@ -1524,7 +1524,7 @@ export class SocketGateway
           console.error(error);
           json = jsontemp;
         }
-        // console.log('footStatus : ', payload, json);
+        console.log('footStatus : ', payload, json);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastExternalStatus)) {
