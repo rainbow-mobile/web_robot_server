@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Validate,
   ValidateNested,
 } from 'class-validator';
 import { TestResult } from '../entities/test.entity';
@@ -122,8 +123,24 @@ export class GetTestRecordListDto extends PaginationRequest {
     }
     return value;
   })
-  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
-  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
+  @Validate(
+    (value: string | number) => {
+      if (value === undefined || value === null) return true;
+
+      if (typeof value === 'number') {
+        const date = new Date(value);
+        return !isNaN(date.getTime()) && date.getTime() > 0;
+      }
+
+      if (typeof value === 'string') {
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      }
+
+      return false;
+    },
+    { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' },
+  )
   @ApiProperty({
     type: String,
     description: '테스트 시작일 (timestamp 또는 ISO 문자열)',
@@ -140,8 +157,24 @@ export class GetTestRecordListDto extends PaginationRequest {
     }
     return value;
   })
-  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
-  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
+  @Validate(
+    (value: string | number) => {
+      if (value === undefined || value === null) return true;
+
+      if (typeof value === 'number') {
+        const date = new Date(value);
+        return !isNaN(date.getTime()) && date.getTime() > 0;
+      }
+
+      if (typeof value === 'string') {
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      }
+
+      return false;
+    },
+    { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' },
+  )
   @ApiProperty({
     type: String,
     description: '테스트 종료일 (timestamp 또는 ISO 문자열)',

@@ -449,6 +449,8 @@ export class TestService {
           });
         }
 
+        queryBuilder.orderBy('test_record.createdAt', param.orderBy || 'DESC');
+
         if (!param.pageNo) {
           const items = await queryBuilder.getMany();
           const totalCount = items.length;
@@ -458,8 +460,6 @@ export class TestService {
           });
           return;
         }
-
-        queryBuilder.orderBy('test_record.createdAt', param.orderBy);
 
         const totalCount = await queryBuilder.getCount();
 
