@@ -45,42 +45,67 @@ export class ControlService {
     });
   }
 
-  async SafetyFieldRequest(dto: {command:string, set_field?: number}){
+  async SafetyFieldRequest(dto: { command: string; set_field?: number }) {
     return new Promise((resolve, reject) => {
+      httpLogger.debug(`[CONTROL] SafetyFieldRequest : ${JSON.stringify(dto)}`)
       if (this.socketGateway.slamnav != null) {
-        if(dto.command === "get"){
-          
-        }else if(dto.command === "set"){
-          if(dto.set_field === undefined){
-            reject(new HttpException(`set_field(${dto.set_field}) 값이 지정되지 않았습니다.`,HttpStatus.BAD_REQUEST));
+        if (dto.command === 'get') {
+        } else if (dto.command === 'set') {
+          if (dto.set_field === undefined) {
+            reject(
+              new HttpException(
+                `set_field(${dto.set_field}) 값이 지정되지 않았습니다.`,
+                HttpStatus.BAD_REQUEST,
+              ),
+            );
           }
-        }else{
-          reject(new HttpException(`알 수 없는 command(${dto.command}) 값입니다.`,HttpStatus.BAD_REQUEST));
+        } else {
+          reject(
+            new HttpException(
+              `알 수 없는 command(${dto.command}) 값입니다.`,
+              HttpStatus.BAD_REQUEST,
+            ),
+          );
         }
 
-        this.socketGateway.slamnav.emit('fieldRequest', stringifyAllValues({ ...dto, time: Date.now().toString() }));
+        this.socketGateway.slamnav.emit(
+          'fieldRequest',
+          stringifyAllValues({ ...dto, time: Date.now().toString() }),
+        );
         httpLogger.info(`[CONTROL] fieldRequest: ${JSON.stringify(dto)}`);
 
         this.socketGateway.slamnav.once('fieldResponse', (data) => {
-          httpLogger.info(
-            `[CONTROL] fieldResponse: ${JSON.stringify(data)}`,
-          );
+          httpLogger.info(`[CONTROL] fieldResponse: ${JSON.stringify(data)}`);
           const json = JSON.parse(data);
           clearTimeout(timeoutId);
-          if(json.result === 'success'){
-            resolve({command : json.command, get_field: json.get_field });
-          }else{
-            reject(new HttpException('명령을 수행할 수 없습니다 : '+data.message,HttpStatus.INTERNAL_SERVER_ERROR));
+          if (json.result === 'success') {
+            resolve({ command: json.command, get_field: json.get_field });
+          } else {
+            reject(
+              new HttpException(
+                '명령을 수행할 수 없습니다 : ' + data.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              ),
+            );
           }
         });
         const timeoutId = setTimeout(() => {
-          reject(new HttpException('프로그램이 응답하지 않습니다',HttpStatus.GATEWAY_TIMEOUT));
+          reject(
+            new HttpException(
+              '프로그램이 응답하지 않습니다',
+              HttpStatus.GATEWAY_TIMEOUT,
+            ),
+          );
         }, 5000); // 5초 타임아웃
-
       } else {
-        reject(new HttpException('프로그램이 연결되지 않았습니다',HttpStatus.GATEWAY_TIMEOUT));
+        reject(
+          new HttpException(
+            '프로그램이 연결되지 않았습니다',
+            HttpStatus.GATEWAY_TIMEOUT,
+          ),
+        );
       }
-    }) 
+    });
   }
 
   async ledControl(data: { command: string; led: string }) {
