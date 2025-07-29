@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   HttpStatus,
   Inject,
   Param,
@@ -30,6 +31,7 @@ import { LedControlDto } from './dto/led.control.dto';
 import { LidarControlDto } from './dto/lidar.control.dto';
 import { MotorControlDto } from './dto/motor.control.dto';
 import { ExternalCommandDto } from './dto/external.control.dto';
+import { SetSafetyFieldDto } from './dto/safetyfield.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -248,6 +250,36 @@ export class ControlController {
         `[COMMAND] LED Control : ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`,
       );
       return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Post('safety/field')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 설정',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 설정합니다.'
+  })
+  async setSafetyField(@Query() dto: SetSafetyFieldDto){
+    try{
+      return this.controlService.SafetyFieldRequest({command: 'set', set_field: dto.field});
+    }catch(error){
+      if(error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] getSafetyField : ${errorToJson(error)}`)
+      throw new HttpException('요청을 처리할 수 없습니다',HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('safety/field')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 요청',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 요청합니다.'
+  })
+  async getSafetyField(){
+    try{
+      return this.controlService.SafetyFieldRequest({command: 'get'});
+    }catch(error){
+      if(error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] getSafetyField : ${errorToJson(error)}`)
+      throw new HttpException('요청을 처리할 수 없습니다',HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
