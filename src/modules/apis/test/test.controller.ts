@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Query, Put, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Put,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { TestService } from './test.service';
 import {
   CheckTestRunningDto,
@@ -16,6 +25,7 @@ import {
   UpdateTestRecordDto,
 } from './dto/test.dto';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
 
 @ApiTags('테스트 관리')
 @Controller('test')
@@ -105,8 +115,9 @@ export class TestController {
     description: '테스트 진행 여부 확인 성공',
     type: CheckTestRunningDto,
   })
-  checkTestRunning() {
-    return this.testService.checkTestRunning();
+  checkTestRunning(@Req() req: Request) {
+    const sessionId = req.sessionID;
+    return this.testService.checkTestRunning(sessionId);
   }
 
   @Post('start')
@@ -127,8 +138,9 @@ export class TestController {
     status: 500,
     description: '서버 내부 오류',
   })
-  startTest(@Body() param: StartTestDto) {
-    return this.testService.startTest(param);
+  startTest(@Req() req: Request, @Body() param: StartTestDto) {
+    const sessionId = req.sessionID;
+    return this.testService.startTest(param, sessionId);
   }
 
   @Post('end')
@@ -149,8 +161,9 @@ export class TestController {
     status: 500,
     description: '서버 내부 오류',
   })
-  endTest() {
-    return this.testService.endTest();
+  endTest(@Req() req: Request) {
+    const sessionId = req.sessionID;
+    return this.testService.endTest(sessionId);
   }
 
   @Post('record')
@@ -245,7 +258,11 @@ export class TestController {
     status: 500,
     description: '서버 내부 오류',
   })
-  upsertTestResult(@Body() updateTestDataDto: UpdateTestDataDto) {
-    return this.testService.upsertTestResult(updateTestDataDto);
+  upsertTestResult(
+    @Req() req: Request,
+    @Body() updateTestDataDto: UpdateTestDataDto,
+  ) {
+    const sessionId = req.sessionID;
+    return this.testService.upsertTestResult(updateTestDataDto, sessionId);
   }
 }

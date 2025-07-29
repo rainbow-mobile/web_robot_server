@@ -7,14 +7,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-export enum SubjectEnum {
-  DISPLAY = 'DISPLAY',
-  SPEAKER = 'SPEAKER',
-  CAMERA = 'CAMERA',
-  CHARGER = 'CHARGER',
-  MAP_MOVE = 'MAP_MOVE',
-}
-
 export enum TestResult {
   SUCCESS = 'SUCCESS',
   FAIL = 'FAIL',
@@ -67,10 +59,10 @@ export class TestEntity {
 
   @Column({
     name: 'subject',
-    type: 'enum',
-    enum: SubjectEnum,
+    type: 'varchar',
+    length: 128,
   })
-  subject: SubjectEnum;
+  subject: string;
 
   @Column({
     name: 'result',

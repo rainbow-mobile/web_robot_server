@@ -20,6 +20,8 @@ import {
   UpdateTestRecordDto,
 } from './dto/test.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
+import { uuid } from 'systeminformation';
+import { uniqueId } from 'lodash';
 
 @Injectable()
 export class TestService {
@@ -199,21 +201,21 @@ export class TestService {
     });
   }
 
-  insertTestResult(data: InsertTestDataDto) {
+  insertTestResult(data: InsertTestDataDto, sessionId: string) {
     return new Promise(async (resolve, reject) => {
       try {
-        const { isRunning } = await this.checkTestRunning();
+        // const { isRunning } = await this.checkTestRunning(sessionId);
 
-        if (isRunning) {
-          reject({
-            status: HttpStatus.BAD_REQUEST,
-            data: {
-              message: `이미 테스트 중입니다. testRecordId: ${this.runningTestInfo?.testRecordId}`,
-            },
-          });
+        // if (isRunning) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message: `이미 테스트 중입니다. testRecordId: ${this.runningTestInfo?.testRecordId}`,
+        //     },
+        //   });
 
-          return;
-        }
+        //   return;
+        // }
 
         const test = this.testRepository.create(data);
         const result = await this.testRepository.save(test);
@@ -232,33 +234,31 @@ export class TestService {
     });
   }
 
-  upsertTestResult(updateTestDataDto: UpdateTestDataDto) {
+  upsertTestResult(updateTestDataDto: UpdateTestDataDto, sessionId: string) {
     return new Promise(async (resolve, reject) => {
       try {
-        const { isRunning, testRecordId } = await this.checkTestRunning();
+        // const { isRunning } = await this.checkTestRunning(sessionId);
 
-        if (!isRunning) {
-          reject({
-            status: HttpStatus.BAD_REQUEST,
-            data: {
-              message:
-                '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
-            },
-          });
+        // if (!isRunning) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message:
+        //         '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
+        //     },
+        //   });
 
-          return;
-        } else if (testRecordId !== updateTestDataDto.testRecordId) {
-          reject({
-            status: HttpStatus.BAD_REQUEST,
-            data: {
-              message: `테스트중인 테스트 레코드가 아닙니다. testRecordId: ${testRecordId}`,
-            },
-          });
+        //   return;
+        // } else if (this.runningTestInfo.testSessionId !== sessionId) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message: '다른 유저가 테스트를 진행중입니다.',
+        //     },
+        //   });
+        // }
 
-          return;
-        }
-
-        this.runningTestInfo.testEndTimestamp = Date.now() + 1000 * 60 * 5;
+        // this.runningTestInfo.testEndTimestamp = Date.now() + 1000 * 60 * 5;
 
         const test = await this.testRepository.findOne({
           where: {
@@ -268,7 +268,10 @@ export class TestService {
         });
 
         if (!test) {
-          const result = await this.insertTestResult(updateTestDataDto);
+          const result = await this.insertTestResult(
+            updateTestDataDto,
+            sessionId,
+          );
           resolve(result);
           return;
         }
@@ -483,7 +486,7 @@ export class TestService {
   observeTestRunning() {
     if (this.runningTestInfo) {
       if (this.runningTestInfo.testEndTimestamp < Date.now()) {
-        this.endTest();
+        this.endTest(this.runningTestInfo.testSessionId);
       } else {
         setTimeout(() => {
           this.observeTestRunning();
@@ -492,15 +495,14 @@ export class TestService {
     }
   }
 
-  checkTestRunning(): Promise<CheckTestRunningDto> {
+  checkTestRunning(sessionId: string): Promise<CheckTestRunningDto> {
+    console.log(this.runningTestInfo?.testSessionId, sessionId);
     return new Promise(async (resolve) => {
       if (this.runningTestInfo) {
-        if (this.runningTestInfo.testEndTimestamp < Date.now()) {
-          await this.endTest();
+        if (this.runningTestInfo.testSessionId === sessionId) {
           resolve({
             isRunning: false,
           });
-          return;
         } else {
           resolve({
             isRunning: true,
@@ -516,12 +518,14 @@ export class TestService {
     });
   }
 
-  startTest(param: StartTestDto) {
+  startTest(param: StartTestDto, sessionId: string) {
+    console.log('sessionId', sessionId);
     return new Promise(async (resolve, reject) => {
       try {
-        const { isRunning, testRecordId } = await this.checkTestRunning();
+        const { isRunning, testRecordId } =
+          await this.checkTestRunning(sessionId);
 
-        if (isRunning && testRecordId !== param.testRecordId) {
+        if (isRunning) {
           reject({
             status: HttpStatus.BAD_REQUEST,
             data: {
@@ -534,6 +538,7 @@ export class TestService {
 
         this.runningTestInfo = {
           tester: param.tester,
+          testSessionId: sessionId,
           testRecordId: param.testRecordId,
           testEndTimestamp: Date.now() + 1000 * 60 * 5,
         };
@@ -554,10 +559,10 @@ export class TestService {
     });
   }
 
-  endTest() {
+  endTest(sessionId: string) {
     return new Promise(async (resolve, reject) => {
       try {
-        const { isRunning } = await this.checkTestRunning();
+        const { isRunning } = await this.checkTestRunning(sessionId);
 
         if (!isRunning) {
           reject({
