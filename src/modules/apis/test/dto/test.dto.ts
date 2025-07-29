@@ -11,7 +11,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { SubjectEnum, TestResult } from '../entities/test.entity';
+import { TestResult } from '../entities/test.entity';
 import { Transform, Type } from 'class-transformer';
 
 export class TestResultDto {
@@ -28,11 +28,10 @@ export class TestResultDto {
   testRecordId: number;
 
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
-    enum: SubjectEnum,
   })
-  subject: SubjectEnum;
+  subject: string;
 
   @ApiProperty({
     example: TestResult.SUCCESS,
@@ -87,18 +86,18 @@ export class TestRecordDto {
 }
 
 export class GetTestResultBySubjectDto {
-  @IsEnum(SubjectEnum)
+  @IsString()
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
   })
-  subject: SubjectEnum;
+  subject: string;
 }
 
 export class GetRecentTestResultDto {
   @IsArray()
   @IsOptional()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value.split(',').map((s) => s.trim());
@@ -106,13 +105,12 @@ export class GetRecentTestResultDto {
     return value;
   })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열 (쉼표로 구분된 문자열도 지원)',
     required: false,
     isArray: true,
-    enum: SubjectEnum,
   })
-  subjects?: SubjectEnum[];
+  subjects?: string[];
 }
 
 export class GetTestRecordListDto extends PaginationRequest {
@@ -154,7 +152,7 @@ export class GetTestRecordListDto extends PaginationRequest {
 
   @IsOptional()
   @IsArray()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value.split(',').map((s) => s.trim());
@@ -162,13 +160,12 @@ export class GetTestRecordListDto extends PaginationRequest {
     return value;
   })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열 (쉼표로 구분된 문자열도 지원)',
     required: false,
-    enum: SubjectEnum,
     isArray: true,
   })
-  subject?: SubjectEnum[];
+  subject?: string[];
 
   @IsOptional()
   @IsString()
@@ -192,14 +189,13 @@ export class GetTestRecordListDto extends PaginationRequest {
 }
 
 export class InsertTestDataDto {
-  @IsEnum(SubjectEnum)
+  @IsString()
   @IsNotEmpty()
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
-    enum: SubjectEnum,
   })
-  subject: SubjectEnum;
+  subject: string;
 
   @IsEnum(TestResult)
   @IsNotEmpty()
@@ -289,14 +285,13 @@ export class InsertTestRecordDto {
 
   @IsArray()
   @IsNotEmpty()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열',
-    enum: SubjectEnum,
     isArray: true,
   })
-  subjects: SubjectEnum[];
+  subjects: string[];
 }
 
 export class UpdateTestRecordDto {
@@ -354,6 +349,14 @@ export class TestRunningInfoDto {
     description: '테스트 레코드 ID',
   })
   testRecordId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'test-session-1234567890',
+    description: '테스트 세션 ID',
+  })
+  testSessionId: string;
 
   @IsNumber()
   @IsNotEmpty()
