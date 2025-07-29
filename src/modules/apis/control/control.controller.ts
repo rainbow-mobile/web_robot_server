@@ -102,11 +102,17 @@ export class ControlController {
           .status(HttpStatus.BAD_REQUEST)
           .send({ message: 'Mapping Save Parameter Missing : name' });
       }
-      const response = await this.controlService.mappingCommand({
+      const response = (await this.controlService.mappingCommand({
         command: 'save',
         name: name,
         time: Date.now().toString(),
-      });
+      })) as any;
+
+      if (response.result === 'fail') {
+        return res.status(HttpStatus.BAD_REQUEST).send({
+          message: response.message,
+        });
+      }
       return res.send(response);
     } catch (error) {
       httpLogger.error(
