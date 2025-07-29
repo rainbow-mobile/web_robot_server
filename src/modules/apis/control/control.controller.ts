@@ -106,13 +106,22 @@ export class ControlController {
         command: 'save',
         name: name,
         time: Date.now().toString(),
-      })) as any;
+      })) as string;
 
-      if (response.result === 'fail') {
+      if (!response) {
         return res.status(HttpStatus.BAD_REQUEST).send({
-          message: response.message,
+          message: 'Mapping Save Failed',
         });
       }
+
+      const parsedResponse = JSON.parse(response);
+
+      if (parsedResponse.result === 'fail') {
+        return res.status(HttpStatus.BAD_REQUEST).send({
+          message: parsedResponse.message,
+        });
+      }
+
       return res.send(response);
     } catch (error) {
       httpLogger.error(
