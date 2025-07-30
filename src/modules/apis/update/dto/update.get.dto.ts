@@ -3,7 +3,6 @@ import {
   IsBoolean,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsObject,
   IsOptional,
   IsString,
@@ -87,6 +86,7 @@ export class GetReleaseAppsVersionListDto {
   @IsNotEmpty()
   @ApiPropertyOptional({
     description: 'software 이름',
+    example: 'slamnav2, rrs-server, web-ui',
     default: 'slamnav2',
   })
   software: string;
