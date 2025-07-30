@@ -69,7 +69,7 @@ export class UpdateService {
    * @returns 업데이트 요청 결과
    */
   updateSoftware({ software, branch, version }: ReqUpdateSoftwareDto) {
-    if (software === 'rrs') {
+    if (software === 'rrs-server' || software === 'rrs') {
       return this.rrsUpdate({ branch, version });
     }
 
@@ -225,8 +225,7 @@ export class UpdateService {
   }) {
     await this.checkRepositoryAccess();
 
-    const softwareDir = SOFTWARE_DIR[software];
-    const newVersionUrl = `${RELEASE_REPO_RAW_URL}/${branch}/${softwareDir}/version.json`;
+    const newVersionUrl = `${RELEASE_REPO_RAW_URL}/${branch}/${software}/version.json`;
 
     try {
       const newVersionData = await fetch(newVersionUrl);
@@ -266,21 +265,7 @@ export class UpdateService {
     software,
   }: GetReleaseAppsVersionListDto) {
     try {
-      let convertSoftware = '';
-
-      if (software === 'slamnav2') {
-        convertSoftware = 'slamnav2';
-      } else if (software === 'rrs') {
-        convertSoftware = 'web_robot_server';
-      } else if (software === 'web-rainbow-ui') {
-        convertSoftware = 'web-ui';
-      } else {
-        throw new BadRequestException({
-          message: '소프트웨어 이름이 올바르지 않습니다.',
-        });
-      }
-
-      const url = `https://api.github.com/repos/rainbow-mobile/rainbow-release-apps/contents/${convertSoftware}?ref=${branch}`;
+      const url = `https://api.github.com/repos/rainbow-mobile/rainbow-release-apps/contents/${software}?ref=${branch}`;
 
       const res = await fetch(url, {
         headers: {

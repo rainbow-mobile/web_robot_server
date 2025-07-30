@@ -1,15 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ReqUpdateSoftwareDto {
   @ApiProperty({
-    description: '업데이트할 소프트웨어 종류 (예: rrs, slamnav2)',
+    description: '업데이트할 소프트웨어 종류 (예: rrs-server, slamnav2)',
     example: 'slamnav2',
     default: 'slamnav2',
   })
