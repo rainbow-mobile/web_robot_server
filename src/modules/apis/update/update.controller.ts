@@ -16,7 +16,14 @@ import {
   WebUIAppDeleteDto,
 } from './dto/update.update.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetNewVersionDto, PingSendToTargetDto } from './dto/update.get.dto';
+import {
+  GetNewVersionDto,
+  GetReleaseAppsBranchesDto,
+  GetReleaseAppsVersionListDto,
+  PingSendToTargetDto,
+  ResponseReleaseAppsBranchesDto,
+  ResponseReleaseVersionInfoDto,
+} from './dto/update.get.dto';
 
 @ApiTags('업데이트 관련 API (update)')
 @Controller('update')
@@ -60,6 +67,37 @@ export class UpdateController {
   })
   getCurrentVersion(@Param('software') software: string) {
     return this.updateService.getCurrentVersion(software);
+  }
+
+  @Get('release-apps/branches')
+  @ApiOperation({
+    summary: 'rainbow-release-apps 레포지토리의 브랜치 조회',
+    description: 'rainbow-release-apps 레포지토리의 브랜치를 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'rainbow-release-apps 레포지토리의 브랜치 조회 성공',
+    type: [ResponseReleaseAppsBranchesDto],
+  })
+  getReleaseAppsBranches(@Query() params: GetReleaseAppsBranchesDto) {
+    return this.updateService.getReleaseAppsBranches(params);
+  }
+
+  @Get('release-apps/version-list')
+  @ApiOperation({
+    summary: 'rainbow-release-apps 레포지토리의 버전 조회',
+    description: 'rainbow-release-apps 레포지토리의 버전을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'rainbow-release-apps 레포지토리의 버전 조회 성공',
+    type: [ResponseReleaseVersionInfoDto],
+  })
+  getReleaseAppsVersionList(
+    @Query()
+    params: GetReleaseAppsVersionListDto,
+  ) {
+    return this.updateService.getReleaseAppsVersionList(params);
   }
 
   @Post('web-ui/app/add')

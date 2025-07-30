@@ -20,6 +20,11 @@ import {
 import { exec, execSync } from 'child_process';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import httpLogger from '@common/logger/http.logger';
+import {
+  GetReleaseAppsBranchesDto,
+  GetReleaseAppsVersionListDto,
+} from './dto/update.get.dto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UpdateService {
@@ -229,6 +234,94 @@ export class UpdateService {
     } catch (_error) {
       throw new NotFoundException({
         message: `[${software}] ${branch} 브랜치의 version.json 파일을 찾을 수 없습니다.`,
+      });
+    }
+  }
+
+  decryptToken(base64Payload: string) {
+    const keyStr = 'RAINBOW_GITHUB_API_TOKEN';
+    const key = crypto.createHash('sha256').update(keyStr).digest();
+
+    const payloadBuffer = Buffer.from(base64Payload, 'base64');
+    const iv = payloadBuffer.slice(0, 16); // 앞 16바이트가 IV
+    const encrypted = payloadBuffer.slice(16); // 나머지는 암호문
+
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encrypted, undefined, 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  }
+
+  /**
+   * 릴리즈 앱 버전 조회
+   * @param token encrypted Token
+   * @param base64IV base64 encoded IV
+   * @param branch 브랜치 이름
+   * @param software 소프트웨어 이름
+   * @returns 릴리즈 앱 버전 정보
+   */
+  async getReleaseAppsVersionList({
+    token,
+    branch = 'main',
+    software,
+  }: GetReleaseAppsVersionListDto) {
+    try {
+      let convertSoftware = '';
+
+      if (software === 'slamnav2') {
+        convertSoftware = 'slamnav2';
+      } else if (software === 'rrs') {
+        convertSoftware = 'web_robot_server';
+      } else if (software === 'web-rainbow-ui') {
+        convertSoftware = 'web-ui';
+      } else {
+        throw new BadRequestException({
+          message: '소프트웨어 이름이 올바르지 않습니다.',
+        });
+      }
+
+      const url = `https://api.github.com/repos/rainbow-mobile/rainbow-release-apps/contents/${convertSoftware}?ref=${branch}`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Basic ${this.decryptToken(token)}`,
+        },
+        method: 'GET',
+      });
+
+      return res.json();
+    } catch (error) {
+      throw new BadRequestException({
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * 릴리즈 앱 브랜치 조회
+   * @param token Github Token
+   * @param per_page 한 페이지에 보여지는 브랜치 개수
+   * @param page 페이지 번호
+   * @returns 릴리즈 앱 브랜치 정보
+   */
+  async getReleaseAppsBranches({
+    token,
+    per_page,
+    page,
+  }: GetReleaseAppsBranchesDto) {
+    try {
+      const url = `https://api.github.com/repos/rainbow-mobile/rainbow-release-apps/branches?per_page=${per_page}&page=${page}`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Basic ${this.decryptToken(token)}`,
+        },
+      });
+
+      return res.json();
+    } catch (error) {
+      throw new BadRequestException({
+        message: error.message,
       });
     }
   }
