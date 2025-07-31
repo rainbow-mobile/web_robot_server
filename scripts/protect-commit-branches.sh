@@ -1,7 +1,7 @@
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 CHANGED_FILES=$(git diff --cached --name-only)
 
-ALLOW_REGEX='^(\.github/workflows/|lefthook\.yml$|RELEASE_LOG\.md$|yarn\.lock$|(.*/)?yarn\.lock$|package\.json$|(.*/)?package\.json$|dist/|.*/dist/|scripts/deploy\.sh$|scripts/protect-commit-branches\.sh$|mf_deploy_time\.json$|commitlint.config.js$|\.vscode/|.*/assets/)'
+ALLOW_REGEX='^(dist/.*|.*/dist/.*|\.github/workflows/.*|lefthook\.yml$|RELEASE_LOG\.md$|yarn\.lock$|.*/yarn\.lock$|package\.json$|.*/package\.json$|scripts/deploy\.sh$|scripts/protect-commit-branches\.sh$|mf_deploy_time\.json$|commitlint.config.js$|\.vscode/.*|.*/assets/.*)$'
 
 
 if [ "$BRANCH" = "main" ]; then
