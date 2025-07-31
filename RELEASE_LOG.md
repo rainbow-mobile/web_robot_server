@@ -1,63 +1,36 @@
 # Release log
 
-## [rrs-20250730125231] - 2025-07-30
-- Release App: RRS, Branch: develop, Version: rrs-20250730125231] release 배포
+## [rrs-20250725111743] - 2025-07-25
+- Release App: RRS, Branch: main, Version: rrs-20250725111743] release 배포
 
 
-## [rrs-20250730003028] - 2025-07-30
-- Release App: RRS, Branch: develop, Version: rrs-20250730003028] release 배포
+## [rrs-20250724181455] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724181455] release 배포
 
 
-## [rrs-20250730001448] - 2025-07-30
-- Release App: RRS, Branch: develop, Version: rrs-20250730001448] release 배포
+## [rrs-20250724180308] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724180308] release 배포
 
 
-## [rrs-20250729220602] - 2025-07-29
-- Release App: RRS, Branch: develop, Version: rrs-20250729220602] release 배포
+## [rrs-20250724175544] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724175544] release 배포
 
 
-## [rrs-20250728171824] - 2025-07-28
-- Release App: RRS, Branch: develop, Version: rrs-20250728171824] release 배포
+## [rrs-20250724173310] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724173310] release 배포
 
 
-## [rrs-20250728153717] - 2025-07-28
-- Release App: RRS, Branch: develop, Version: rrs-20250728153717] release 배포
+## [rrs-20250724172014] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724172014] release 배포
 
 
-## [rrs-20250728152402] - 2025-07-28
-- Release App: RRS, Branch: develop, Version: rrs-20250728152402] release 배포
+## [rrs-20250724124026] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724124026] release 배포
 
 
-## [rrs-20250728141514] - 2025-07-28
-- Release App: RRS, Branch: develop, Version: rrs-20250728141514] release 배포
+## [rrs-20250724085929] - 2025-07-24
+- Release App: RRS, Branch: main, Version: rrs-20250724085929] release 배포
 
-
-## [rrs-20250728114808] - 2025-07-28
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250728114808] release 배포
-
-
-## [rrs-20250728112430] - 2025-07-28
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250728112430] release 배포
-
-
-## [rrs-20250728111841] - 2025-07-28
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250728111841] release 배포
-
-
-## [rrs-20250725170728] - 2025-07-25
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250725170728] release 배포
-
-
-## [rrs-20250725161017] - 2025-07-25
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250725161017] release 배포
-
-
-## [rrs-20250725155948] - 2025-07-25
-- Release App: RRS, Branch: WB-153_web-ui-api, Version: rrs-20250725155948] release 배포
-
-
-## [rrs-20250725134119] - 2025-07-25
-- Release App: RRS, Branch: develop, Version: rrs-20250725134119] release 배포
 
 
 ## [rrs-20250722193122] - 2025-07-22
