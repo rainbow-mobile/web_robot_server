@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 CHANGED_FILES=$(git diff --cached --name-only)
 
