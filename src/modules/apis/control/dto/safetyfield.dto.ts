@@ -4,7 +4,7 @@ import { IsNumber } from 'class-validator';
 
 export class SetSafetyFieldDto {
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   @ApiProperty({
     description: '',
     example: 0,
