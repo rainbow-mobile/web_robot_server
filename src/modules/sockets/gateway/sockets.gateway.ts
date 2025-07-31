@@ -485,9 +485,23 @@ export class SocketGateway
           robotSerial: global.robotSerial,
         };
 
-        const newData = { command: 'resume', time: Date.now().toString() };
-        socketLogger.info(`[TEST] Frs connected and Move Resume`);
-        this.slamnav?.emit('move', stringifyAllValues(newData));
+        //change resume -> move (250725 yujin)
+        // const newData = { command: 'resume', time: Date.now().toString() };
+        if (this.lastGoal && this.lastGoal !== '') {
+          const newData = {
+            command: 'goal',
+            goal_id: this.lastGoal,
+            time: Date.now().toString(),
+          };
+          socketLogger.info(
+            `[TEST] Frs connected and Move Goal ${this.lastGoal}`,
+          );
+          this.slamnav?.emit('move', stringifyAllValues(newData));
+        } else {
+          const newData = { command: 'resume', time: Date.now().toString() };
+          socketLogger.info(`[TEST] Frs connected and Move Resume`);
+          this.slamnav?.emit('move', stringifyAllValues(newData));
+        }
 
         socketLogger.debug(`[CONNECT] FRS init : ${JSON.stringify(sendData)}`);
         this.frsSocket.emit('init', sendData);
@@ -1819,21 +1833,15 @@ export class SocketGateway
   }
 
   @SubscribeMessage('pathResponse')
-  async handlePathResponse(@MessageBody() payload: { time: string }) {
-    if (
-      payload == null ||
-      payload == undefined ||
-      payload.time == null ||
-      payload.time == undefined ||
-      payload.time == ''
-    ) {
+  async handlePathResponse(@MessageBody() payload: string) {
+    if (payload == null || payload == undefined) {
       socketLogger.warn(`[STATUS] pathResponse: NULL`);
       return;
     }
 
     const sendData = {
       robotSerial: global.robotSerial,
-      data: payload,
+      data: JSON.parse(payload),
     };
     this.frsSocket?.emit('pathResponse', sendData);
   }
