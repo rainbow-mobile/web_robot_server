@@ -6,6 +6,7 @@ import httpLogger from '@common/logger/http.logger';
 import { errorToJson } from '@common/util/error.util';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import {
+  CheckTestRunningDto,
   GetRecentTestResultDto,
   GetTestRecordListDto,
   GetTestResultBySubjectDto,
@@ -13,13 +14,19 @@ import {
   InsertTestRecordDto,
   ResponseTestRecordListDto,
   ResponseTestResultDto,
+  StartTestDto,
+  TestRunningInfoDto,
   UpdateTestDataDto,
   UpdateTestRecordDto,
 } from './dto/test.dto';
 import { PaginationResponse } from '@common/pagination/pagination.response';
+import { uuid } from 'systeminformation';
+import { uniqueId } from 'lodash';
 
 @Injectable()
 export class TestService {
+  runningTestInfo: TestRunningInfoDto | null = null;
+
   constructor(
     @InjectRepository(TestEntity)
     private readonly testRepository: Repository<TestEntity>,
@@ -194,9 +201,22 @@ export class TestService {
     });
   }
 
-  insertTestResult(data: InsertTestDataDto) {
+  insertTestResult(data: InsertTestDataDto, sessionId: string) {
     return new Promise(async (resolve, reject) => {
       try {
+        // const { isRunning } = await this.checkTestRunning(sessionId);
+
+        // if (isRunning) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message: `이미 테스트 중입니다. testRecordId: ${this.runningTestInfo?.testRecordId}`,
+        //     },
+        //   });
+
+        //   return;
+        // }
+
         const test = this.testRepository.create(data);
         const result = await this.testRepository.save(test);
 
@@ -214,9 +234,32 @@ export class TestService {
     });
   }
 
-  upsertTestResult(updateTestDataDto: UpdateTestDataDto) {
+  upsertTestResult(updateTestDataDto: UpdateTestDataDto, sessionId: string) {
     return new Promise(async (resolve, reject) => {
       try {
+        // const { isRunning } = await this.checkTestRunning(sessionId);
+
+        // if (!isRunning) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message:
+        //         '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
+        //     },
+        //   });
+
+        //   return;
+        // } else if (this.runningTestInfo.testSessionId !== sessionId) {
+        //   reject({
+        //     status: HttpStatus.BAD_REQUEST,
+        //     data: {
+        //       message: '다른 유저가 테스트를 진행중입니다.',
+        //     },
+        //   });
+        // }
+
+        // this.runningTestInfo.testEndTimestamp = Date.now() + 1000 * 60 * 5;
+
         const test = await this.testRepository.findOne({
           where: {
             testRecordId: updateTestDataDto.testRecordId,
@@ -225,7 +268,10 @@ export class TestService {
         });
 
         if (!test) {
-          const result = await this.insertTestResult(updateTestDataDto);
+          const result = await this.insertTestResult(
+            updateTestDataDto,
+            sessionId,
+          );
           resolve(result);
           return;
         }
@@ -403,6 +449,8 @@ export class TestService {
           });
         }
 
+        queryBuilder.orderBy('test_record.createdAt', param.orderBy || 'DESC');
+
         if (!param.pageNo) {
           const items = await queryBuilder.getMany();
           const totalCount = items.length;
@@ -412,8 +460,6 @@ export class TestService {
           });
           return;
         }
-
-        queryBuilder.orderBy('test_record.createdAt', param.orderBy);
 
         const totalCount = await queryBuilder.getCount();
 
@@ -426,6 +472,114 @@ export class TestService {
       } catch (error) {
         httpLogger.error(`[TEST] getTestRecordAll : ${errorToJson(error)}`);
 
+        reject({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {
+            message: HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500,
+            error: error,
+          },
+        });
+      }
+    });
+  }
+
+  observeTestRunning() {
+    if (this.runningTestInfo) {
+      if (this.runningTestInfo.testEndTimestamp < Date.now()) {
+        this.endTest(this.runningTestInfo.testSessionId);
+      } else {
+        setTimeout(() => {
+          this.observeTestRunning();
+        }, 1000);
+      }
+    }
+  }
+
+  checkTestRunning(sessionId: string): Promise<CheckTestRunningDto> {
+    console.log(this.runningTestInfo?.testSessionId, sessionId);
+    return new Promise(async (resolve) => {
+      if (this.runningTestInfo) {
+        if (this.runningTestInfo.testSessionId === sessionId) {
+          resolve({
+            isRunning: false,
+          });
+        } else {
+          resolve({
+            isRunning: true,
+            testRecordId: this.runningTestInfo.testRecordId,
+            tester: this.runningTestInfo.tester,
+          });
+        }
+      } else {
+        resolve({
+          isRunning: false,
+        });
+      }
+    });
+  }
+
+  startTest(param: StartTestDto, sessionId: string) {
+    console.log('sessionId', sessionId);
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { isRunning, testRecordId } =
+          await this.checkTestRunning(sessionId);
+
+        if (isRunning) {
+          reject({
+            status: HttpStatus.BAD_REQUEST,
+            data: {
+              message: `이미 테스트 중입니다. testRecordId: ${testRecordId}`,
+            },
+          });
+
+          return;
+        }
+
+        this.runningTestInfo = {
+          tester: param.tester,
+          testSessionId: sessionId,
+          testRecordId: param.testRecordId,
+          testEndTimestamp: Date.now() + 1000 * 60 * 5,
+        };
+
+        this.observeTestRunning();
+
+        resolve(this.runningTestInfo);
+      } catch (error) {
+        httpLogger.error(`[TEST] startTest : ${errorToJson(error)}`);
+        reject({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {
+            message: HttpStatusMessagesConstants.INTERNAL_SERVER_ERROR_500,
+            error: error,
+          },
+        });
+      }
+    });
+  }
+
+  endTest(sessionId: string) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { isRunning } = await this.checkTestRunning(sessionId);
+
+        if (!isRunning) {
+          reject({
+            status: HttpStatus.BAD_REQUEST,
+            data: {
+              message:
+                '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
+            },
+          });
+
+          return;
+        }
+
+        this.runningTestInfo = null;
+        resolve({ result: true });
+      } catch (error) {
+        httpLogger.error(`[TEST] endTest : ${errorToJson(error)}`);
         reject({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           data: {

@@ -1,18 +1,31 @@
-import { Controller, Get, Post, Body, Query, Put, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Put,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { TestService } from './test.service';
 import {
+  CheckTestRunningDto,
   GetRecentTestResultDto,
   GetTestRecordListDto,
   GetTestResultBySubjectDto,
   InsertTestRecordDto,
   ResponseTestRecordListDto,
   ResponseTestResultDto,
+  StartTestDto,
   TestRecordDto,
   TestResultDto,
+  TestRunningInfoDto,
   UpdateTestDataDto,
   UpdateTestRecordDto,
 } from './dto/test.dto';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
 
 @ApiTags('테스트 관리')
 @Controller('test')
@@ -90,6 +103,67 @@ export class TestController {
   })
   getTestResultBySubject(@Query() param: GetTestResultBySubjectDto) {
     return this.testService.getTestResultBySubject(param);
+  }
+
+  @Get('check-test-running')
+  @ApiOperation({
+    summary: '테스트 진행 여부 확인',
+    description: '테스트 진행 여부를 확인합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 진행 여부 확인 성공',
+    type: CheckTestRunningDto,
+  })
+  checkTestRunning(@Req() req: Request) {
+    const sessionId = req.sessionID;
+    return this.testService.checkTestRunning(sessionId);
+  }
+
+  @Post('start')
+  @ApiOperation({
+    summary: '테스트 시작',
+    description: '테스트를 시작합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 시작 성공',
+    type: TestRunningInfoDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이미 진행중인 테스트가 있습니다.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  startTest(@Req() req: Request, @Body() param: StartTestDto) {
+    const sessionId = req.sessionID;
+    return this.testService.startTest(param, sessionId);
+  }
+
+  @Post('end')
+  @ApiOperation({
+    summary: '테스트 종료',
+    description: '테스트를 종료합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '테스트 종료 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      '테스트 시작 API를 통해 테스트를 시작하지 않았습니다. 테스트 시작 API를 통해 테스트를 시작하세요.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 내부 오류',
+  })
+  endTest(@Req() req: Request) {
+    const sessionId = req.sessionID;
+    return this.testService.endTest(sessionId);
   }
 
   @Post('record')
@@ -184,7 +258,11 @@ export class TestController {
     status: 500,
     description: '서버 내부 오류',
   })
-  upsertTestResult(@Body() updateTestDataDto: UpdateTestDataDto) {
-    return this.testService.upsertTestResult(updateTestDataDto);
+  upsertTestResult(
+    @Req() req: Request,
+    @Body() updateTestDataDto: UpdateTestDataDto,
+  ) {
+    const sessionId = req.sessionID;
+    return this.testService.upsertTestResult(updateTestDataDto, sessionId);
   }
 }

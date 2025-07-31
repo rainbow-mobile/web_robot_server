@@ -2,15 +2,17 @@ import { PaginationRequest } from '@common/pagination/pagination.request';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Validate,
   ValidateNested,
 } from 'class-validator';
-import { SubjectEnum, TestResult } from '../entities/test.entity';
+import { TestResult } from '../entities/test.entity';
 import { Transform, Type } from 'class-transformer';
 
 export class TestResultDto {
@@ -27,11 +29,10 @@ export class TestResultDto {
   testRecordId: number;
 
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
-    enum: SubjectEnum,
   })
-  subject: SubjectEnum;
+  subject: string;
 
   @ApiProperty({
     example: TestResult.SUCCESS,
@@ -86,18 +87,18 @@ export class TestRecordDto {
 }
 
 export class GetTestResultBySubjectDto {
-  @IsEnum(SubjectEnum)
+  @IsString()
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
   })
-  subject: SubjectEnum;
+  subject: string;
 }
 
 export class GetRecentTestResultDto {
   @IsArray()
   @IsOptional()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value.split(',').map((s) => s.trim());
@@ -105,13 +106,12 @@ export class GetRecentTestResultDto {
     return value;
   })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열 (쉼표로 구분된 문자열도 지원)',
     required: false,
     isArray: true,
-    enum: SubjectEnum,
   })
-  subjects?: SubjectEnum[];
+  subjects?: string[];
 }
 
 export class GetTestRecordListDto extends PaginationRequest {
@@ -123,8 +123,24 @@ export class GetTestRecordListDto extends PaginationRequest {
     }
     return value;
   })
-  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
-  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
+  @Validate(
+    (value: string | number) => {
+      if (value === undefined || value === null) return true;
+
+      if (typeof value === 'number') {
+        const date = new Date(value);
+        return !isNaN(date.getTime()) && date.getTime() > 0;
+      }
+
+      if (typeof value === 'string') {
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      }
+
+      return false;
+    },
+    { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' },
+  )
   @ApiProperty({
     type: String,
     description: '테스트 시작일 (timestamp 또는 ISO 문자열)',
@@ -141,8 +157,24 @@ export class GetTestRecordListDto extends PaginationRequest {
     }
     return value;
   })
-  @IsNumber({}, { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' })
-  @IsDateString({}, { message: 'ISO 날짜문자열이어야 합니다.' })
+  @Validate(
+    (value: string | number) => {
+      if (value === undefined || value === null) return true;
+
+      if (typeof value === 'number') {
+        const date = new Date(value);
+        return !isNaN(date.getTime()) && date.getTime() > 0;
+      }
+
+      if (typeof value === 'string') {
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      }
+
+      return false;
+    },
+    { message: '숫자(timestamp) 또는 ISO 문자열이어야 합니다.' },
+  )
   @ApiProperty({
     type: String,
     description: '테스트 종료일 (timestamp 또는 ISO 문자열)',
@@ -153,7 +185,7 @@ export class GetTestRecordListDto extends PaginationRequest {
 
   @IsOptional()
   @IsArray()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return value.split(',').map((s) => s.trim());
@@ -161,13 +193,12 @@ export class GetTestRecordListDto extends PaginationRequest {
     return value;
   })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열 (쉼표로 구분된 문자열도 지원)',
     required: false,
-    enum: SubjectEnum,
     isArray: true,
   })
-  subject?: SubjectEnum[];
+  subject?: string[];
 
   @IsOptional()
   @IsString()
@@ -191,14 +222,13 @@ export class GetTestRecordListDto extends PaginationRequest {
 }
 
 export class InsertTestDataDto {
-  @IsEnum(SubjectEnum)
+  @IsString()
   @IsNotEmpty()
   @ApiProperty({
-    example: SubjectEnum.DISPLAY,
+    example: 'DISPLAY',
     description: '테스트 주제',
-    enum: SubjectEnum,
   })
-  subject: SubjectEnum;
+  subject: string;
 
   @IsEnum(TestResult)
   @IsNotEmpty()
@@ -288,14 +318,13 @@ export class InsertTestRecordDto {
 
   @IsArray()
   @IsNotEmpty()
-  @IsEnum(SubjectEnum, { each: true })
+  @IsString({ each: true })
   @ApiProperty({
-    example: [SubjectEnum.DISPLAY, SubjectEnum.SPEAKER],
+    example: ['DISPLAY', 'SPEAKER'],
     description: '테스트 주제 배열',
-    enum: SubjectEnum,
     isArray: true,
   })
-  subjects: SubjectEnum[];
+  subjects: string[];
 }
 
 export class UpdateTestRecordDto {
@@ -317,4 +346,88 @@ export class UpdateTestRecordDto {
     default: null,
   })
   tester?: string | null;
+}
+
+export class StartTestDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+  })
+  tester: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  testRecordId: number;
+}
+
+export class TestRunningInfoDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+  })
+  tester: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+  })
+  testRecordId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'test-session-1234567890',
+    description: '테스트 세션 ID',
+  })
+  testSessionId: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 종료 시간',
+  })
+  testEndTimestamp: number;
+}
+
+export class CheckTestRunningDto {
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 1,
+    description: '테스트 레코드 ID',
+    required: false,
+    nullable: true,
+    default: undefined,
+  })
+  testRecordId?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'tester1',
+    description: '테스트 수행자',
+    required: false,
+    nullable: true,
+    default: undefined,
+  })
+  tester?: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: true,
+    description: '테스트 진행 여부',
+  })
+  isRunning: boolean;
 }
