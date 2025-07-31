@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Inject,
@@ -11,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { MapService } from './map.service';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
 import * as fs from 'fs';
@@ -448,6 +449,32 @@ export class MapController {
     } catch (error) {
       httpLogger.error(
         `[MAP] getGoals ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Delete('delete/:mapNm')
+  @ApiOperation({
+    summary: '맵 삭제',
+    description: '맵을 삭제합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '맵 삭제 성공',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '맵 삭제 실패',
+  })
+  async deleteMap(@Param('mapNm') mapNm: string, @Res() res: Response) {
+    try {
+      httpLogger.debug(`[MAP] deleteMap: ${mapNm}`);
+      const response = await this.mapService.deleteMap(mapNm);
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] deleteMap ${mapNm}: ${error.status} -> ${JSON.stringify(error.data)}`,
       );
       return res.status(error.status).send(error.data);
     }

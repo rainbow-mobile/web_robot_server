@@ -1,5 +1,5 @@
 import httpLogger from '@common/logger/http.logger';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { SocketGateway } from '@sockets/gateway/sockets.gateway';
 import * as fs from 'fs';
 import { homedir } from 'os';
@@ -133,6 +133,35 @@ export class MapService {
         reject({
           status: HttpStatus.GATEWAY_TIMEOUT,
           data: { message: '프로그램이 연결되지 않았습니다' },
+        });
+      }
+    });
+  }
+
+  deleteMap(mapNm: string) {
+    const mapDir = Path.join(this.mapDir, mapNm);
+
+    return new Promise((resolve, reject) => {
+      if (fs.existsSync(mapDir)) {
+        fs.rm(mapDir, { recursive: true, force: true }, (err) => {
+          if (err) {
+            reject({
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
+              data: {
+                error: err.message,
+              },
+            });
+          } else {
+            resolve({
+              status: HttpStatus.OK,
+              data: { mapNm, mapDir },
+            });
+          }
+        });
+      } else {
+        reject({
+          status: HttpStatus.NOT_FOUND,
+          data: { message: 'Map not found' },
         });
       }
     });
