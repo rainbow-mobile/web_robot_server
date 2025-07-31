@@ -8,7 +8,7 @@ if [ "$BRANCH" = "main" ]; then
     echo $CHANGED_FILES
     for file in $CHANGED_FILES; do
     if ! [[ "$file" =~ $ALLOW_REGEX ]]; then
-        echo "❌ main 브랜치에는 직접 커밋할 수 없습니다. PR을 통한 병합을 진행해주세요."
+        echo "❌ main 브랜치에는 직접 커밋할 수 없습니다. PR을 통한 병합을 진행해주세요. $file"
         exit 1
     fi
     done
