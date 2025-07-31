@@ -47,7 +47,7 @@ export class ControlService {
 
   async SafetyFieldRequest(dto: { command: string; set_field?: number }) {
     return new Promise((resolve, reject) => {
-      httpLogger.debug(`[CONTROL] SafetyFieldRequest : ${JSON.stringify(dto)}`)
+      httpLogger.debug(`[CONTROL] SafetyFieldRequest : ${JSON.stringify(dto)}`);
       if (this.socketGateway.slamnav != null) {
         if (dto.command === 'get') {
         } else if (dto.command === 'set') {
