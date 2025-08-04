@@ -114,7 +114,7 @@ export class MoveService {
           ) {
             resolve(responseJson);
           } else {
-            reject({ data: responseJson, status: HttpStatus.FORBIDDEN });
+            reject({ data: responseJson, status: HttpStatus.NOT_FOUND });
           }
           clearTimeout(timeoutId);
         });
