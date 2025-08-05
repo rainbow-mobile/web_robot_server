@@ -96,10 +96,16 @@ export class UpdateService {
       });
     }
 
-    execSync('git pull', {
-      cwd: rainbowDeployKitDir,
-      stdio: 'pipe',
-    });
+    try {
+      execSync('git pull', {
+        cwd: rainbowDeployKitDir,
+        stdio: 'pipe',
+      });
+    } catch (err) {
+      console.warn(
+        '⚠️ git pull 실패: 네트워크 연결이 없을 수 있음, 계속 진행합니다',
+      );
+    }
 
     exec(
       `nohup bash ${updateScript} --mode=${branch || 'main'} --version=${version} > /tmp/rrs-update.log 2>&1 &`,
@@ -334,10 +340,16 @@ export class UpdateService {
     }
 
     try {
-      execSync('git pull', {
-        cwd: rainbowDeployKitDir,
-        stdio: 'pipe',
-      });
+      try {
+        execSync('git pull', {
+          cwd: rainbowDeployKitDir,
+          stdio: 'pipe',
+        });
+      } catch (err) {
+        console.warn(
+          '⚠️ git pull 실패: 네트워크 연결이 없을 수 있음, 계속 진행합니다',
+        );
+      }
 
       execSync(
         `bash ${appAddScript}${branch ? ` --mode=${branch}` : ''}${fo ? ` --fo=${fo}` : ''} ${appNames.join(' ')}`,
@@ -372,10 +384,16 @@ export class UpdateService {
     }
 
     try {
-      execSync('git pull', {
-        cwd: rainbowDeployKitDir,
-        stdio: 'pipe',
-      });
+      try {
+        execSync('git pull', {
+          cwd: rainbowDeployKitDir,
+          stdio: 'pipe',
+        });
+      } catch (err) {
+        console.warn(
+          '⚠️ git pull 실패: 네트워크 연결이 없을 수 있음, 계속 진행합니다',
+        );
+      }
 
       execSync(`bash ${appDeleteScript} ${appNames.join(' ')}`);
 
