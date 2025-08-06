@@ -40,8 +40,7 @@ const isEqual = (a: any, b: any) => {
 @WebSocketGateway(11337, {
   transports: ['websocket', 'polling'],
   cors: {
-    origin: ['*', 'https://admin.socket.io'],
-    credentials: true,
+    origin: ['*', 'https://admin.socket.io']
   },
   host: '0.0.0.0',
 })
