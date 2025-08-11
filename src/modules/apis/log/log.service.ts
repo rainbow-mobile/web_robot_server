@@ -59,12 +59,12 @@ export class LogService {
 
   async init() {
     await this.checkTables('variables', Query.create_variables);
-    this.checkTables('status', Query.create_status);
-    this.checkTables('move', Query.create_move);
-    this.checkTables('system', Query.create_system);
-    this.checkTables('alarm', Query.create_alarm);
-    this.checkTables('alarmLog', Query.create_alarmLog);
-    this.generateAlarmDB();
+    await this.checkTables('status', Query.create_status);
+    await this.checkTables('move', Query.create_move);
+    await this.checkTables('system', Query.create_system);
+    await this.checkTables('alarm', Query.create_alarm);
+    await this.checkTables('alarmLog', Query.create_alarmLog);
+    await this.generateAlarmDB();
   }
 
   private systemUsage = null;
