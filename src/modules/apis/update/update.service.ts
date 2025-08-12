@@ -173,7 +173,7 @@ export class UpdateService {
    * @returns 현재 버전 정보를 담은 version.json 파일 내용
    */
   async getCurrentVersion(software: string) {
-    if (software === 'rrs') {
+    if (software === 'rrs' || software === 'rrs-server') {
       return this.getRrsCurrentVersion();
     }
 
@@ -231,6 +231,9 @@ export class UpdateService {
   }) {
     await this.checkRepositoryAccess();
 
+    if (software === 'rrs' || software === 'rrs-server') {
+      software = 'web_robot_server';
+    }
     const newVersionUrl = `${RELEASE_REPO_RAW_URL}/${branch}/${software}/version.json`;
 
     try {
