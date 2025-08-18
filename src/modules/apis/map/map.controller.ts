@@ -25,6 +25,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { HttpError } from '@influxdata/influxdb3-client';
 import { ConfigService } from '@nestjs/config';
+import { MapPipeRequestDto } from './dto/pipe.dto';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -116,20 +117,29 @@ export class MapController {
     }
   }
 
-  @Get('cloud-pipe/test')
+  @Get('pipe')
   @ApiOperation({
-    summary: '맵 클라우드 요청 (파일 스트리밍)',
-    description: '맵 클라우드 데이터를 요청합니다.',
+    summary: '맵 클라우드/토폴로지 요청 (파일 스트리밍)',
+    description: '맵 클라우드 및 토폴로지 파일을 요청합니다.',
   })
-  async getCloudTest(
+  async getCloudPipe(
     @Req() req: Request,
     @Res() res: Response,
-    @Query('download') download?: string,
+    @Query() dto:MapPipeRequestDto,
   ) {
     try {
-      const relPath = '/data/maps/Large/test.deb';
 
-      console.log(req.headers);
+      if(dto.mapName === undefined || dto.mapName === ""){
+        res.status(400).send('mapName 값이 없습니다');
+      }
+
+      if(dto.fileName === undefined || dto.fileName === ""){
+        dto.fileName = "cloud.csv";
+      }
+
+      const relPath = join('/data','maps',dto.mapName, dto.fileName);
+
+      console.log(relPath); 
       // 파일 존재 여부 확인
       const fullPath = relPath;
       if (!fs.existsSync(relPath)) {
@@ -176,9 +186,7 @@ export class MapController {
       const mime = mimeTypes[fileExtension] || 'application/octet-stream';
       const encodedFileName = encodeURIComponent(fileName);
       const disposition =
-        download === '1'
-          ? `attachment; filename="${encodedFileName}"`
-          : `inline; filename="${encodedFileName}"`;
+          `attachment; filename="${encodedFileName}"`;
 
       // 캐시 헤더 설정 (대용량 파일 최적화)
       res.setHeader('Cache-Control', 'public, max-age=3600');
