@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
 import { MapService } from './map.service';
@@ -21,6 +22,7 @@ import { errorToJson } from '@common/util/error.util';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { join } from 'path';
 import { HttpError } from '@influxdata/influxdb3-client';
+import { MapPipeRequestDto } from './dto/pipe.dto';
 
 @ApiTags('맵 관련 API (map)')
 @Controller('map')
@@ -108,6 +110,187 @@ export class MapController {
       return res.status(error.status).send(error.data);
     }
   }
+
+  @Get('pipe')
+  @ApiOperation({
+    summary: '맵 클라우드/토폴로지 요청 (파일 스트리밍)',
+    description: '맵 클라우드 및 토폴로지 파일을 요청합니다.',
+  })
+  async getCloudPipe(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query() dto: MapPipeRequestDto,
+  ) {
+    try {
+      if (dto.mapName === undefined || dto.mapName === '') {
+        res.status(400).send('mapName 값이 없습니다');
+      }
+
+      if (dto.fileName === undefined || dto.fileName === '') {
+        dto.fileName = 'cloud.csv';
+      }
+
+      const relPath = join('/data', 'maps', dto.mapName, dto.fileName);
+
+      console.log(relPath);
+      // 파일 존재 여부 확인
+      const fullPath = relPath;
+      if (!fs.existsSync(relPath)) {
+        return res.status(HttpStatus.NOT_FOUND).send({
+          message: '파일을 찾을 수 없습니다.',
+          path: relPath,
+        });
+      }
+
+      const stat = fs.statSync(fullPath);
+      const fileSize = stat.size;
+      const range = (req as any).headers.range; // e.g. "bytes=0-"
+
+      // MIME 타입 동적 감지
+      const fileName = relPath.split('/').pop() || 'file';
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+
+      // 파일 확장자별 MIME 타입 매핑
+      const mimeTypes: { [key: string]: string } = {
+        csv: 'text/csv',
+        txt: 'text/plain',
+        json: 'application/json',
+        xml: 'application/xml',
+        deb: 'application/vnd.debian.binary-package',
+        zip: 'application/zip',
+        tar: 'application/x-tar',
+        gz: 'application/gzip',
+        bz2: 'application/x-bzip2',
+        '7z': 'application/x-7z-compressed',
+        pdf: 'application/pdf',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        svg: 'image/svg+xml',
+        mp4: 'video/mp4',
+        avi: 'video/x-msvideo',
+        mov: 'video/quicktime',
+        wav: 'audio/wav',
+        mp3: 'audio/mpeg',
+        ogg: 'audio/ogg',
+      };
+
+      const mime = mimeTypes[fileExtension] || 'application/octet-stream';
+      const encodedFileName = encodeURIComponent(fileName);
+      const disposition = `attachment; filename="${encodedFileName}"`;
+
+      // 캐시 헤더 설정 (대용량 파일 최적화)
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Disposition', disposition);
+
+      if (!range) {
+        // 전체 스트림 (200) - 용량 제한 없음
+        res.status(HttpStatus.OK);
+        res.setHeader('Content-Type', mime);
+        res.setHeader('Content-Length', fileSize.toString());
+
+        const stream = fs.createReadStream(fullPath, {
+          highWaterMark: 64 * 1024, // 64KB 청크 크기
+        });
+
+        // 클라이언트가 중간에 끊으면 스트림 닫기
+        (req as any).on('close', () => {
+          stream.destroy();
+          httpLogger.debug(
+            '[MAP] getCloudTest: Client disconnected, stream destroyed',
+          );
+        });
+
+        // 에러 처리
+        stream.on('error', (error) => {
+          httpLogger.error(
+            `[MAP] getCloudTest: Stream error - ${error.message}`,
+          );
+          if (!res.headersSent) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+              message: '파일 스트리밍 중 오류가 발생했습니다.',
+            });
+          }
+        });
+
+        stream.pipe(res);
+        return;
+      }
+
+      // Range 요청 처리 (206) - 대용량 파일에 권장
+      const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+      if (!m) {
+        res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).end();
+        return;
+      }
+
+      let start = m[1] ? parseInt(m[1], 10) : 0;
+      let end = m[2] ? parseInt(m[2], 10) : fileSize - 1;
+
+      // 범위 정규화
+      if (isNaN(start) && !isNaN(end)) {
+        // bytes=-500 (마지막 500바이트)
+        start = Math.max(0, fileSize - end);
+        end = fileSize - 1;
+      }
+      if (!isNaN(start) && isNaN(end)) {
+        // bytes=500- (500부터 끝까지)
+        end = fileSize - 1;
+      }
+
+      // 범위 유효성 검사
+      if (start < 0 || end < 0 || start > end || end >= fileSize) {
+        res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).end();
+        return;
+      }
+
+      // 청크 크기 제한 없음
+      const chunkSize = end - start + 1;
+      const finalChunkSize = chunkSize;
+
+      res.status(HttpStatus.PARTIAL_CONTENT);
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Content-Length', finalChunkSize.toString());
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+
+      const stream = fs.createReadStream(fullPath, {
+        start,
+        end,
+        highWaterMark: 64 * 1024, // 64KB 청크 크기
+      });
+
+      (req as any).on('close', () => {
+        stream.destroy();
+        httpLogger.debug(
+          '[MAP] getCloudTest: Client disconnected, range stream destroyed',
+        );
+      });
+
+      // 에러 처리
+      stream.on('error', (error) => {
+        httpLogger.error(
+          `[MAP] getCloudTest: Range stream error - ${error.message}`,
+        );
+        if (!res.headersSent) {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            message: '파일 스트리밍 중 오류가 발생했습니다.',
+          });
+        }
+      });
+
+      stream.pipe(res);
+    } catch (error) {
+      httpLogger.error(`[MAP] getCloudTest: ${error.message || error}`);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        message: '파일 처리 중 오류가 발생했습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+
 
   @Post('cloud/:mapNm')
   @ApiOperation({
