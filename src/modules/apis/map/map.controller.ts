@@ -290,8 +290,6 @@ export class MapController {
     }
   }
 
-
-
   @Post('cloud/:mapNm')
   @ApiOperation({
     summary: '맵 클라우드 저장',
@@ -476,7 +474,7 @@ export class MapController {
 
       httpLogger.info(`[MAP] saveTopology -> auto map load ${mapNm}`);
       this.socketGateway.slamnav?.emit('load', {
-        command: 'mapload',
+        command: 'topoload',
         name: mapNm,
         time: Date.now().toString(),
       });

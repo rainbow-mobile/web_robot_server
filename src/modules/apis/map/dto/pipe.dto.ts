@@ -1,6 +1,4 @@
-
-
-  import { PaginationRequest } from '@common/pagination/pagination.request';
+import { PaginationRequest } from '@common/pagination/pagination.request';
 import { PaginationResponse } from '@common/pagination/pagination.response';
 import { DateUtil } from '@common/util/date.util';
 import { ApiProperty } from '@nestjs/swagger';
