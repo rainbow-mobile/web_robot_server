@@ -472,7 +472,7 @@ export class MapController {
       const response = await this.mapService.saveTopology(mapNm, data);
       res.send(response);
 
-      httpLogger.info(`[MAP] saveTopology -> auto map load ${mapNm}`);
+      httpLogger.info(`[MAP] saveTopology -> auto topo load ${mapNm}`);
       this.socketGateway.slamnav?.emit('load', {
         command: 'topoload',
         name: mapNm,
