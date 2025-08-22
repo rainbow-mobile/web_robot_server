@@ -45,16 +45,29 @@ export class ControlService {
     });
   }
 
-  async SafetyFieldRequest(dto: { command: string; set_field?: number }) {
+  async SafetyFieldRequest(dto: {
+    command: string;
+    set_field?: number;
+    reset_flag?: string;
+  }) {
     return new Promise((resolve, reject) => {
       httpLogger.debug(`[CONTROL] SafetyFieldRequest : ${JSON.stringify(dto)}`);
       if (this.socketGateway.slamnav != null) {
-        if (dto.command === 'get') {
-        } else if (dto.command === 'set') {
+        if (dto.command === 'getField') {
+        } else if (dto.command === 'setField') {
           if (dto.set_field === undefined) {
             reject(
               new HttpException(
                 `set_field(${dto.set_field}) 값이 지정되지 않았습니다.`,
+                HttpStatus.BAD_REQUEST,
+              ),
+            );
+          }
+        } else if (dto.command === 'resetFlag') {
+          if(dto.reset_flag === undefined || dto.reset_flag === '') {
+            reject(
+              new HttpException(
+                `reset_flag(${dto.reset_flag}) 값이 지정되지 않았습니다.`,
                 HttpStatus.BAD_REQUEST,
               ),
             );
@@ -69,17 +82,17 @@ export class ControlService {
         }
 
         this.socketGateway.slamnav.emit(
-          'fieldRequest',
+          'safetyRequest',
           stringifyAllValues({ ...dto, time: Date.now().toString() }),
         );
-        httpLogger.info(`[CONTROL] fieldRequest: ${JSON.stringify(dto)}`);
+        httpLogger.info(`[CONTROL] safetyRequest: ${JSON.stringify(dto)}`);
 
-        this.socketGateway.slamnav.once('fieldResponse', (data) => {
-          httpLogger.info(`[CONTROL] fieldResponse: ${JSON.stringify(data)}`);
+        this.socketGateway.slamnav.once('safetyResponse', (data) => {
+          httpLogger.info(`[CONTROL] safetyResponse: ${JSON.stringify(data)}`);
           const json = JSON.parse(data);
           clearTimeout(timeoutId);
           if (json.result === 'success') {
-            resolve({ command: json.command, get_field: json.get_field });
+            resolve(json);
           } else {
             reject(
               new HttpException(

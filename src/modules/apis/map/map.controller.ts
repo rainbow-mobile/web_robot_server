@@ -35,7 +35,7 @@ export class MapController {
   @ApiOperation({
     summary: '맵 리스트 요청',
     description:
-      '로봇의 맵 리스트를 요청합니다. cloud.csv가 없는 폴더는 반환하지 않습니다.',
+      '로봇의 맵 리스트를 요청합니다. cloud.csv,map.las가 없는 폴더는 반환하지 않습니다.',
   })
   async getList(@Res() res: Response) {
     try {
@@ -111,6 +111,41 @@ export class MapController {
     }
   }
 
+  @Get('lidar/2d')
+  @ApiOperation({
+    summary: '맵 라이다 요청',
+    description: '맵 라이다 데이터를 요청합니다.',
+  })
+  async get2DLidar(@Res() res: Response) {
+    try {
+      httpLogger.debug(`[MAP] get2DLidar`);
+      const response = await this.mapService.read2DLidar();
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] get2DLidar : ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+  @Get('lidar/3d')
+  @ApiOperation({
+    summary: '맵 라이다 요청',
+    description: '맵 라이다 데이터를 요청합니다.',
+  })
+  async get3DLidar(@Res() res: Response) {
+    try {
+      httpLogger.debug(`[MAP] get3DLidar`);
+      const response = await this.mapService.read3DLidar();
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[MAP] get3DLidar : ${error.status} -> ${JSON.stringify(error.data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
   @Get('pipe')
   @ApiOperation({
     summary: '맵 클라우드/토폴로지 요청 (파일 스트리밍)',
@@ -174,6 +209,8 @@ export class MapController {
         wav: 'audio/wav',
         mp3: 'audio/mpeg',
         ogg: 'audio/ogg',
+        las: 'application/octet-stream',
+        laz: 'application/octet-stream',
       };
 
       const mime = mimeTypes[fileExtension] || 'application/octet-stream';

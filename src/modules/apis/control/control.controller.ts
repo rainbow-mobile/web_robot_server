@@ -32,6 +32,7 @@ import { LidarControlDto } from './dto/lidar.control.dto';
 import { MotorControlDto } from './dto/motor.control.dto';
 import { ExternalCommandDto } from './dto/external.control.dto';
 import { SetSafetyFieldDto } from './dto/safetyfield.dto';
+import { ResetSafetyFlagDto } from './dto/safetyreset.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -253,6 +254,27 @@ export class ControlController {
     }
   }
 
+  @Post('safety/reset')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 초기화',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 초기화합니다.',
+  })
+  async resetSafetyFlag(@Query() dto: ResetSafetyFlagDto) {
+    try {
+      return this.controlService.SafetyFieldRequest({
+        command: 'resetFlag',
+        reset_flag: dto.reset_flag,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] resetSafetyField : ${errorToJson(error)}`);
+      throw new HttpException(
+        '요청을 처리할 수 없습니다',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Post('safety/field')
   @ApiOperation({
     summary: '세이프티 라이다 필드값 설정',
@@ -261,7 +283,7 @@ export class ControlController {
   async setSafetyField(@Query() dto: SetSafetyFieldDto) {
     try {
       return this.controlService.SafetyFieldRequest({
-        command: 'set',
+        command: 'setField',
         set_field: dto.field,
       });
     } catch (error) {
@@ -281,7 +303,7 @@ export class ControlController {
   })
   async getSafetyField() {
     try {
-      return this.controlService.SafetyFieldRequest({ command: 'get' });
+      return this.controlService.SafetyFieldRequest({ command: 'getField' });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       httpLogger.error(`[COMMAND] getSafetyField : ${errorToJson(error)}`);
@@ -348,6 +370,25 @@ export class ControlController {
     } catch (error) {
       httpLogger.error(
         `[COMMAND] Motor Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`,
+      );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+  @Post('lift')
+  @ApiOperation({
+    summary: 'MOTOR on/off',
+    description: 'MOTOR 전원을 켜거나 끕니다',
+  })
+  async liftControl(@Body() data: MotorControlDto, @Res() res: Response) {
+    try {
+      httpLogger.info(`[COMMAND] Lift Control : ${data.command}`);
+      const response = await this.controlService.sendCommand('lift', data);
+      httpLogger.info(`[COMMAND] Lift Response : ${response}`);
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[COMMAND] Lift Control: ${error.status} -> ${errorToJson(error.data)} ${JSON.stringify(data)}`,
       );
       return res.status(error.status).send(error.data);
     }

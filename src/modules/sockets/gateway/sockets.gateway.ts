@@ -62,6 +62,7 @@ import { ExternalStatusPayload } from '@common/interface/robot/foot.interface';
 import { FootCommand } from 'src/modules/apis/control/dto/external.control.dto';
 import { IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { deflateSync, inflate, inflateSync } from 'zlib';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1229,6 +1230,7 @@ export class SocketGateway
     @ConnectedSocket() client: Socket,
   ) {
     try {
+      console.log(dto);
       socketLogger.info(`[SUB] Client Subscribe ${client.id}, ${dto.topic}`);
 
       if (client.rooms.has(dto.topic)) {
@@ -2531,6 +2533,82 @@ export class SocketGateway
       socketLogger.error(
         `[RESPONSE] SLAMNAV dockResponse: ${errorToJson(error)}`,
       );
+      throw error;
+    }
+  }
+
+  @SubscribeMessage('2dLidarResponse')
+  async handle2dLidarResponseMessage(@MessageBody() payload: Buffer) {
+    try {
+      console.log('2dLidarResponse : ', payload);
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[RESPONSE] 2dLidarResponse: NULL`);
+        return;
+      }
+
+      let data;
+      if (typeof payload === 'string') {
+        data = Buffer.from(payload, 'base64');
+        const raw = inflateSync(data);
+        const jsonString = raw.toString('utf8');
+        const jsonData = JSON.parse(jsonString);
+
+        console.log('2dLidarResponse data : ', jsonData.length);
+      } else {
+        const count = payload.readUInt32LE(0);
+        const points: [number, number, number][] = [];
+        let offset = 4;
+        for (let i = 0; i < count; i++) {
+          const x = payload.readFloatLE(offset);
+          offset += 4;
+          const y = payload.readFloatLE(offset);
+          offset += 4;
+          const z = payload.readFloatLE(offset);
+          offset += 4;
+          points.push([x, y, z]);
+        }
+        console.log('2dLidarResponse Received', count, points, points.length);
+      }
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] 2dLidarResponse: ${errorToJson(error)}`);
+      throw error;
+    }
+  }
+
+  @SubscribeMessage('3dLidarResponse')
+  async handle3dLidarResponseMessage(@MessageBody() payload: Buffer) {
+    try {
+      console.log('3dLidarResponse : ', payload);
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[RESPONSE] 3dLidarResponse: NULL`);
+        return;
+      }
+
+      let data;
+      if (typeof payload === 'string') {
+        data = Buffer.from(payload, 'base64');
+        const raw = inflateSync(data);
+        const jsonString = raw.toString('utf8');
+        const jsonData = JSON.parse(jsonString);
+
+        console.log('3dLidarResponse data : ', jsonData.length);
+      } else {
+        const count = payload.readUInt32LE(0);
+        const points: [number, number, number][] = [];
+        let offset = 4;
+        for (let i = 0; i < count; i++) {
+          const x = payload.readFloatLE(offset);
+          offset += 4;
+          const y = payload.readFloatLE(offset);
+          offset += 4;
+          const z = payload.readFloatLE(offset);
+          offset += 4;
+          points.push([x, y, z]);
+        }
+        console.log('3dLidarResponse Received', count, points, points.length);
+      }
+    } catch (error) {
+      socketLogger.error(`[RESPONSE] 3dLidarResponse: ${errorToJson(error)}`);
       throw error;
     }
   }

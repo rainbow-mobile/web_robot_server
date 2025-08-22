@@ -94,6 +94,70 @@ export class MapService {
     return await saveJson(Path.join(this.mapDir, mapNm, 'topo.json'), data);
   }
 
+  async read2DLidar() {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        httpLogger.info(`[MAP] read2DLidar`);
+        this.socketGateway.server.to('slamnav').emit('2dLidarRequest', {
+          command: 'lidar2d',
+          time: Date.now().toString(),
+        });
+
+        this.socketGateway.slamnav.once('2dLidarResponse', (data) => {
+          httpLogger.info(`[MAP] Slamnav 2DLidar Response: ${data.length}`);
+          resolve(data);
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          httpLogger.warn(`[MAP] read2DLidar: Timeout`);
+          reject({
+            status: HttpStatus.GATEWAY_TIMEOUT,
+            data: { message: '프로그램이 응답하지 않습니다' },
+          });
+        }, 5000); // 5초 타임아웃
+      } else {
+        httpLogger.warn(`[MAP] read2DLidar: Disconnect`);
+        reject({
+          status: HttpStatus.GATEWAY_TIMEOUT,
+          data: { message: '프로그램이 연결되지 않았습니다' },
+        });
+      }
+    });
+  }
+
+  async read3DLidar() {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        httpLogger.info(`[MAP] read3DLidar`);
+        this.socketGateway.server.to('slamnav').emit('3dLidarRequest', {
+          command: 'lidar3d',
+          time: Date.now().toString(),
+        });
+
+        this.socketGateway.slamnav.once('3dLidarResponse', (data) => {
+          httpLogger.info(`[MAP] Slamnav 3DLidar Response: ${data.length}`);
+          resolve(data);
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          httpLogger.warn(`[MAP] read3DLidar: Timeout`);
+          reject({
+            status: HttpStatus.GATEWAY_TIMEOUT,
+            data: { message: '프로그램이 응답하지 않습니다' },
+          });
+        }, 5000); // 5초 타임아웃
+      } else {
+        httpLogger.warn(`[MAP] read3DLidar: Disconnect`);
+        reject({
+          status: HttpStatus.GATEWAY_TIMEOUT,
+          data: { message: '프로그램이 연결되지 않았습니다' },
+        });
+      }
+    });
+  }
+
   async loadMap(mapNm: string) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
