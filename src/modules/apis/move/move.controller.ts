@@ -14,7 +14,7 @@ import { MoveService } from './move.service';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
-import { MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
+import { MoveCommand, MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
 import { errorToJson } from '@common/util/error.util';
 import { generateGeneralLog } from '@common/logger/equipment.logger';
 import {
@@ -25,6 +25,7 @@ import {
   VehicleOperationName,
 } from '@common/enum/equipment.enum';
 import { HttpError } from '@influxdata/influxdb3-client';
+import { MoveLinearRequestDto } from './dto/move.linear.dto';
 
 @ApiTags('이동 관련 API (move)')
 @Controller('move')
@@ -90,8 +91,46 @@ export class MoveController {
       } else if (
         data.command == 'stop' ||
         data.command == 'pause' ||
-        data.command == 'resume'
+        data.command == 'resume' ||
+        data.command == MoveCommand.linearStop
       ) {
+      } else if(data.command == MoveCommand.linearXMove || data.command == MoveCommand.rotateMove) {
+        if(data.target == undefined || data.target == null){
+          httpLogger.warn(`[MOVE] moveControl: move LinearXMove parameter missing`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (target)' });
+        }
+        if(data.speed == undefined || data.speed == null){
+          httpLogger.warn(`[MOVE] moveControl: move LinearXMove parameter missing`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (speed)' });
+        }
+      } else if(data.command == MoveCommand.circularMove) {
+        if(data.target == undefined || data.target == null){
+          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (target)' });
+        }
+        if(data.speed == undefined || data.speed == null){
+          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (speed)' });
+        }
+        if(data.direction == undefined || data.direction == null){
+          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter missing (direction)' });
+        }else if(data.direction != 'left' && data.direction != 'right'){
+          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter invalid`);
+          return res
+            .status(HttpStatus.BAD_REQUEST)
+            .send({ message: 'parameter invalid (direction)' });
+        }
       } else {
         httpLogger.warn(
           `[MOVE] moveControl: move Command parameter unknown : ${data.command}`,
@@ -104,20 +143,50 @@ export class MoveController {
       const newData = { ...data, time: Date.now().toString() };
       httpLogger.debug(`[MOVE] moveControl: ${JSON.stringify(newData)}`);
 
-      if (data.command != 'jog') {
+      if (data.command == MoveCommand.jog) {
+        await this.moveService.moveJog(newData);
+        return res.send();
+      } else if (
+        data.command == MoveCommand.linearXMove ||
+        data.command == MoveCommand.rotateMove ||
+        data.command == MoveCommand.circularMove ||
+        data.command == MoveCommand.linearStop
+      ) {
+        await this.moveService.profileMove(newData);
+        return res.send();
+      } else {
         const response = await this.moveService.moveCommand(newData);
         httpLogger.debug(
           `[MOVE] moveControl Response: ${JSON.stringify(response)}`,
         );
         return res.send(response);
-      } else {
-        this.moveService.moveJog(newData);
-        return res.send();
       }
     } catch (error) {
       httpLogger.error(
         `[MOVE] moveControl: ${JSON.stringify(data)}, ${errorToJson(error)}`,
       );
+      return res.status(error.status).send(error.data);
+    }
+  }
+
+
+
+  @Post('profile')
+  @ApiOperation({
+    summary: '프로필 이동 명령',
+    description: '프로필 이동 명령을 요청합니다. (command == linearXMove, rotateMove, circularMove, linearStop)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: HttpStatusMessagesConstants.MOVE.MOVE_ACCEPT_200,
+  })
+  async moveProfile(@Body() data: MoveLinearRequestDto, @Res() res: Response) {
+    try {
+      httpLogger.info(`[MOVE] moveProfile: ${JSON.stringify(data)}`);
+      await this.moveService.profileMove(data);
+      return res.send();
+    } catch (error) {
+      httpLogger.error(`[MOVE] moveProfile: ${errorToJson(error)}`);
       return res.status(error.status).send(error.data);
     }
   }

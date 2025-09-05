@@ -15,6 +15,8 @@ import { MoveLogEntity } from './entity/move.entity';
 import { HttpError } from '@influxdata/influxdb3-client';
 import socketLogger from '@common/logger/socket.logger';
 import { errorToJson } from '@common/util/error.util';
+import { MoveCommand } from './dto/move.command.dto';
+import { stringifyAllValues } from '@common/util/network.util';
 
 @Injectable()
 export class MoveService {
@@ -85,10 +87,58 @@ export class MoveService {
       //save Log--------------------------------
     }
   }
+
+  async profileMove(data: any) {
+    return new Promise(async (resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        this.socketGateway.server.to('slamnav').emit('profileMove', stringifyAllValues(data));
+        httpLogger.info(`[MOVE] profileMove: ${JSON.stringify(data)}`); 
+        this.saveLog({
+          command: data.command,
+          goal_id: data.goal_id,
+          goal_name: data.goal_name ?? null,
+          map_name: data.map_name ?? null,
+          x: data.x ? parseFloat(data.x) : null,
+          y: data.x ? parseFloat(data.y) : null,
+          rz: data.rz ? parseFloat(data.rz) : null,
+        });
+
+        this.socketGateway.slamnav.once('profileMoveResponse', (data2) => {
+          httpLogger.info(
+            `[MOVE] profileMove Response: ${JSON.stringify(data2)}`,
+          );
+          const json = JSON.parse(data2);
+          if (json.result === 'accept') {
+            console.log('here:', json);
+            resolve(json);
+          } else {
+            reject({ data: json, status: HttpStatus.FORBIDDEN });
+          }
+          clearTimeout(timeoutId);
+        });
+
+        const timeoutId = setTimeout(() => {
+          reject({
+            status: HttpStatus.GATEWAY_TIMEOUT,
+            data: { message: '프로그램이 응답하지 않습니다' },
+          });
+        }, 5000); // 5초 타임아웃
+      } else {
+        reject({
+          status: HttpStatus.GATEWAY_TIMEOUT,
+          data: { message: '프로그램이 연결되지 않았습니다' },
+        });
+      }
+    });
+  }
+
   async moveCommand(data: any) {
     return new Promise(async (resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
+
         this.socketGateway.server.to('slamnav').emit('move', data);
+
+        
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
         this.saveLog({
           command: data.command,

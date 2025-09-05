@@ -192,6 +192,30 @@ export class ControlController {
     }
   }
 
+  @Get('dockstop')
+  @ApiOperation({
+    summary: '도킹 중지',
+    description: '도킹을 중지합니다(도킹중인 상태에서 실행해야함)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: HttpStatusMessagesConstants.MAPPING.MAPPING_ACCEPT_200,
+  })
+  async dockStopStop(@Res() res: Response) {
+    try {
+      const response = await this.controlService.dockCommand({
+        command: 'dockstop',
+        time: Date.now().toString(),
+      }); 
+      res.send(response);
+    } catch (error) {
+      httpLogger.error(
+        `[COMMAND] dockstop start: ${error.status} -> ${errorToJson(error.data)}`,
+      );
+      res.status(error.status).send(error.data);
+    }
+  }
+
   @Post('localization')
   @ApiOperation({
     summary: '위치초기화',

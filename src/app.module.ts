@@ -20,6 +20,7 @@ import { AppService } from './app.service';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
 import { UpdateModule } from './modules/apis/update/update.module';
+import { ConfigApiModule } from './modules/apis/config/config.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -47,6 +48,7 @@ import { UpdateModule } from './modules/apis/update/update.module';
     SocketsModule,
     TaskModule,
     ControlModule,
+    ConfigApiModule, 
     // SSHModule,
     MoveModule,
     MapModule,

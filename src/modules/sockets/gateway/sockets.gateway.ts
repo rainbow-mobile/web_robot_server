@@ -59,10 +59,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
 import { LessThan, Repository } from 'typeorm';
 import { ExternalStatusPayload } from '@common/interface/robot/foot.interface';
-import { FootCommand } from 'src/modules/apis/control/dto/external.control.dto';
-import { IsNumber, IsOptional } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { deflateSync, inflate, inflateSync } from 'zlib';
+import { inflateSync } from 'zlib';
+import { ConfigRequestSlamnav, ConfigResponseSlamnav } from '@sockets/dto/config.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1488,20 +1486,20 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('footStatus')
-  async handleFootSTatusMessage(
+  @SubscribeMessage('exStatus')
+  async handleExternalAccessoryStatusMessage(
     @MessageBody() payload: string,
     @ConnectedSocket() client: Socket,
   ) {
     try {
       if (client.id == this.externalAccessory?.id) {
         if (payload == null || payload == undefined) {
-          socketLogger.warn(`[STATUS] footStatus: NULL`);
+          socketLogger.warn(`[STATUS] exStatus: NULL`);
           return;
         }
 
         const jsontemp = JSON.parse(payload);
-        console.log('footStatus : ', jsontemp);
+        console.log('exStatus : ', jsontemp);
         let json = jsontemp;
         try {
           json = {
@@ -1526,7 +1524,7 @@ export class SocketGateway
           console.error(error);
           json = jsontemp;
         }
-        console.log('footStatus : ', payload, json);
+        console.log('exStatus : ', payload, json);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastExternalStatus)) {
@@ -1535,28 +1533,69 @@ export class SocketGateway
 
         this.lastExternalStatus = tempjson;
         this.server
-          .to(['footStatus', 'all', 'allStatus'])
-          .emit('footStatus', stringifyAllValues(json));
+          .to(['exStatus', 'all', 'allStatus'])
+          .emit('exStatus', stringifyAllValues(json));
 
         if (this.slamnav) {
-          this.slamnav.emit('footStatus', stringifyAllValues(json));
+          this.slamnav.emit('exStatus', stringifyAllValues(json));
         } else {
           // console.log("??????????");
         }
 
         if (this.frsSocket?.connected) {
-          this.frsSocket.emit('footStatus', {
+          this.frsSocket.emit('exStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
         }
       } else {
         socketLogger.warn(
-          `[STATUS] another externalAccessory footStatus ${this.externalAccessory?.id}, ${client.id}`,
+          `[STATUS] another externalAccessory exStatus ${this.externalAccessory?.id}, ${client.id}`,
         );
       }
     } catch (error) {
-      socketLogger.error(`[STATUS] footStatus : ${errorToJson(error)}`);
+      socketLogger.error(`[STATUS] exStatus : ${errorToJson(error)}`);
+    }
+  }
+
+  @SubscribeMessage('configRequest')
+  async handleConfigRequestMessage(@MessageBody() payload: ConfigRequestSlamnav) {
+    try {
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[CONFIG] Config Request: NULL`);
+        return;
+      }
+
+      socketLogger.debug(`[CONFIG] Config Request: ${JSON.stringify(payload)}`);
+      if(this.slamnav){
+        this.slamnav.emit('configRequest', payload);
+      }
+
+      this.server.to(['configRequest', 'all', 'config']).emit('configRequest', payload);
+    } catch (error) {
+      socketLogger.error(`[CONFIG] Config Request: ${errorToJson(error)}`);
+    }
+  }
+
+  @SubscribeMessage('configResponse')
+    async handleConfigResponseMessage(@MessageBody() payload: ConfigResponseSlamnav) {
+    try {
+      if (payload == null || payload == undefined) {
+        socketLogger.warn(`[CONFIG] Config Response: NULL`);
+        return;
+      }
+
+      socketLogger.debug(`[CONFIG] Config Response: ${JSON.stringify(payload)}`);
+      this.server.to(['configResponse', 'all', 'config']).emit('configResponse', payload);
+
+      if (this.frsSocket?.connected) {
+        this.frsSocket.emit('configResponse', {
+          robotSerial: global.robotSerial,
+          data: payload,
+        });
+      }
+    } catch (error) {
+      socketLogger.error(`[CONFIG] Config Response: ${errorToJson(error)}`);
     }
   }
 
@@ -1644,9 +1683,9 @@ export class SocketGateway
 
         const json = this.parseStatus(JSON.parse(payload));
         // console.log(json);
-        // socketLogger.debug(`status in : ${JSON.stringify(json)}`);
+        socketLogger.debug(`status in : ${JSON.stringify(json)}`);
         const tempjson = { ...json };
-        delete tempjson.time;
+        // delete tempjson.time;
         if (isEqual(tempjson, this.lastStatus)) {
           return;
         }
@@ -1723,79 +1762,6 @@ export class SocketGateway
           }
         }
 
-        // if (this.lastStatus?.motor[0].current !== tempjson.motor[0].current) {
-        //   if (
-        //     parseFloat(tempjson.motor[0].current) > 20 ||
-        //     parseFloat(tempjson.motor[1].current) > 20
-        //   ) {
-        //     this.setAlarmCode(4500);
-        //   } else {
-        //     this.clearAlarmCode(4500);
-        //   }
-        // }
-
-        // if (this.lastStatus?.motor[0].temp !== tempjson.motor[0].temp) {
-        //   if (
-        //     parseFloat(tempjson.motor[0].temp) > 60 ||
-        //     parseFloat(tempjson.motor[1].temp) > 60
-        //   ) {
-        //     this.setAlarmCode(4505);
-        //   } else {
-        //     this.clearAlarmCode(4505);
-        //   }
-        // }
-
-        // if (this.lastStatus?.motor[0].status !== tempjson.motor[0].status) {
-        //   if (tempjson.motor[0].status === '1') {
-        //     this.clearAlarmCode(4515);
-        //   } else {
-        //     this.setAlarmCode(4515);
-        //   }
-        // }
-
-        // if (this.lastStatus?.motor[1].status !== tempjson.motor[1].status) {
-        //   if (tempjson.motor[1].status === '1') {
-        //     this.clearAlarmCode(4514);
-        //   } else {
-        //     this.setAlarmCode(4514);
-        //   }
-        // }
-
-        // if (
-        //   this.lastStatus?.motor[0].connection !==
-        //     tempjson.motor[0].connection ||
-        //   this.lastStatus?.motor[1].connection !== tempjson.motor[1].connection
-        // ) {
-        //   if (
-        //     tempjson.motor[0].connection === 'true' &&
-        //     tempjson.motor[1].connection === 'false'
-        //   ) {
-        //     this.clearAlarmCode(4517);
-        //   } else {
-        //     this.setAlarmCode(4517);
-        //   }
-        // }
-
-        // if (
-        //   this.lastStatus?.lidar[0].connection !== tempjson.lidar[0].connection
-        // ) {
-        //   if (tempjson.lidar[0].connection === '1') {
-        //     this.clearAlarmCode(5100);
-        //   } else {
-        //     this.setAlarmCode(5100);
-        //   }
-        // }
-
-        // if (
-        //   this.lastStatus?.lidar[1].connection !== tempjson.lidar[1].connection
-        // ) {
-        //   if (tempjson.lidar[1].connection === '1') {
-        //     this.clearAlarmCode(5101);
-        //   } else {
-        //     this.setAlarmCode(5101);
-        //   }
-        // }
-
         this.lastStatus = tempjson;
 
         this.server.to(['status', 'all', 'allStatus']).emit('status', json);
@@ -1819,7 +1785,7 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('system_status')
+  @SubscribeMessage('systemStatus')
   async handleSystemStatusMessage(
     @MessageBody() payload: string,
     @ConnectedSocket() client: Socket,
@@ -1840,20 +1806,24 @@ export class SocketGateway
         // isEqual 대신 JSON.stringify 사용하여 CPU 사용량 줄임
         if (
           JSON.stringify(compareJson) ===
-          JSON.stringify(this.lastData['system_status'])
+          JSON.stringify(this.lastData['systemStatus'])
         ) {
           return;
         }
 
         // 이전 값을 하나의 객체에 키값으로 여러 값들을 관리 가능!
-        this.lastData['system_status'] = compareJson;
+        this.lastData['systemStatus'] = compareJson;
 
         this.server
-          .to(['system_status', 'all', 'allStatus'])
+          .to(['systemStatus', 'all', 'allStatus'])
+          .emit('systemStatus', json);
+
+        this.server
+          .to(['system_tatus', 'all', 'allStatus'])
           .emit('system_status', json);
 
         if (this.frsSocket?.connected) {
-          this.frsSocket.emit('system_status', {
+          this.frsSocket.emit('systemStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
@@ -2682,7 +2652,7 @@ export class SocketGateway
   @SubscribeMessage('localPath')
   async handleLocalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      if (payload == null || payload == undefined || payload.length == 0) {
+      if (payload == null || payload == undefined) {
         socketLogger.warn(`[STATUS] localPath: NULL`);
         return;
       }
@@ -2711,7 +2681,7 @@ export class SocketGateway
   @SubscribeMessage('globalPath')
   async handleGlobalPathdMessage(@MessageBody() payload: any[]) {
     try {
-      if (payload == null || payload == undefined || payload.length == 0) {
+      if (payload == null || payload == undefined) {
         socketLogger.warn(`[STATUS] globalPath: NULL`);
         return;
       }

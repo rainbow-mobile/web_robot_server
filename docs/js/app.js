@@ -441,7 +441,7 @@ const schema = {
                 type: 'string',
                 description: '도킹명령',
                 default: 'dock',
-                enum: ['dock', 'undock'],
+                enum: ['dock', 'undock', 'dockstop'],
                 'x-parser-schema-id': '<anonymous-schema-49>',
               },
             },

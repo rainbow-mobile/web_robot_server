@@ -1,13 +1,27 @@
-import { IsOptional, IsString, Length } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+
+export enum MoveCommand {
+  goal = 'goal',
+  target = 'target',
+  jog = 'jog',
+  stop = 'stop',
+  pause = 'pause',
+  resume = 'resume',
+  linearXMove = 'linearXMove',
+  circularMove = 'circularMove',
+  rotateMove = 'rotateMove',
+  linearStop = 'linearStop'
+}
 
 export class MoveCommandDto {
   @IsString()
   @Length(1, 50)
   @ApiProperty({
     description: 'Move 명령',
-    example: 'goal',
+    example: MoveCommand.goal,
+    enum: MoveCommand,
     required: true,
   })
   @Expose()
@@ -21,7 +35,7 @@ export class MoveCommandDto {
     example: '',
   })
   @Expose()
-  goal_id: string;
+  goal_id?: string;
 
   @IsOptional()
   @IsString()
@@ -31,7 +45,7 @@ export class MoveCommandDto {
     example: '',
   })
   @Expose()
-  goal_name: string;
+  goal_name?: string;
 
   @IsOptional()
   @IsString()
@@ -41,7 +55,7 @@ export class MoveCommandDto {
     example: '',
   })
   @Expose()
-  map_name: string;
+  map_name?: string;
 
   @IsOptional()
   @IsString()
@@ -51,7 +65,7 @@ export class MoveCommandDto {
     example: 'pp',
   })
   @Expose()
-  method: string;
+  method?: string;
 
   @IsOptional()
   @IsString()
@@ -61,7 +75,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  preset: string;
+  preset?: string;
 
   @IsOptional()
   @IsString()
@@ -71,7 +85,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  x: string;
+  x?: string;
 
   @IsOptional()
   @IsString()
@@ -81,7 +95,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  y: string;
+  y?: string;
 
   @IsOptional()
   @IsString()
@@ -91,7 +105,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  z: string;
+  z?: string;
 
   @IsOptional()
   @IsString()
@@ -101,7 +115,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  rz: string;
+  rz?: string;
 
   @IsOptional()
   @IsString()
@@ -111,7 +125,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  vx: string;
+  vx?: string;
 
   @IsOptional()
   @IsString()
@@ -121,7 +135,7 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  vy: string;
+  vy?: string;
 
   @IsOptional()
   @IsString()
@@ -131,15 +145,35 @@ export class MoveCommandDto {
     example: '0',
   })
   @Expose()
-  wz: string;
+  wz?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({
+    description: 'linearXMove 이동거리 [m] | circularMove 이동거리 [deg] | rotateMove 이동거리 [deg]',
+    example: 0,
+  })
+  @Expose()
+  target?: number;
+
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({
+    description: 'linearXMove 이동속도 [m/s] | circularMove 이동속도 [deg/s] | rotateMove 이동속도 [deg/s]',
+    example: 0,
+  })
+  @Expose()
+  speed?: number;
 
   @IsOptional()
   @IsString()
   @Length(1, 50)
   @ApiProperty({
-    description: 'Time',
-    example: '0',
+    description: 'circularMove 방향 [left, right]',
+    enum: ['left', 'right'],
+    example: 'left',
   })
   @Expose()
-  time: string;
+  direction?: 'left' | 'right';
 }
