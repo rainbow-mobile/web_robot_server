@@ -72,13 +72,13 @@ export class UpdateService {
     software,
     branch,
     version,
-    slamRobotType,
+    robotType,
   }: ReqUpdateSoftwareDto) {
     if (software === 'rrs-server' || software === 'rrs') {
       return this.rrsUpdate({ branch, version });
     }
 
-    return this.otherSwUpdate({ branch, version, slamRobotType });
+    return this.otherSwUpdate({ branch, version, robotType });
   }
 
   /**
@@ -127,14 +127,14 @@ export class UpdateService {
   otherSwUpdate({
     branch,
     version,
-    slamRobotType,
-  }: { branch?: string; version?: string; slamRobotType?: string } = {}) {
+    robotType,
+  }: { branch?: string; version?: string; robotType?: string } = {}) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
         const data = {
           branch: branch || 'main',
           version: version || '',
-          slamRobotType: slamRobotType || '',
+          robotType: robotType || '',
         };
 
         this.socketGateway.server.to('slamnav').emit('swUpdate', data);
