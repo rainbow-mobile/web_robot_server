@@ -21,6 +21,15 @@ export class ReqUpdateSoftwareDto {
   branch: string;
 
   @ApiProperty({
+    description: '업데이트할 로봇 타입',
+    example: 'S100-A',
+    default: '',
+  })
+  @IsString()
+  @IsOptional()
+  robotType?: string;
+
+  @ApiProperty({
     description: '업데이트할 버전 이름',
     example: '1.2.4',
     default: '',

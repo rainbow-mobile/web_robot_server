@@ -68,12 +68,17 @@ export class UpdateService {
    * @param branch 브랜치 이름
    * @returns 업데이트 요청 결과
    */
-  updateSoftware({ software, branch, version }: ReqUpdateSoftwareDto) {
+  updateSoftware({
+    software,
+    branch,
+    version,
+    robotType,
+  }: ReqUpdateSoftwareDto) {
     if (software === 'rrs-server' || software === 'rrs') {
       return this.rrsUpdate({ branch, version });
     }
 
-    return this.otherSwUpdate({ branch, version });
+    return this.otherSwUpdate({ branch, version, robotType });
   }
 
   /**
@@ -122,12 +127,14 @@ export class UpdateService {
   otherSwUpdate({
     branch,
     version,
-  }: { branch?: string; version?: string } = {}) {
+    robotType,
+  }: { branch?: string; version?: string; robotType?: string } = {}) {
     return new Promise((resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
         const data = {
           branch: branch || 'main',
           version: version || '',
+          robotType: robotType || '',
         };
 
         this.socketGateway.server.to('slamnav').emit('swUpdate', data);
