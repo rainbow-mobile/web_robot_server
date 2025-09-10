@@ -1,12 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
 enum LinearMoveCommand {
-    linearXMove = 'linearXMove',
-    circularMove = 'circularMove',
-    rotateMove = 'rotateMove',
-    linearStop = 'linearStop'
+  linearXMove = 'linearXMove',
+  circularMove = 'circularMove',
+  rotateMove = 'rotateMove',
+  linearStop = 'linearStop',
 }
 
 export class MoveLinearRequestDto {
@@ -22,7 +28,8 @@ export class MoveLinearRequestDto {
   @IsOptional()
   @IsNumber()
   @ApiProperty({
-    description: 'linearXMove 이동거리 [m] | circularMove 이동거리 [deg] | rotateMove 이동거리 [deg]',
+    description:
+      'linearXMove 이동거리 [m] | circularMove 이동거리 [deg] | rotateMove 이동거리 [deg]',
     example: 0,
   })
   @Expose()
@@ -31,7 +38,8 @@ export class MoveLinearRequestDto {
   @IsOptional()
   @IsNumber()
   @ApiProperty({
-    description: 'linearXMove 이동속도 [m/s] | circularMove 이동속도 [deg/s] | rotateMove 이동속도 [deg/s]',
+    description:
+      'linearXMove 이동속도 [m/s] | circularMove 이동속도 [deg/s] | rotateMove 이동속도 [deg/s]',
     example: 0,
   })
   @Expose()

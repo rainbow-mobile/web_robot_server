@@ -14,7 +14,10 @@ import { MoveService } from './move.service';
 import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
 import httpLogger from '@common/logger/http.logger';
 import { Response } from 'express';
-import { MoveCommand, MoveCommandDto } from 'src/modules/apis/move/dto/move.command.dto';
+import {
+  MoveCommand,
+  MoveCommandDto,
+} from 'src/modules/apis/move/dto/move.command.dto';
 import { errorToJson } from '@common/util/error.util';
 import { generateGeneralLog } from '@common/logger/equipment.logger';
 import {
@@ -94,39 +97,54 @@ export class MoveController {
         data.command == 'resume' ||
         data.command == MoveCommand.linearStop
       ) {
-      } else if(data.command == MoveCommand.linearXMove || data.command == MoveCommand.rotateMove) {
-        if(data.target == undefined || data.target == null){
-          httpLogger.warn(`[MOVE] moveControl: move LinearXMove parameter missing`);
+      } else if (
+        data.command == MoveCommand.linearXMove ||
+        data.command == MoveCommand.rotateMove
+      ) {
+        if (data.target == undefined || data.target == null) {
+          httpLogger.warn(
+            `[MOVE] moveControl: move LinearXMove parameter missing`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter missing (target)' });
         }
-        if(data.speed == undefined || data.speed == null){
-          httpLogger.warn(`[MOVE] moveControl: move LinearXMove parameter missing`);
+        if (data.speed == undefined || data.speed == null) {
+          httpLogger.warn(
+            `[MOVE] moveControl: move LinearXMove parameter missing`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter missing (speed)' });
         }
-      } else if(data.command == MoveCommand.circularMove) {
-        if(data.target == undefined || data.target == null){
-          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+      } else if (data.command == MoveCommand.circularMove) {
+        if (data.target == undefined || data.target == null) {
+          httpLogger.warn(
+            `[MOVE] moveControl: move CircularMove parameter missing`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter missing (target)' });
         }
-        if(data.speed == undefined || data.speed == null){
-          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+        if (data.speed == undefined || data.speed == null) {
+          httpLogger.warn(
+            `[MOVE] moveControl: move CircularMove parameter missing`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter missing (speed)' });
         }
-        if(data.direction == undefined || data.direction == null){
-          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter missing`);
+        if (data.direction == undefined || data.direction == null) {
+          httpLogger.warn(
+            `[MOVE] moveControl: move CircularMove parameter missing`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter missing (direction)' });
-        }else if(data.direction != 'left' && data.direction != 'right'){
-          httpLogger.warn(`[MOVE] moveControl: move CircularMove parameter invalid`);
+        } else if (data.direction != 'left' && data.direction != 'right') {
+          httpLogger.warn(
+            `[MOVE] moveControl: move CircularMove parameter invalid`,
+          );
           return res
             .status(HttpStatus.BAD_REQUEST)
             .send({ message: 'parameter invalid (direction)' });
@@ -152,8 +170,11 @@ export class MoveController {
         data.command == MoveCommand.circularMove ||
         data.command == MoveCommand.linearStop
       ) {
-        await this.moveService.profileMove(newData);
-        return res.send();
+        const data = await this.moveService.profileMove(newData);
+        httpLogger.debug(
+          `[MOVE] moveControl Response: ${JSON.stringify(data)}`,
+        );
+        return res.send(data);
       } else {
         const response = await this.moveService.moveCommand(newData);
         httpLogger.debug(
@@ -169,12 +190,11 @@ export class MoveController {
     }
   }
 
-
-
   @Post('profile')
   @ApiOperation({
     summary: '프로필 이동 명령',
-    description: '프로필 이동 명령을 요청합니다. (command == linearXMove, rotateMove, circularMove, linearStop)',
+    description:
+      '프로필 이동 명령을 요청합니다. (command == linearXMove, rotateMove, circularMove, linearStop)',
   })
   @ApiResponse({
     status: 200,

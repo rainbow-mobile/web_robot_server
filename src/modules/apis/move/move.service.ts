@@ -91,8 +91,10 @@ export class MoveService {
   async profileMove(data: any) {
     return new Promise(async (resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('profileMove', stringifyAllValues(data));
-        httpLogger.info(`[MOVE] profileMove: ${JSON.stringify(data)}`); 
+        this.socketGateway.server
+          .to('slamnav')
+          .emit('profileMove', stringifyAllValues(data));
+        httpLogger.info(`[MOVE] profileMove: ${JSON.stringify(data)}`);
         this.saveLog({
           command: data.command,
           goal_id: data.goal_id,
@@ -135,10 +137,8 @@ export class MoveService {
   async moveCommand(data: any) {
     return new Promise(async (resolve, reject) => {
       if (this.socketGateway.slamnav != null) {
-
         this.socketGateway.server.to('slamnav').emit('move', data);
 
-        
         httpLogger.info(`[MOVE] moveCommand: ${JSON.stringify(data)}`);
         this.saveLog({
           command: data.command,

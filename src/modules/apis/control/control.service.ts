@@ -64,7 +64,7 @@ export class ControlService {
             );
           }
         } else if (dto.command === 'resetFlag') {
-          if(dto.reset_flag === undefined || dto.reset_flag === '') {
+          if (dto.reset_flag === undefined || dto.reset_flag === '') {
             reject(
               new HttpException(
                 `reset_flag(${dto.reset_flag}) 값이 지정되지 않았습니다.`,
@@ -144,7 +144,7 @@ export class ControlService {
           .to('slamnav')
           .emit(topic, { ...data, time: Date.now().toString() });
         httpLogger.info(`[CONTROL] sendCommand: ${JSON.stringify(data)}`);
-        resolve({});
+        resolve(data);
       } else {
         reject({
           status: HttpStatus.GATEWAY_TIMEOUT,

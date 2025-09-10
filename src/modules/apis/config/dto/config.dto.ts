@@ -1,6 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 export enum ConfigCommand {
   getDriveParam = 'getDriveParam',
@@ -83,7 +90,8 @@ export class ConfigResponseDto extends ConfigRequestDto {
   result: string;
 
   @ApiProperty({
-    description: '결과 메시지. result값이 reject, fail일 경우 메시지 내용을 확인하세요.',
+    description:
+      '결과 메시지. result값이 reject, fail일 경우 메시지 내용을 확인하세요.',
     example: '파라미터의 값이 범위를 벗어났습니다.',
     required: false,
   })

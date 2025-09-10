@@ -8,7 +8,6 @@ import { MoveModule } from './modules/apis/move/move.module';
 import { ControlModule } from './modules/apis/control/control.module';
 import { MapModule } from './modules/apis/map/map.module';
 import { ProcessModule } from './modules/apis/process/process.module';
-import { SettingModule } from './modules/apis/setting/setting.module';
 import { VariablesModule } from './modules/apis/variables/variables.module';
 import { NetworkModule } from './modules/apis/network/network.module';
 import { LogModule } from './modules/apis/log/log.module';
@@ -21,6 +20,7 @@ import { AppService } from './app.service';
 // import { MotionModule } from './modules/apis/motion/motion.module';
 import { UpdateModule } from './modules/apis/update/update.module';
 import { ConfigApiModule } from './modules/apis/config/config.module';
+import { SettingModule } from './modules/apis/setting/setting.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,7 +48,6 @@ import { ConfigApiModule } from './modules/apis/config/config.module';
     SocketsModule,
     TaskModule,
     ControlModule,
-    ConfigApiModule, 
     // SSHModule,
     MoveModule,
     MapModule,

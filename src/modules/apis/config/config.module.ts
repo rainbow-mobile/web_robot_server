@@ -4,8 +4,8 @@ import { ConfigService } from './config.service';
 import { ConfigController } from './config.controller';
 
 @Module({
-    imports:[SocketsModule],
-    providers:[ConfigService],
-    controllers:[ConfigController],
+  imports: [SocketsModule],
+  providers: [ConfigService],
+  controllers: [ConfigController],
 })
 export class ConfigApiModule {}

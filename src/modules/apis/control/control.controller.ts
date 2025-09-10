@@ -206,7 +206,7 @@ export class ControlController {
       const response = await this.controlService.dockCommand({
         command: 'dockstop',
         time: Date.now().toString(),
-      }); 
+      });
       res.send(response);
     } catch (error) {
       httpLogger.error(
@@ -408,7 +408,7 @@ export class ControlController {
     try {
       httpLogger.info(`[COMMAND] Lift Control : ${data.command}`);
       const response = await this.controlService.sendCommand('lift', data);
-      httpLogger.info(`[COMMAND] Lift Response : ${response}`);
+      httpLogger.info(`[COMMAND] Lift Response : ${JSON.stringify(response)}`);
       res.send(response);
     } catch (error) {
       httpLogger.error(

@@ -1,7 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { ConfigCommand, ConfigParameterDto, ConfigParameterType, ConfigRequestDto, Result } from 'src/modules/apis/config/dto/config.dto';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import {
+  ConfigCommand,
+  ConfigParameterDto,
+  ConfigParameterType,
+  ConfigRequestDto,
+  Result,
+} from 'src/modules/apis/config/dto/config.dto';
 
 export class ConfigRequestSlamnav {
   @ApiProperty({
@@ -44,7 +57,8 @@ export class ConfigResponseSlamnav extends ConfigRequestSlamnav {
   result: string;
 
   @ApiProperty({
-    description: '결과 메시지. result값이 reject, fail일 경우 메시지 내용을 확인하세요.',
+    description:
+      '결과 메시지. result값이 reject, fail일 경우 메시지 내용을 확인하세요.',
     example: '파라미터의 값이 범위를 벗어났습니다.',
     required: false,
   })

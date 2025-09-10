@@ -12,7 +12,7 @@ export enum MoveCommand {
   linearXMove = 'linearXMove',
   circularMove = 'circularMove',
   rotateMove = 'rotateMove',
-  linearStop = 'linearStop'
+  linearStop = 'linearStop',
 }
 
 export class MoveCommandDto {
@@ -150,17 +150,18 @@ export class MoveCommandDto {
   @IsOptional()
   @IsNumber()
   @ApiProperty({
-    description: 'linearXMove 이동거리 [m] | circularMove 이동거리 [deg] | rotateMove 이동거리 [deg]',
+    description:
+      'linearXMove 이동거리 [m] | circularMove 이동거리 [deg] | rotateMove 이동거리 [deg]',
     example: 0,
   })
   @Expose()
   target?: number;
 
-
   @IsOptional()
   @IsNumber()
   @ApiProperty({
-    description: 'linearXMove 이동속도 [m/s] | circularMove 이동속도 [deg/s] | rotateMove 이동속도 [deg/s]',
+    description:
+      'linearXMove 이동속도 [m/s] | circularMove 이동속도 [deg/s] | rotateMove 이동속도 [deg/s]',
     example: 0,
   })
   @Expose()

@@ -1,249 +1,260 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
+  HttpException,
   HttpStatus,
-  Inject,
   Param,
   Post,
   Put,
   Query,
   Res,
-  UseGuards,
 } from '@nestjs/common';
-import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
-import { Response } from 'express';
-import httpLogger from '@common/logger/http.logger';
-import { SettingService } from './setting.service';
-import { SocketGateway } from '@sockets/gateway/sockets.gateway';
+import { Body } from '@nestjs/common';
+import { Delete } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { SettingJSONPayload } from '@common/interface/robot/setting.interface';
-import { PresetDto } from 'src/modules/apis/setting/dto/setting.preset.dto';
+import { ApiOkResponse } from '@nestjs/swagger';
+import { SettingCommand } from './dto/setting.dto';
+import { SettingGetSettingResponseDto } from './dto/setting.dto';
+import { SettingGetSettingRequestDto } from './dto/setting.dto';
+import { SettingService } from './setting.service';
+import { SettingSaveSettingResponseDto } from './dto/setting.dto';
+import { SettingSaveSettingRequestDto } from './dto/setting.dto';
+import { SettingSaveSettingAllResponseDto } from './dto/setting.dto';
+import { SettingSaveSettingAllRequestDto } from './dto/setting.dto';
+import { SettingGetPresetListResponseDto } from './dto/setting.dto';
+import { SettingGetPresetListRequestDto } from './dto/setting.dto';
+import { SettingGetPresetResponseDto } from './dto/setting.dto';
+import { SettingGetPresetRequestDto } from './dto/setting.dto';
+import { SettingSavePresetResponseDto } from './dto/setting.dto';
+import { SettingSavePresetRequestDto } from './dto/setting.dto';
+import { SettingDeletePresetResponseDto } from './dto/setting.dto';
+import { SettingDeletePresetRequestDto } from './dto/setting.dto';
+import { Response } from 'express';
+import { SettingCreatePresetResponseDto } from './dto/setting.dto';
+import { SettingCreatePresetRequestDto } from './dto/setting.dto';
+import { ConfigCommand } from '../config/dto/config.dto';
+import { SettingSetParamRequestDto } from './dto/setting.dto';
+import { HttpStatusMessagesConstants } from '@constants/http-status-messages.constants';
+import { SettingFileService } from './setting-file.service';
+import httpLogger from '@common/logger/http.logger';
+import { PresetDto } from './dto/setting.preset.dto';
 
-@ApiTags('세팅 관련 API (setting)')
-@Controller('setting')
+@Controller('settings')
+@ApiTags('세팅 API (SLAMNAV 저장 방식)')
 export class SettingController {
-  constructor(private readonly settingSsocketGatewayervice: SocketGateway) {}
-  @Inject()
-  private readonly settingService: SettingService;
+  constructor(
+    private readonly settingService: SettingService,
+    private readonly settingFileService: SettingFileService,
+  ) {}
+  generateId(): string {
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
+  }
 
-  @Get(':type')
+  @Get()
   @ApiOperation({
     summary: '세팅 파일 요청',
     description: '타입에 해당하는 세팅 파일을 요청합니다.',
   })
-  async getSetting(@Param('type') type: string, @Res() res: Response) {
-    try {
-      if (type == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-      const response = await this.settingService.getSetting(type);
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] getSetting: ${type}, ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
-    }
+  @ApiOkResponse({
+    description: '세팅 파일 요청 성공',
+    type: SettingGetSettingResponseDto,
+  })
+  async getSetting(@Query() dto: SettingGetSettingRequestDto) {
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.getSetting,
+    });
   }
 
-  @Post(':type')
+  @Post()
   @ApiOperation({
     summary: '세팅 파일 저장',
     description: '타입에 해당하는 세팅 파일을 저장합니다.',
   })
-  async saveSetting(
-    @Param('type') type: string,
-    @Body() data: JSON,
-    @Res() res: Response,
-  ) {
-    try {
-      httpLogger.debug(
-        `[SETTING] save Setting: ${type}, ${JSON.stringify(data)}`,
-      );
-      if (type == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-
-      const response = await this.settingService.saveSetting(type, data);
-      httpLogger.debug(
-        `[SETTING] save Setting Response: ${JSON.stringify(response)}`,
-      );
-      res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] save Setting: ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
+  @ApiOkResponse({
+    description: '세팅 파일 저장 성공',
+    type: SettingSaveSettingResponseDto,
+  })
+  async saveSetting(@Body() dto: SettingSaveSettingRequestDto) {
+    if (dto.param == null || dto.param == undefined || dto.param.length == 0) {
+      throw new HttpException('데이터를 입력해주세요.', HttpStatus.BAD_REQUEST);
     }
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.saveSetting,
+      param: dto.param,
+    });
   }
 
-  @Get('preset/:type')
+  //   @Post('all')
+  //   @ApiOperation({
+  //     summary: '세팅 파일 전체 저장',
+  //     description: '타입에 해당하는 세팅 파일을 전체 저장합니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 파일 전체 저장 성공',
+  //     type: SettingSaveSettingAllResponseDto,
+  //   })
+  //   async saveSettingAll(@Body() dto: SettingSaveSettingAllRequestDto) {
+  //     if (dto.param == null || dto.param == undefined || dto.param.length == 0) {
+  //       throw new HttpException('데이터를 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.saveSettingAll,
+  //       param: dto.param,
+  //     });
+  //   }
+
+  //   @Get('preset/list')
+  //   @ApiOperation({
+  //     summary: '세팅 프리셋 리스트 요청',
+  //     description:
+  //       '타입에 해당하는 세팅 프리셋 리스트를 요청합니다. 반환되는 프리셋 파일의 형식은 반드시 preset_{number}.json 형식입니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 프리셋 리스트 요청 성공',
+  //     type: SettingGetPresetListResponseDto,
+  //   })
+  //   async getPresetList(@Query() dto: SettingGetPresetListRequestDto) {
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.getPresetList,
+  //     });
+  //   }
+
+  //   @Get('preset')
+  //   @ApiOperation({
+  //     summary: '세팅 프리셋 요청',
+  //     description: '타입에 해당하는 세팅 프리셋을 요청합니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 프리셋 요청 성공',
+  //     type: SettingGetPresetResponseDto,
+  //   })
+  //   async getPreset(@Query() dto: SettingGetPresetRequestDto) {
+  //     if (dto.preset == null || dto.preset == undefined || dto.preset == '') {
+  //       throw new HttpException('프리셋을 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.getPreset,
+  //       preset: dto.preset,
+  //     });
+  //   }
+
+  //   @Post('preset')
+  //   @ApiOperation({
+  //     summary: '세팅 프리셋 저장',
+  //     description: '타입에 해당하는 세팅 프리셋을 저장합니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 프리셋 저장 성공',
+  //     type: SettingSavePresetResponseDto,
+  //   })
+  //   async savePreset(@Body() dto: SettingSavePresetRequestDto) {
+  //     if (dto.preset == null || dto.preset == undefined || dto.preset == '') {
+  //       throw new HttpException('프리셋을 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     if (dto.param == null || dto.param == undefined || dto.param.length == 0) {
+  //       throw new HttpException('데이터를 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.savePreset,
+  //       preset: dto.preset,
+  //       param: dto.param,
+  //     });
+  //   }
+
+  //   @Delete('preset')
+  //   @ApiOperation({
+  //     summary: '세팅 프리셋 삭제',
+  //     description: '타입에 해당하는 세팅 프리셋을 삭제합니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 프리셋 삭제 성공',
+  //     type: SettingDeletePresetResponseDto,
+  //   })
+  //   async deletePreset(@Query() dto: SettingDeletePresetRequestDto) {
+  //     if (dto.preset == null || dto.preset == undefined || dto.preset == '') {
+  //       throw new HttpException('프리셋을 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.deletePreset,
+  //       preset: dto.preset,
+  //     });
+  //   }
+
+  //   @Post('preset/new')
+  //   @ApiOperation({
+  //     summary: '세팅 프리셋 파일 생성',
+  //     description: '타입에 해당하는 세팅 프리셋을 생성합니다.',
+  //   })
+  //   @ApiOkResponse({
+  //     description: '세팅 프리셋 파일 생성 성공',
+  //     type: SettingCreatePresetResponseDto,
+  //   })
+  //   async createPreset(@Query() dto: SettingCreatePresetRequestDto) {
+  //     if (dto.preset == null || dto.preset == undefined || dto.preset == '') {
+  //       throw new HttpException('프리셋을 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //     }
+  //     return this.settingService.settingRequest({
+  //       id: this.generateId(),
+  //       command: SettingCommand.createPreset,
+  //       preset: dto.preset,
+  //     });
+  //   }
+
+  @Get('pdu')
   @ApiOperation({
-    summary: '세팅 프리셋 리스트 요청',
-    description: '타입에 해당하는 세팅 프리셋 리스트를 요청합니다.',
+    summary: 'PDU 파라미터 조회',
+    description: 'PDU 파라미터 조회 명령을 전달합니다',
   })
-  async getPresetList(@Param('type') type: string, @Res() res: Response) {
-    try {
-      httpLogger.debug(`[SETTING] get Preset List: ${type}`);
-      if (type == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-      const response = await this.settingService.getPresetList(type);
-      httpLogger.debug(
-        `[SETTING] get Preset List: ${JSON.stringify(response)}`,
-      );
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] get Preset List: ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
-    }
+  async getPduParameter() {
+    throw new HttpException(
+      '아직 구현되지 않은 기능입니다.',
+      HttpStatus.NOT_IMPLEMENTED,
+    );
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: ConfigCommand.getParam,
+    });
   }
 
-  @Post('preset/:type/:id')
+  @Get('pdu/drive')
   @ApiOperation({
-    summary: '세팅 프리셋 파일 생성',
-    description: '타입에 해당하는 세팅 프리셋을 생성합니다.',
+    summary: 'PDU 파라미터 조회',
+    description: 'PDU 파라미터 조회 명령을 전달합니다',
   })
-  async makePreset(
-    @Param('type') type: string,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ) {
-    try {
-      httpLogger.debug(`[SETTING] make Preset: type=${type}, id=${id}`);
-      if (type == '' || id == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-      const response = await this.settingService.makePreset(type, id);
-      httpLogger.debug(`[SETTING] make Preset: ${JSON.stringify(response)}`);
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] make Preset: ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
-    }
+  async getDriveConfig() {
+    return await this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.getDriveParam,
+    });
   }
 
-  @Get('preset/:type/:id')
+  @Post('pdu')
   @ApiOperation({
-    summary: '세팅 프리셋 파일 요청',
-    description: '프리셋 파일 데이터를 요청합니다',
+    summary: 'PDU 파라미터 설정',
+    description: 'PDU 파라미터 설정 명령을 전달합니다',
   })
-  async getPreset(
-    @Param('type') type: string,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ) {
-    try {
-      httpLogger.debug(`[SETTING] get Preset: type=${type}, id=${id}`);
-      if (type == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-      const response = await this.settingService.getPreset(type, id);
-      httpLogger.debug(`[SETTING] get Preset: ${JSON.stringify(response)}`);
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] get Preset: ${error.status} -> ${error.data}`,
+  async setPduParameter(@Body() dto: SettingSetParamRequestDto) {
+    if (dto.param == null || dto.param == undefined || dto.param.length == 0) {
+      throw new HttpException(
+        '파라미터를 입력해주세요.',
+        HttpStatus.BAD_REQUEST,
       );
-      return res.status(error.status).send(error.data);
     }
-  }
 
-  @Put('preset/:type/:id')
-  @ApiOperation({
-    summary: '세팅 프리셋 파일 수정',
-    description: '프리셋 파일 데이터를 수정합니다',
-  })
-  async savePreset(
-    @Param('type') type: string,
-    @Param('id') id: string,
-    @Body() data: PresetDto,
-    @Res() res: Response,
-  ) {
-    try {
-      httpLogger.debug(
-        `[SETTING] save Preset: type=${type}, id=${id}, data=${JSON.stringify(data)}`,
-      );
-      if (type == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-
-      if (
-        isNaN(Number(data.LIMIT_V)) ||
-        isNaN(Number(data.LIMIT_V_ACC)) ||
-        isNaN(Number(data.LIMIT_W)) ||
-        isNaN(Number(data.LIMIT_W_ACC)) ||
-        isNaN(Number(data.LIMIT_PIVOT_W)) ||
-        isNaN(Number(data.ED_V)) ||
-        isNaN(Number(data.DRIVE_EPS)) ||
-        isNaN(Number(data.DRIVE_H)) ||
-        isNaN(Number(data.DRIVE_K)) ||
-        isNaN(Number(data.DRIVE_L)) ||
-        isNaN(Number(data.DRIVE_T)) ||
-        isNaN(Number(data.ST_V)) ||
-        isNaN(Number(data.DRIVE_A)) ||
-        isNaN(Number(data.DRIVE_B))
-      ) {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-
-      const response = await this.settingService.savePreset(type, id, data);
-      httpLogger.debug(`[SETTING] save Preset: ${JSON.stringify(response)}`);
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] save Preset: ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
-    }
-  }
-
-  @Delete('preset/:type/:id')
-  @ApiOperation({
-    summary: '세팅 프리셋 파일 삭제',
-    description: '프리셋 파일을 삭제합니다',
-  })
-  async deletePreset(
-    @Param('type') type: string,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ) {
-    try {
-      httpLogger.debug(`[SETTING] delete Preset: type=${type}, id=${id}`);
-      if (type == '' || id == '') {
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .send({ message: HttpStatusMessagesConstants.INVALID_DATA_400 });
-      }
-
-      const response = await this.settingService.deletePreset(type, id);
-      httpLogger.debug(`[SETTING] delete Preset: ${JSON.stringify(response)}`);
-      return res.send(response);
-    } catch (error) {
-      httpLogger.error(
-        `[SETTING] delete Preset: ${error.status} -> ${error.data}`,
-      );
-      return res.status(error.status).send(error.data);
-    }
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.setParam,
+      param: dto.param,
+    });
   }
 }

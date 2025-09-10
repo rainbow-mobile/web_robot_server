@@ -60,7 +60,11 @@ import { MoveLogEntity } from 'src/modules/apis/move/entity/move.entity';
 import { LessThan, Repository } from 'typeorm';
 import { ExternalStatusPayload } from '@common/interface/robot/foot.interface';
 import { inflateSync } from 'zlib';
-import { ConfigRequestSlamnav, ConfigResponseSlamnav } from '@sockets/dto/config.dto';
+import {
+  ConfigRequestSlamnav,
+  ConfigResponseSlamnav,
+} from '@sockets/dto/config.dto';
+import { SettingResponseSlamnav } from 'src/modules/apis/setting/dto/setting.dto';
 
 const isEqual = (a: any, b: any) => {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -1486,7 +1490,7 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('exStatus')
+  @SubscribeMessage('externalStatus')
   async handleExternalAccessoryStatusMessage(
     @MessageBody() payload: string,
     @ConnectedSocket() client: Socket,
@@ -1494,12 +1498,12 @@ export class SocketGateway
     try {
       if (client.id == this.externalAccessory?.id) {
         if (payload == null || payload == undefined) {
-          socketLogger.warn(`[STATUS] exStatus: NULL`);
+          socketLogger.warn(`[STATUS] externalStatus: NULL`);
           return;
         }
 
         const jsontemp = JSON.parse(payload);
-        console.log('exStatus : ', jsontemp);
+        console.log('externalStatus : ', jsontemp);
         let json = jsontemp;
         try {
           json = {
@@ -1524,7 +1528,7 @@ export class SocketGateway
           console.error(error);
           json = jsontemp;
         }
-        console.log('exStatus : ', payload, json);
+        // console.log('externalStatus : ', payload, json);
         const tempjson = { ...json };
         delete tempjson.time;
         if (isEqual(tempjson, this.lastExternalStatus)) {
@@ -1533,33 +1537,35 @@ export class SocketGateway
 
         this.lastExternalStatus = tempjson;
         this.server
-          .to(['exStatus', 'all', 'allStatus'])
-          .emit('exStatus', stringifyAllValues(json));
+          .to(['externalStatus', 'all', 'allStatus'])
+          .emit('externalStatus', stringifyAllValues(json));
 
         if (this.slamnav) {
-          this.slamnav.emit('exStatus', stringifyAllValues(json));
+          this.slamnav.emit('externalStatus', stringifyAllValues(json));
         } else {
           // console.log("??????????");
         }
 
         if (this.frsSocket?.connected) {
-          this.frsSocket.emit('exStatus', {
+          this.frsSocket.emit('externalStatus', {
             robotSerial: global.robotSerial,
             data: json,
           });
         }
       } else {
         socketLogger.warn(
-          `[STATUS] another externalAccessory exStatus ${this.externalAccessory?.id}, ${client.id}`,
+          `[STATUS] another externalStatus ${this.externalAccessory?.id}, ${client.id}`,
         );
       }
     } catch (error) {
-      socketLogger.error(`[STATUS] exStatus : ${errorToJson(error)}`);
+      socketLogger.error(`[STATUS] externalStatus : ${errorToJson(error)}`);
     }
   }
 
   @SubscribeMessage('configRequest')
-  async handleConfigRequestMessage(@MessageBody() payload: ConfigRequestSlamnav) {
+  async handleConfigRequestMessage(
+    @MessageBody() payload: ConfigRequestSlamnav,
+  ) {
     try {
       if (payload == null || payload == undefined) {
         socketLogger.warn(`[CONFIG] Config Request: NULL`);
@@ -1567,38 +1573,58 @@ export class SocketGateway
       }
 
       socketLogger.debug(`[CONFIG] Config Request: ${JSON.stringify(payload)}`);
-      if(this.slamnav){
+      if (this.slamnav) {
         this.slamnav.emit('configRequest', payload);
       }
 
-      this.server.to(['configRequest', 'all', 'config']).emit('configRequest', payload);
+      this.server
+        .to(['configRequest', 'all', 'config'])
+        .emit('configRequest', payload);
     } catch (error) {
       socketLogger.error(`[CONFIG] Config Request: ${errorToJson(error)}`);
     }
   }
 
-  @SubscribeMessage('configResponse')
-    async handleConfigResponseMessage(@MessageBody() payload: ConfigResponseSlamnav) {
+  @SubscribeMessage('settingResponse')
+  async handleConfigResponseMessage(
+    @MessageBody() payload: SettingResponseSlamnav,
+  ) {
     try {
       if (payload == null || payload == undefined) {
-        socketLogger.warn(`[CONFIG] Config Response: NULL`);
+        socketLogger.warn(`[CONFIG] settingResponse: NULL`);
         return;
       }
 
-      socketLogger.debug(`[CONFIG] Config Response: ${JSON.stringify(payload)}`);
-      this.server.to(['configResponse', 'all', 'config']).emit('configResponse', payload);
+      // socketLogger.debug(
+      //   `[CONFIG] Setting Response: ${JSON.stringify(payload)}`,
+      // );
+      this.server
+        .to(['settingResponse', 'all', 'setting'])
+        .emit('settingResponse', payload);
 
       if (this.frsSocket?.connected) {
-        this.frsSocket.emit('configResponse', {
+        this.frsSocket.emit('settingResponse', {
           robotSerial: global.robotSerial,
           data: payload,
         });
       }
     } catch (error) {
-      socketLogger.error(`[CONFIG] Config Response: ${errorToJson(error)}`);
+      socketLogger.error(`[CONFIG] settingResponse: ${errorToJson(error)}`);
     }
   }
 
+  @SubscribeMessage('configResponse')
+  async handleConfigR3esponseMessage(
+    @MessageBody() payload: SettingResponseSlamnav,
+  ) {
+    try {
+      socketLogger.debug(
+        `[CONFIG] Config Response: ${JSON.stringify(payload)}`,
+      );
+    } catch (error) {
+      socketLogger.error(`[CONFIG] configResponse: ${errorToJson(error)}`);
+    }
+  }
   parseStatus(status: any): any {
     try {
       /// 1) battey만 특별하게 파싱
@@ -1683,7 +1709,7 @@ export class SocketGateway
 
         const json = this.parseStatus(JSON.parse(payload));
         // console.log(json);
-        socketLogger.debug(`status in : ${JSON.stringify(json)}`);
+        // socketLogger.debug(`status in : ${JSON.stringify(json)}`);
         const tempjson = { ...json };
         // delete tempjson.time;
         if (isEqual(tempjson, this.lastStatus)) {
@@ -1785,7 +1811,7 @@ export class SocketGateway
     }
   }
 
-  @SubscribeMessage('systemStatus')
+  @SubscribeMessage('system_status')
   async handleSystemStatusMessage(
     @MessageBody() payload: string,
     @ConnectedSocket() client: Socket,
@@ -1890,7 +1916,40 @@ export class SocketGateway
     }
   }
 
-  /**
+  @SubscribeMessage('profileMoveResponse')
+  async handleProfileMoveResponseMessage(
+    @MessageBody() payload: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      if (client.id == this.slamnav?.id) {
+        console.log('profileMoveResponse : ', JSON.parse(payload));
+
+        const json = JSON.parse(payload);
+
+        this.server
+          .to(['profileMoveResponse', 'all', 'move'])
+          .emit('profileMoveResponse', json);
+
+        if (this.frsSocket?.connected) {
+          this.frsSocket.emit('profileMoveResponse', {
+            robotSerial: global.robotSerial,
+            data: json,
+          });
+        }
+      } else {
+        socketLogger.warn(
+          `[RESPONSE] another slamnav profileMoveResponse ${this.slamnav?.id}, ${client.id}`,
+        );
+      }
+    } catch (error) {
+      socketLogger.error(
+        `[RESPONSE] SLAMNAV Profile Move: ${errorToJson(error)}`,
+      );
+      throw error;
+    }
+  }
+  /*
    * @description SLAMNAV의 이동 응답 메시지를 처리하는 함수
    * @param socket
    * @param payload 로봇 이동 변수
