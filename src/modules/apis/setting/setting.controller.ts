@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   HttpStatus,
   Inject,
   Param,
@@ -25,6 +26,8 @@ import {
   CameraOrderChangeDto,
   CameraOrderInfoDto,
 } from './dto/setting.camera.dto';
+import { SettingCommand, SettingSetParamRequestDto } from './dto/setting.dto';
+import { ConfigCommand } from './dto/config.dto';
 
 @ApiTags('세팅 관련 API (setting)')
 @Controller('setting')
@@ -32,6 +35,60 @@ export class SettingController {
   constructor(private readonly settingSsocketGatewayervice: SocketGateway) {}
   @Inject()
   private readonly settingService: SettingService;
+
+  generateId(): string {
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
+  }
+  @Get('pdu')
+  @ApiOperation({
+    summary: 'PDU 파라미터 조회',
+    description: 'PDU 파라미터 조회 명령을 전달합니다',
+  })
+  async getPduParameter() {
+    throw new HttpException(
+      '아직 구현되지 않은 기능입니다.',
+      HttpStatus.NOT_IMPLEMENTED,
+    );
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: ConfigCommand.getParam,
+    });
+  }
+
+  @Get('pdu/drive')
+  @ApiOperation({
+    summary: 'PDU 파라미터 조회',
+    description: 'PDU 파라미터 조회 명령을 전달합니다',
+  })
+  async getDriveConfig() {
+    return await this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.getDriveParam,
+    });
+  }
+
+  @Post('pdu')
+  @ApiOperation({
+    summary: 'PDU 파라미터 설정',
+    description: 'PDU 파라미터 설정 명령을 전달합니다',
+  })
+  async setPduParameter(@Body() dto: SettingSetParamRequestDto) {
+    if (dto.param == null || dto.param == undefined || dto.param.length == 0) {
+      throw new HttpException(
+        '파라미터를 입력해주세요.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.settingService.settingRequest({
+      id: this.generateId(),
+      command: SettingCommand.setParam,
+      param: dto.param,
+    });
+  }
 
   @Get(':type')
   @ApiOperation({
