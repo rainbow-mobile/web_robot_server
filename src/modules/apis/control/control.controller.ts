@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   HttpStatus,
   Inject,
   Param,
@@ -29,6 +30,7 @@ import { errorToJson } from '@common/util/error.util';
 import { LedControlDto } from './dto/led.control.dto';
 import { LidarControlDto } from './dto/lidar.control.dto';
 import { MotorControlDto } from './dto/motor.control.dto';
+import { ResetSafetyFlagDto, SetSafetyFieldDto } from './dto/safety.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -155,6 +157,65 @@ export class ControlController {
     }
   }
 
+  @Post('safety/reset')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 초기화',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 초기화합니다.',
+  })
+  async resetSafetyFlag(@Query() dto: ResetSafetyFlagDto) {
+    try {
+      return this.controlService.SafetyFieldRequest({
+        command: 'resetFlag',
+        reset_flag: dto.reset_flag,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] resetSafetyField : ${errorToJson(error)}`);
+      throw new HttpException(
+        '요청을 처리할 수 없습니다',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('safety/field')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 설정',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 설정합니다.',
+  })
+  async setSafetyField(@Query() dto: SetSafetyFieldDto) {
+    try {
+      return this.controlService.SafetyFieldRequest({
+        command: 'setField',
+        set_field: dto.field,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] getSafetyField : ${errorToJson(error)}`);
+      throw new HttpException(
+        '요청을 처리할 수 없습니다',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('safety/field')
+  @ApiOperation({
+    summary: '세이프티 라이다 필드값 요청',
+    description: '세이프티 라이다에 설정되어 있는 필드값을 요청합니다.',
+  })
+  async getSafetyField() {
+    try {
+      return this.controlService.SafetyFieldRequest({ command: 'getField' });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      httpLogger.error(`[COMMAND] getSafetyField : ${errorToJson(error)}`);
+      throw new HttpException(
+        '요청을 처리할 수 없습니다',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   @Get('dock')
   @ApiOperation({
     summary: '도킹 시작',
