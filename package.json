@@ -56,6 +56,7 @@
     "mqtt": "^5.10.3",
     "msgpack-lite": "^0.1.26",
     "multer": "^1.4.5-lts.1",
+    "multicast-dns": "^7.2.5",
     "mysql": "^2.18.1",
     "node-onvif": "^0.1.7",
     "node-wifi": "^2.0.16",

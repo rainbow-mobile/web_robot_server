@@ -16,6 +16,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UploadModule } from './modules/apis/upload/upload.module';
 import { SoundModule } from './modules/apis/sound/sound.module';
 import { OnvifDeviceModule } from './modules/apis/onvif/onvif.module';
+import { MdnsModule } from './mdns/mdns.module';
 import config from './modules/config';
 
 // import { MotionModule } from './modules/apis/motion/motion.module';
@@ -66,6 +67,7 @@ import { TestModule } from './modules/apis/test/test.module';
       ? [OnvifDeviceModule]
       : []),
     TestModule,
+    MdnsModule,
   ],
   providers: [],
   controllers: [],
