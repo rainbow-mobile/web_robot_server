@@ -265,6 +265,13 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
 
     for (const name of sortedInterfaces) {
       console.log(`[mDNS] 인터페이스 ${name} 검사 중`);
+
+      // 가상머신 인터페이스 필터링
+      if (this.isVirtualMachineInterface(name)) {
+        console.log(`[mDNS] 가상머신 인터페이스 건너뜀: ${name}`);
+        continue;
+      }
+
       for (const info of ifaces[name] ?? []) {
         if (!info || info.internal) {
           console.log(
@@ -376,6 +383,63 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     ];
 
     return dockerRanges.some((range) => ip.startsWith(range));
+  }
+
+  private isVirtualMachineInterface(interfaceName: string): boolean {
+    // 가상머신 관련 인터페이스 이름 패턴들
+    const vmPatterns = [
+      // VMware
+      'vmnet',
+      'vmware',
+      'vboxnet',
+      'virtualbox',
+
+      // Hyper-V
+      'veth',
+      'vEthernet',
+      'Hyper-V',
+
+      // Docker Desktop
+      'docker',
+      'br-',
+      'veth',
+
+      // 기타 가상화
+      'virbr',
+      'virbr0',
+      'vnet',
+      'tap',
+      'tun',
+      'ppp',
+
+      // Windows 가상 어댑터
+      'VirtualBox Host-Only',
+      'VMware Virtual Ethernet Adapter',
+      'Hyper-V Virtual Ethernet Adapter',
+      'Microsoft Wi-Fi Direct Virtual Adapter',
+      'Microsoft Hosted Network Virtual Adapter',
+
+      // Linux 가상 인터페이스
+      'veth',
+      'docker0',
+      'br-',
+      'lxc',
+      'qemu',
+
+      // 기타 패턴
+      'Virtual',
+      'VirtualBox',
+      'VMware',
+      'Hyper-V',
+      'Docker',
+    ];
+
+    const lowerName = interfaceName.toLowerCase();
+    return vmPatterns.some(
+      (pattern) =>
+        lowerName.includes(pattern.toLowerCase()) ||
+        interfaceName.includes(pattern),
+    );
   }
 
   private getInstanceId(): string {
