@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20250919152254] - 2025-09-19
+- Release App: RRS, Branch: mdns, Version: rrs-20250919152254] release 배포
+
+
 ## [rrs-20250919145835] - 2025-09-19
 - Release App: RRS, Branch: mdns, Version: rrs-20250919145835] release 배포
 
