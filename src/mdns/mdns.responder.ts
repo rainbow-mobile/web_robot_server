@@ -260,6 +260,9 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
     });
 
+    // 유효한 IP 주소를 수집 (우선순위별로)
+    const validIps: { ip: string; interface: string; priority: number }[] = [];
+
     for (const name of sortedInterfaces) {
       console.log(`[mDNS] 인터페이스 ${name} 검사 중`);
       for (const info of ifaces[name] ?? []) {
@@ -271,29 +274,74 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         }
 
         if (info.family === 'IPv4' && info.address) {
-          console.log(`[mDNS] IPv4 주소 발견: ${info.address} (${name})`);
-          records.push({
-            name: this.targetHost,
-            type: 'A',
-            ttl: this.ttl,
-            data: info.address,
+          // Docker 네트워크 IP 필터링 (172.17.x.x, 172.18.x.x 등)
+          if (this.isDockerNetworkIp(info.address)) {
+            console.log(
+              `[mDNS] Docker 네트워크 IP 건너뜀: ${info.address} (${name})`,
+            );
+            continue;
+          }
+
+          // 루프백 주소 필터링
+          if (info.address.startsWith('127.')) {
+            console.log(`[mDNS] 루프백 IP 건너뜀: ${info.address} (${name})`);
+            continue;
+          }
+
+          const priority = interfacePriority.findIndex((p) => name.includes(p));
+          validIps.push({
+            ip: info.address,
+            interface: name,
+            priority: priority === -1 ? 999 : priority,
           });
+          console.log(
+            `[mDNS] 유효한 IPv4 주소 발견: ${info.address} (${name})`,
+          );
         } else if (info.family === 'IPv6' && info.address) {
           // 링크로컬(fe80::)은 보통 생략. 필요시 포함
           if (!info.address.startsWith('fe80:')) {
-            console.log(`[mDNS] IPv6 주소 발견: ${info.address} (${name})`);
-            records.push({
-              name: this.targetHost,
-              type: 'AAAA',
-              ttl: this.ttl,
-              data: info.address,
+            const priority = interfacePriority.findIndex((p) =>
+              name.includes(p),
+            );
+            validIps.push({
+              ip: info.address,
+              interface: name,
+              priority: priority === -1 ? 999 : priority,
             });
+            console.log(
+              `[mDNS] 유효한 IPv6 주소 발견: ${info.address} (${name})`,
+            );
           } else {
             console.log(
               `[mDNS] IPv6 링크로컬 주소 건너뜀: ${info.address} (${name})`,
             );
           }
         }
+      }
+    }
+
+    // 우선순위에 따라 정렬하고 가장 높은 우선순위의 IP만 선택
+    validIps.sort((a, b) => a.priority - b.priority);
+
+    if (validIps.length > 0) {
+      // 가장 높은 우선순위의 IP만 등록 (ping 문제 해결)
+      const primaryIp = validIps[0];
+      console.log(
+        `[mDNS] 주요 IP 선택: ${primaryIp.ip} (${primaryIp.interface})`,
+      );
+
+      records.push({
+        name: this.targetHost,
+        type: primaryIp.ip.includes(':') ? 'AAAA' : 'A',
+        ttl: this.ttl,
+        data: primaryIp.ip,
+      });
+
+      // 추가 IP가 필요한 경우에만 더 추가 (일반적으로는 하나만)
+      if (validIps.length > 1) {
+        console.log(
+          `[mDNS] 추가 IP 발견했지만 주요 IP만 등록: ${validIps.length - 1}개 건너뜀`,
+        );
       }
     }
 
@@ -305,6 +353,29 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     }
 
     return records;
+  }
+
+  private isDockerNetworkIp(ip: string): boolean {
+    // Docker 기본 네트워크 범위들 필터링
+    const dockerRanges = [
+      '172.17.', // Docker 기본 브리지 네트워크
+      '172.18.',
+      '172.19.',
+      '172.20.',
+      '172.21.',
+      '172.22.',
+      '172.23.',
+      '172.24.',
+      '172.25.',
+      '172.26.',
+      '172.27.',
+      '172.28.',
+      '172.29.',
+      '172.30.',
+      '172.31.',
+    ];
+
+    return dockerRanges.some((range) => ip.startsWith(range));
   }
 
   private getInstanceId(): string {
