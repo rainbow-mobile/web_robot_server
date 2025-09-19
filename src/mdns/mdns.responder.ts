@@ -295,6 +295,14 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
             continue;
           }
 
+          // PDU 통신용 IP 필터링 (192.168.2.x 대역)
+          if (this.isPduNetworkIp(info.address)) {
+            console.log(
+              `[mDNS] PDU 통신용 IP 건너뜀: ${info.address} (${name})`,
+            );
+            continue;
+          }
+
           const priority = interfacePriority.findIndex((p) => name.includes(p));
           validIps.push({
             ip: info.address,
@@ -385,6 +393,17 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     return dockerRanges.some((range) => ip.startsWith(range));
   }
 
+  private isPduNetworkIp(ip: string): boolean {
+    // PDU 통신용 네트워크 대역 필터링
+    const pduRanges = [
+      '192.168.2.', // PDU 전용 네트워크 대역
+      '192.168.100.', // 일반적인 PDU/장비 제어용 대역
+      '192.168.200.', // 추가 PDU 대역 (필요시)
+    ];
+
+    return pduRanges.some((range) => ip.startsWith(range));
+  }
+
   private isVirtualMachineInterface(interfaceName: string): boolean {
     // 가상머신 관련 인터페이스 이름 패턴들
     const vmPatterns = [
@@ -395,7 +414,6 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       'virtualbox',
 
       // Hyper-V
-      'veth',
       'vEthernet',
       'Hyper-V',
 
@@ -420,9 +438,7 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       'Microsoft Hosted Network Virtual Adapter',
 
       // Linux 가상 인터페이스
-      'veth',
       'docker0',
-      'br-',
       'lxc',
       'qemu',
 
