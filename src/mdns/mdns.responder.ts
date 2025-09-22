@@ -1,14 +1,11 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { VariablesService } from '../modules/apis/variables/variables.service';
 import * as mdns from 'multicast-dns';
+import type { Answer } from 'dns-packet';
 import * as os from 'node:os';
 import * as crypto from 'node:crypto';
 
-type MdnsRecord = {
-  name: string;
-  type: string;
-  ttl?: number;
-  data: any;
-};
+// dns-packet의 Answer 타입을 사용하여 응답 레코드를 엄격 타이핑합니다.
 
 @Injectable()
 export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
@@ -16,20 +13,28 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     multicast: true,
     interface: '0.0.0.0', // 모든 인터페이스에서 수신
     port: 5353,
-    ttl: 255, // 멀티캐스트 TTL 증가
+    ttl: 255,
   }); // UDP 5353 멀티캐스트 join
   private readonly serviceType = '_rainbow-robot._tcp.local';
-  private readonly ttl = 120;
+  private readonly ttl = 4500; // 75분 (표준 mDNS TTL)
 
-  private readonly instanceId = this.getInstanceId(); // 고유 식별자
-  private readonly instanceName = `RainbowBot-${this.instanceId}`;
-  private readonly instanceFqdn = `${this.instanceName}.${this.serviceType}`; // PTR → 이걸 가리킴
-  private readonly targetHost = `${this.instanceName}.local`; // SRV target & A/AAAA name
-  private readonly servicePort = Number(process.env.ROBOT_API_PORT ?? 3100);
+  private instanceId: string = ''; // 고유 식별자 (비동기 초기화)
+  private instanceName: string = '';
+  private instanceFqdn: string = '';
+  private targetHost: string = '';
+  private readonly servicePort = Number(process.env.ROBOT_API_PORT ?? 8180);
 
   private announced = false;
 
+  constructor(private readonly variablesService: VariablesService) {}
+
   async onModuleInit() {
+    // 비동기로 인스턴스 ID 초기화
+    this.instanceId = await this.getInstanceId();
+    this.instanceName = `rainbowbot-${this.instanceId}`;
+    this.instanceFqdn = `${this.instanceName}.${this.serviceType}`;
+    this.targetHost = `${this.instanceName}.local`;
+
     console.log(`[mDNS] 서비스 초기화 시작`);
     console.log(`[mDNS] 서비스 타입: ${this.serviceType}`);
     console.log(`[mDNS] 인스턴스 ID: ${this.instanceId}`);
@@ -56,40 +61,47 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      // 클라가 우리 서비스 타입을 PTR/ANY로 물으면 응답
+      // 클라가 우리 서비스 타입을 PTR/ANY로 물으면 응답 (대소문자 무시)
       const wants = packet.questions?.some((q) => {
         // 서비스 타입 쿼리
         if (
-          q.name === this.serviceType &&
-          (q.type === 'PTR' || q.type === 'ANY')
+          q.name.toLowerCase() === this.serviceType.toLowerCase() &&
+          (q.type.toUpperCase() === 'PTR' ||
+            (q.type as string).toUpperCase() === 'ANY')
         ) {
           return true;
         }
         // 인스턴스 FQDN 쿼리
         if (
-          q.name === this.instanceFqdn &&
-          (q.type === 'SRV' || q.type === 'TXT' || q.type === 'ANY')
+          q.name.toLowerCase() === this.instanceFqdn.toLowerCase() &&
+          (q.type.toUpperCase() === 'SRV' ||
+            q.type.toUpperCase() === 'TXT' ||
+            (q.type as string).toUpperCase() === 'ANY')
         ) {
           return true;
         }
         // 타겟 호스트 쿼리
         if (
-          q.name === this.targetHost &&
-          (q.type === 'A' || q.type === 'AAAA' || q.type === 'ANY')
+          q.name.toLowerCase() === this.targetHost.toLowerCase() &&
+          (q.type.toUpperCase() === 'A' ||
+            q.type.toUpperCase() === 'AAAA' ||
+            (q.type as string).toUpperCase() === 'ANY')
         ) {
           return true;
         }
         // 와일드카드 쿼리 (모든 서비스 타입)
         if (
-          q.name === '_services._dns-sd._udp.local' &&
-          (q.type === 'PTR' || q.type === 'ANY')
+          q.name.toLowerCase() === '_services._dns-sd._udp.local' &&
+          (q.type.toUpperCase() === 'PTR' ||
+            (q.type as string).toUpperCase() === 'ANY')
         ) {
           return true;
         }
         // 일반적인 서비스 검색 쿼리
         if (
-          q.name.includes('_tcp.local') &&
-          (q.type === 'PTR' || q.type === 'ANY')
+          q.name.toLowerCase().includes('_tcp.local') &&
+          (q.type.toUpperCase() === 'PTR' ||
+            (q.type as string).toUpperCase() === 'ANY')
         ) {
           return true;
         }
@@ -116,20 +128,25 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       this.announced = true;
       console.log(`[mDNS] 자발 광고 완료`);
 
-      // 추가 테스트: 주기적으로 광고 반복 (디버깅용)
-      setInterval(() => {
-        console.log(`[mDNS] 주기적 광고 (10초마다)`);
-        this.respondAll();
-      }, 10000); // 30초 -> 10초로 단축
+      // 운영환경: TTL의 80% 주기로 주기적 광고 (표준 mDNS 방식)
+      setInterval(
+        () => {
+          console.log(
+            `[mDNS] 주기적 광고 (${Math.round(this.ttl * 0.8)}초마다)`,
+          );
+          this.respondAll();
+        },
+        this.ttl * 0.8 * 1000,
+      ); // TTL의 80% = 3600초 (1시간)마다
     }, 100); // 500ms -> 100ms로 단축
 
-    // 추가: 더 빠른 초기 광고를 위해 1초 후에도 한 번 더
+    // 운영환경: 초기 안정화를 위해 5초 후 추가 광고
     setTimeout(() => {
       if (this.announced) {
-        console.log(`[mDNS] 추가 자발 광고 (1초 후)`);
+        console.log(`[mDNS] 초기 안정화 광고 (5초 후)`);
         this.respondAll();
       }
-    }, 1000);
+    }, 5000);
   }
 
   async onModuleDestroy() {
@@ -158,7 +175,7 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
             name: this.instanceFqdn,
             type: 'TXT',
             ttl: 0,
-            data: this.txtString(),
+            data: this.buildTxtArray(),
           },
           // A/AAAA도 ttl 0으로 내려도 되지만, 보통 PTR/SRV/TXT만 bye로 충분
         ],
@@ -170,10 +187,10 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
   private respondAll() {
     console.log(`[mDNS] 응답 생성 시작`);
 
-    const addressRecords = this.addressRecords();
+    const addressRecords = this.buildAddressRecords();
 
     // 모든 레코드를 answers에 포함 (mDNS 표준에 따라)
-    const answers: MdnsRecord[] = [
+    const answers: Answer[] = [
       // 1) PTR: 타입 목록 → 인스턴스 FQDN
       {
         name: this.serviceType,
@@ -198,7 +215,8 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         name: this.instanceFqdn,
         type: 'TXT',
         ttl: this.ttl,
-        data: this.txtString(), // "version=1.2.3 model=S100 id=RB-0001 api=/api"
+        // multicast-dns/dns-packet은 TXT를 string[] | Buffer[]로 기대
+        data: this.buildTxtArray(),
       },
       // 4) A/AAAA: SRV target 이름과 정확히 일치하는 A/AAAA
       ...addressRecords,
@@ -211,7 +229,7 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       `[mDNS] SRV 레코드: ${this.instanceFqdn} -> ${this.targetHost}:${this.servicePort}`,
     );
     console.log(
-      `[mDNS] TXT 레코드: ${this.instanceFqdn} -> ${this.txtString()}`,
+      `[mDNS] TXT 레코드: ${this.instanceFqdn} -> ${this.buildTxtArray().join(',')}`,
     );
     console.log(`[mDNS] A/AAAA 레코드 개수: ${addressRecords.length}`);
 
@@ -222,8 +240,12 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
 
       // 전송된 레코드 상세 정보 로깅
       answers.forEach((record, index) => {
+        const hasData = (record as any).data !== undefined;
+        const dataStr = hasData
+          ? JSON.stringify((record as any).data)
+          : '(no data)';
         console.log(
-          `[mDNS] 레코드 ${index + 1}: ${record.name} (${record.type}) -> ${JSON.stringify(record.data)}`,
+          `[mDNS] 레코드 ${index + 1}: ${record.name} (${record.type}) -> ${dataStr}`,
         );
       });
     } catch (error) {
@@ -231,20 +253,10 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private txtString(): string {
-    // 당신의 Electron 파서가 "공백 구분 key=value" 문자열을 기대하므로 이렇게 보냅니다.
-    const model = process.env.ROBOT_MODEL ?? 'S100';
-    const fw = process.env.ROBOT_FW ?? '1.2.3';
-    const id = process.env.ROBOT_ID ?? this.instanceId;
-    const api = process.env.ROBOT_API_BASE ?? '/api';
-    // 필요한 key만 최소한으로. (민감정보 X)
-    return `version=${fw} model=${model} id=${id} api=${api}`;
-  }
-
-  private addressRecords(): MdnsRecord[] {
+  private buildAddressRecords(): Answer[] {
     // 가능한 로컬 IP들을 추출하여 A/AAAA를 만듭니다.
     const ifaces = os.networkInterfaces();
-    const records: MdnsRecord[] = [];
+    const records: Answer[] = [];
     const interfacePriority = ['Wi-Fi', 'Ethernet', 'en0', 'eth0']; // Wi-Fi 우선순위
 
     console.log(`[mDNS] 네트워크 인터페이스 스캔 시작`);
@@ -345,12 +357,21 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         `[mDNS] 주요 IP 선택: ${primaryIp.ip} (${primaryIp.interface})`,
       );
 
-      records.push({
-        name: this.targetHost,
-        type: primaryIp.ip.includes(':') ? 'AAAA' : 'A',
-        ttl: this.ttl,
-        data: primaryIp.ip,
-      });
+      if (primaryIp.ip.includes(':')) {
+        records.push({
+          name: this.targetHost,
+          type: 'AAAA',
+          ttl: this.ttl,
+          data: primaryIp.ip,
+        });
+      } else {
+        records.push({
+          name: this.targetHost,
+          type: 'A',
+          ttl: this.ttl,
+          data: primaryIp.ip,
+        });
+      }
 
       // 추가 IP가 필요한 경우에만 더 추가 (일반적으로는 하나만)
       if (validIps.length > 1) {
@@ -368,6 +389,13 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     }
 
     return records;
+  }
+
+  private buildTxtArray(): string[] {
+    // TXT는 key=value 항목의 배열로 제공 (대소문자: 키는 소문자 권장)
+    const model = process.env.ROBOT_MODEL ?? 'S100';
+    const id = process.env.ROBOT_ID ?? this.instanceId;
+    return [`model=${model}`, `robot_serial=${id}`];
   }
 
   private isDockerNetworkIp(ip: string): boolean {
@@ -458,9 +486,42 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private getInstanceId(): string {
-    // 장치 고유값(시리얼 등) 사용 권장. 임시로 hostname+hash
+  private async getInstanceId(): Promise<string> {
+    // 1. 환경변수에서 ROBOT_ID 확인
+    if (process.env.ROBOT_ID) {
+      return process.env.ROBOT_ID;
+    }
+
+    // 2. 전역 변수에서 robotSerial 확인
+    if (global.robotSerial) {
+      return global.robotSerial;
+    }
+
+    // 3. 데이터베이스에서 robotSerial 조회 (비동기)
+    try {
+      // VariablesService를 주입받아 사용하거나
+      // 또는 직접 DB 조회
+      const robotSerial = await this.getRobotSerialFromDB();
+      if (robotSerial) return robotSerial;
+    } catch (error) {
+      console.warn('[mDNS] DB에서 robotSerial 조회 실패:', error);
+    }
+
+    // 4. 임시 ID 생성 (fallback)
     const host = os.hostname() || 'unknown-host';
     return `rb-${crypto.createHash('sha1').update(host).digest('hex').slice(0, 6)}`;
+  }
+
+  private async getRobotSerialFromDB(): Promise<string | null> {
+    try {
+      const serial = await this.variablesService.getVariable('robotSerial');
+      return serial && serial.trim() !== '' ? serial : null;
+    } catch (error) {
+      console.warn(
+        '[mDNS] VariablesService.getVariable("robotSerial") 실패:',
+        error,
+      );
+      return null;
+    }
   }
 }
