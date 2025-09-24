@@ -11,7 +11,11 @@ import {
   GeneralStatus,
   GeneralOperationStatus,
 } from '@common/enum/equipment.enum';
-import { ObsBoxRequestDto, ObsBoxRequestSlamnav } from './dto/control-request.dto';
+import {
+  ControlCommand,
+  ObsBoxRequestDto,
+  ObsBoxRequestSlamnav,
+} from './dto/control-request.dto';
 
 @Injectable()
 export class ControlService {
@@ -124,44 +128,58 @@ export class ControlService {
 
   async obsBoxRequest(dto: ObsBoxRequestSlamnav) {
     return new Promise((resolve, reject) => {
-      if (this.socketGateway.slamnav != null) {
-        this.socketGateway.server.to('slamnav').emit('controlRequest', {...dto, time: Date.now().toString()});
-        httpLogger.info(`[CONTROL] controlRequest: ${JSON.stringify(dto)}`);
+      httpLogger.debug(`[CONTROL] obsBoxRequest : ${JSON.stringify(dto)}`);
 
-        this.socketGateway.slamnav.once('controlResponse', (data) => {
-          httpLogger.info(`[CONTROL] controlResponse: ${JSON.stringify(data)}`);
-          const json = JSON.parse(data);
-          clearTimeout(timeoutId);
-          if (json.result === 'success' || json.result === 'accept') {
-            resolve(json);
-          } else {
-            reject(
-              new HttpException(
-                '명령을 수행할 수 없습니다 : ' + data.message,
-                HttpStatus.INTERNAL_SERVER_ERROR,
-              ),
-            );
-          }
-        });
-        const timeoutId = setTimeout(() => {
+      /// 1) dto 검사
+      if( dto.command === ControlCommand.setObsBox) {
+        if(dto.minZ === undefined || dto.minZ < 0 || dto.minZ > 5) {
+          reject(new HttpException('minZ 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+        }
+        if(dto.maxZ === undefined || dto.maxZ < 0 || dto.maxZ > 5) {
+          reject(new HttpException('maxZ 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+        }
+        if(dto.mapRange === undefined || dto.mapRange < 0 || dto.mapRange > 5) {
+          reject(new HttpException('mapRange 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+        }
+      }
+
+      /// 2) 소켓 연결 검사
+      if(this.socketGateway.slamnav == null) {
+        reject(new HttpException('프로그램이 연결되지 않았습니다', HttpStatus.GATEWAY_TIMEOUT));
+      }
+
+      /// 3) 소켓 메시지 전송
+      this.socketGateway.server
+        .to('slamnav')
+        .emit('controlRequest', { ...dto, time: Date.now().toString() });
+      httpLogger.info(`[CONTROL] controlRequest: ${JSON.stringify(dto)}`);
+
+      this.socketGateway.slamnav.once('controlResponse', (data) => {
+        httpLogger.info(`[CONTROL] controlResponse: ${JSON.stringify(data)}`);
+        const json = JSON.parse(data);
+        clearTimeout(timeoutId);
+        if (json.result === 'success' || json.result === 'accept') {
+          resolve(json);
+        } else {
           reject(
             new HttpException(
-              '프로그램이 응답하지 않습니다',
-              HttpStatus.GATEWAY_TIMEOUT,
+              '명령을 수행할 수 없습니다 : ' + data.message,
+              HttpStatus.INTERNAL_SERVER_ERROR,
             ),
           );
-        }, 5000); // 5초 타임아웃
-      } else {
+        }
+      });
+      
+      const timeoutId = setTimeout(() => {
         reject(
           new HttpException(
-            '프로그램이 연결되지 않았습니다',
+            '프로그램이 응답하지 않습니다',
             HttpStatus.GATEWAY_TIMEOUT,
           ),
         );
-      }
+      }, 5000); // 5초 타임아웃
     });
   }
-
 
   async ledControl(data: { command: string; led: string }) {
     return new Promise((resolve, reject) => {

@@ -385,19 +385,26 @@ export class ControlController {
   @Get('obsbox')
   @ApiOperation({
     summary: '장애물감지 영역 설정 조회',
-    description: 'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
+    description:
+      'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
   })
   async getObsboxControl() {
-    return this.controlService.obsBoxRequest({command: ControlCommand.getObsBox});
+    return this.controlService.obsBoxRequest({
+      command: ControlCommand.getObsBox,
+    });
   }
 
   @Post('obsbox')
   @ApiOperation({
     summary: '장애물감지 영역 설정',
-    description: 'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
+    description:
+      'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
   })
   async setObsboxControl(@Query() dto: ObsBoxRequestDto) {
-    return this.controlService.obsBoxRequest({command: ControlCommand.setObsBox, ...dto});
+    return this.controlService.obsBoxRequest({
+      command: ControlCommand.setObsBox,
+      ...dto,
+    });
   }
 
   @Post('motor')

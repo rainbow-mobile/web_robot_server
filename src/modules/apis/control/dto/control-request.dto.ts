@@ -1,8 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 import { v4 as uuidv4 } from 'uuid';
-
 
 enum Description {
   COMMAND = '실행할 컨트롤 명령',
@@ -17,24 +23,24 @@ enum Description {
   MCU_DIO = 'MCU DIO 제어. 0번 핀부터 7번 핀까지 순서대로 입력하세요. 예로 [0,0,0,0,0,1,1,1] 은 0번 핀부터 7번 핀까지 순서대로 0,0,0,0,0,1,1,1 로 제어합니다.',
 }
 export enum ControlCommand {
-    dockStart = 'dock',
-    undockStart = 'undock',
-    randomSeq = 'randomSeq',
-    ledControl = 'ledControl',
-    lidarOnOff = 'lidarOnOff',
-    pathOnOff = 'pathOnOff',
-    motorOnOff = 'motorOnOff',
-    safetyFieldControl = 'safetyFieldControl',
-    setSafetyField = 'setSafetyField',
-    getSafetyField = 'getSafetyField',
-    resetSafetyField = 'resetSafetyField',
-    footMove = 'footMove',
-    footStop = 'footStop',
-    safetyIoControl = 'safetyIoControl',
-    setObsBox = 'setObsBox',
-    getObsBox = 'getObsBox',
-  }
-  
+  dockStart = 'dock',
+  undockStart = 'undock',
+  randomSeq = 'randomSeq',
+  ledControl = 'ledControl',
+  lidarOnOff = 'lidarOnOff',
+  pathOnOff = 'pathOnOff',
+  motorOnOff = 'motorOnOff',
+  safetyFieldControl = 'safetyFieldControl',
+  setSafetyField = 'setSafetyField',
+  getSafetyField = 'getSafetyField',
+  resetSafetyField = 'resetSafetyField',
+  footMove = 'footMove',
+  footStop = 'footStop',
+  safetyIoControl = 'safetyIoControl',
+  setObsBox = 'setObsBox',
+  getObsBox = 'getObsBox',
+}
+
 export class ControlRequestDto {
   @ApiProperty({
     description: Description.COMMAND,
@@ -47,59 +53,59 @@ export class ControlRequestDto {
   @Expose()
   command: string;
 
-//   @ApiProperty({
-//     description: Description.ONOFF,
-//     example: true,
-//     type: 'boolean',
-//     required: false,
-//   })
-//   @IsOptional()
-//   @IsBoolean()
-//   @Expose()
-//   onoff?: boolean;
+  //   @ApiProperty({
+  //     description: Description.ONOFF,
+  //     example: true,
+  //     type: 'boolean',
+  //     required: false,
+  //   })
+  //   @IsOptional()
+  //   @IsBoolean()
+  //   @Expose()
+  //   onoff?: boolean;
 
-//   @ApiProperty({
-//     description: Description.LED,
-//     example: LEDColor.red,
-//     enum: LEDColor,
-//     required: false,
-//   })
-//   @IsString()
-//   @IsOptional()
-//   @Length(1, 50)
-//   color?: string;
+  //   @ApiProperty({
+  //     description: Description.LED,
+  //     example: LEDColor.red,
+  //     enum: LEDColor,
+  //     required: false,
+  //   })
+  //   @IsString()
+  //   @IsOptional()
+  //   @Length(1, 50)
+  //   color?: string;
 
-//   @ApiProperty({
-//     description: Description.FREQ,
-//     example: 10,
-//     required: false,
-//   })
-//   @IsNumber()
-//   @IsOptional()
-//   @Expose()
-//   frequency?: number;
+  //   @ApiProperty({
+  //     description: Description.FREQ,
+  //     example: 10,
+  //     required: false,
+  //   })
+  //   @IsNumber()
+  //   @IsOptional()
+  //   @Expose()
+  //   frequency?: number;
 
-//   @ApiProperty({
-//     description: Description.MCU_DIO,
-//     example: [
-//       [0, 0, 0, 0, 0, 1, 1, 1],
-//       [1, 0, 0, 0, 0, 0, 0, 0],
-//     ],
-//     required: false,
-//   })
-//   @IsArray()
-//   @IsOptional()
-//   mcu_dio?: number[][];
+  //   @ApiProperty({
+  //     description: Description.MCU_DIO,
+  //     example: [
+  //       [0, 0, 0, 0, 0, 1, 1, 1],
+  //       [1, 0, 0, 0, 0, 0, 0, 0],
+  //     ],
+  //     required: false,
+  //   })
+  //   @IsArray()
+  //   @IsOptional()
+  //   mcu_dio?: number[][];
 
-//   @ApiProperty({
-//     description: Description.SAFETY_FIELD,
-//     example: '1',
-//     required: false,
-//   })
-//   @IsString()
-//   @IsOptional()
-//   @Expose()
-//   safetyField?: string;
+  //   @ApiProperty({
+  //     description: Description.SAFETY_FIELD,
+  //     example: '1',
+  //     required: false,
+  //   })
+  //   @IsString()
+  //   @IsOptional()
+  //   @Expose()
+  //   safetyField?: string;
 }
 
 export class ControlResponseDto extends ControlRequestDto {}
@@ -165,36 +171,36 @@ export class ControlResponseFrs {
   data: ControlResponseDto;
 }
 
-export class ObsBoxRequestDto { 
-    @ApiProperty({
-        description: '장애물감지영역 최소 z값 (0~5m)',
-        example: '1.3',
-        required: false,
-    })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    minZ?: number;
+export class ObsBoxRequestDto {
+  @ApiProperty({
+    description: '장애물감지영역 최소 z값 (0~5m)',
+    example: '1.3',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  minZ?: number;
 
-    @ApiProperty({
-        description: '장애물감지영역 최대 z값 (0~5m)',
-        example: '1.3',
-        required: false,
-    })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    maxZ?: number;
+  @ApiProperty({
+    description: '장애물감지영역 최대 z값 (0~5m)',
+    example: '1.3',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  maxZ?: number;
 
-    @ApiProperty({
-        description: '장애물감지영역 맵 범위 (0~5m)',
-        example: '1.3',
-        required: false,
-    })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    mapRange?: number;
+  @ApiProperty({
+    description: '장애물감지영역 맵 범위 (0~5m)',
+    example: '1.3',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  mapRange?: number;
 }
 
 export class ObsBoxResponseDto extends ObsBoxRequestDto {}
@@ -212,7 +218,8 @@ export class ObsBoxRequestSlamnav extends ObsBoxRequestDto {
 }
 export class OnOffRequestDto {
   @ApiProperty({
-    description: 'OnOff 명령을 사용할 Command를 입력하세요. 현재 사용가능한 Command는 lidarOnOff, pathOnOff, motorOnOff가 있습니다.',
+    description:
+      'OnOff 명령을 사용할 Command를 입력하세요. 현재 사용가능한 Command는 lidarOnOff, pathOnOff, motorOnOff가 있습니다.',
     example: 'lidarOnOff',
     required: true,
   })
@@ -274,7 +281,8 @@ export class OnOffResponseDto {
 
 export class WorkRequestDto {
   @ApiProperty({
-    description: '실행할 Command를 입력하세요. 현재 사용가능한 Command는 dock, undock, randomSeq가 있습니다.',
+    description:
+      '실행할 Command를 입력하세요. 현재 사용가능한 Command는 dock, undock, randomSeq가 있습니다.',
     example: 'dock',
     required: true,
   })
