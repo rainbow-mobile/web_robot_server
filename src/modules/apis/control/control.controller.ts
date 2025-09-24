@@ -33,6 +33,7 @@ import { MotorControlDto } from './dto/motor.control.dto';
 import { ExternalCommandDto } from './dto/external.control.dto';
 import { SetSafetyFieldDto } from './dto/safetyfield.dto';
 import { ResetSafetyFlagDto } from './dto/safetyreset.dto';
+import { ControlCommand, ObsBoxRequestDto } from './dto/control-request.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -379,6 +380,24 @@ export class ControlController {
       );
       return res.status(error.status).send(error.data);
     }
+  }
+
+  @Get('obsbox')
+  @ApiOperation({
+    summary: '장애물감지 영역 설정 조회',
+    description: 'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
+  })
+  async getObsboxControl() {
+    return this.controlService.obsBoxRequest({command: ControlCommand.getObsBox});
+  }
+
+  @Post('obsbox')
+  @ApiOperation({
+    summary: '장애물감지 영역 설정',
+    description: 'AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.',
+  })
+  async setObsboxControl(@Query() dto: ObsBoxRequestDto) {
+    return this.controlService.obsBoxRequest({command: ControlCommand.setObsBox, ...dto});
   }
 
   @Post('motor')

@@ -11,6 +11,7 @@ import {
   GeneralStatus,
   GeneralOperationStatus,
 } from '@common/enum/equipment.enum';
+import { ObsBoxRequestDto, ObsBoxRequestSlamnav } from './dto/control-request.dto';
 
 @Injectable()
 export class ControlService {
@@ -120,6 +121,47 @@ export class ControlService {
       }
     });
   }
+
+  async obsBoxRequest(dto: ObsBoxRequestSlamnav) {
+    return new Promise((resolve, reject) => {
+      if (this.socketGateway.slamnav != null) {
+        this.socketGateway.server.to('slamnav').emit('controlRequest', {...dto, time: Date.now().toString()});
+        httpLogger.info(`[CONTROL] controlRequest: ${JSON.stringify(dto)}`);
+
+        this.socketGateway.slamnav.once('controlResponse', (data) => {
+          httpLogger.info(`[CONTROL] controlResponse: ${JSON.stringify(data)}`);
+          const json = JSON.parse(data);
+          clearTimeout(timeoutId);
+          if (json.result === 'success' || json.result === 'accept') {
+            resolve(json);
+          } else {
+            reject(
+              new HttpException(
+                '명령을 수행할 수 없습니다 : ' + data.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              ),
+            );
+          }
+        });
+        const timeoutId = setTimeout(() => {
+          reject(
+            new HttpException(
+              '프로그램이 응답하지 않습니다',
+              HttpStatus.GATEWAY_TIMEOUT,
+            ),
+          );
+        }, 5000); // 5초 타임아웃
+      } else {
+        reject(
+          new HttpException(
+            '프로그램이 연결되지 않았습니다',
+            HttpStatus.GATEWAY_TIMEOUT,
+          ),
+        );
+      }
+    });
+  }
+
 
   async ledControl(data: { command: string; led: string }) {
     return new Promise((resolve, reject) => {
