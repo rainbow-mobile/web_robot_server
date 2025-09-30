@@ -25,6 +25,8 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
   private readonly servicePort = Number(process.env.ROBOT_API_PORT ?? 8180);
 
   private announced = false;
+  private lastPrimaryIp?: string;
+  private ipCheckTimer?: NodeJS.Timeout;
 
   constructor(private readonly variablesService: VariablesService) {}
 
@@ -117,34 +119,43 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       }
 
       console.log(`[mDNS] 관련 쿼리 감지, 응답 전송`);
-      this.respondAll();
+      this.respondAll().catch((error) => {
+        console.error(`[mDNS] 응답 전송 실패:`, error);
+      });
     });
 
     // 부팅 직후 **자발 광고(unsolicited announcement)** 를 한 번 날려주면
     // 당신의 스캐너가 즉시 발견 가능 (쿼리 기다리지 않음)
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log(`[mDNS] 자발 광고 시작`);
-      this.respondAll();
+      await this.respondAll();
       this.announced = true;
       console.log(`[mDNS] 자발 광고 완료`);
 
       // 운영환경: TTL의 80% 주기로 주기적 광고 (표준 mDNS 방식)
       setInterval(
-        () => {
+        async () => {
           console.log(
             `[mDNS] 주기적 광고 (${Math.round(this.ttl * 0.8)}초마다)`,
           );
-          this.respondAll();
+          await this.respondAll();
         },
         this.ttl * 0.8 * 1000,
       ); // TTL의 80% = 3600초 (1시간)마다
     }, 100); // 500ms -> 100ms로 단축
 
     // 운영환경: 초기 안정화를 위해 5초 후 추가 광고
-    setTimeout(() => {
+    setTimeout(async () => {
       if (this.announced) {
         console.log(`[mDNS] 초기 안정화 광고 (5초 후)`);
-        this.respondAll();
+        await this.respondAll();
+      }
+    }, 5000);
+
+    // IP 변경 감지 타이머 (5초마다 체크)
+    this.ipCheckTimer = setInterval(async () => {
+      if (this.announced) {
+        await this.checkIpChange();
       }
     }, 5000);
   }
@@ -175,16 +186,23 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
             name: this.instanceFqdn,
             type: 'TXT',
             ttl: 0,
-            data: this.buildTxtArray(),
+            data: await this.buildTxtArray(),
           },
           // A/AAAA도 ttl 0으로 내려도 되지만, 보통 PTR/SRV/TXT만 bye로 충분
         ],
       });
     }
+
+    // IP 체크 타이머 정리
+    if (this.ipCheckTimer) {
+      clearInterval(this.ipCheckTimer);
+      this.ipCheckTimer = undefined;
+    }
+
     this.mdns.destroy();
   }
 
-  private respondAll() {
+  private async respondAll() {
     console.log(`[mDNS] 응답 생성 시작`);
 
     const addressRecords = this.buildAddressRecords();
@@ -216,7 +234,7 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         type: 'TXT',
         ttl: this.ttl,
         // multicast-dns/dns-packet은 TXT를 string[] | Buffer[]로 기대
-        data: this.buildTxtArray(),
+        data: await this.buildTxtArray(),
       },
       // 4) A/AAAA: SRV target 이름과 정확히 일치하는 A/AAAA
       ...addressRecords,
@@ -228,8 +246,9 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     console.log(
       `[mDNS] SRV 레코드: ${this.instanceFqdn} -> ${this.targetHost}:${this.servicePort}`,
     );
+    const txtData = await this.buildTxtArray();
     console.log(
-      `[mDNS] TXT 레코드: ${this.instanceFqdn} -> ${this.buildTxtArray().join(',')}`,
+      `[mDNS] TXT 레코드: ${this.instanceFqdn} -> ${txtData.join(',')}`,
     );
     console.log(`[mDNS] A/AAAA 레코드 개수: ${addressRecords.length}`);
 
@@ -391,11 +410,65 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     return records;
   }
 
-  private buildTxtArray(): string[] {
+  private async buildTxtArray(): Promise<string[]> {
     // TXT는 key=value 항목의 배열로 제공 (대소문자: 키는 소문자 권장)
-    const model = process.env.ROBOT_MODEL ?? 'S100';
+    const model =
+      (await this.variablesService.getVariable('robotType')) ?? 'S100';
     const id = process.env.ROBOT_ID ?? this.instanceId;
     return [`model=${model}`, `robot_serial=${id}`];
+  }
+
+  private async checkIpChange(): Promise<void> {
+    const currentRecords = this.buildAddressRecords();
+    const currentPrimaryIp = (
+      currentRecords.find((r) => r.type === 'A' || r.type === 'AAAA') as any
+    )?.data as string | undefined;
+
+    if (!currentPrimaryIp) {
+      console.log(`[mDNS] IP 변경 체크: 현재 IP 없음`);
+      return;
+    }
+
+    // 첫 번째 체크이거나 IP가 변경된 경우
+    if (!this.lastPrimaryIp) {
+      this.lastPrimaryIp = currentPrimaryIp;
+      console.log(`[mDNS] IP 변경 체크: 초기 IP 설정 - ${currentPrimaryIp}`);
+      return;
+    }
+
+    if (this.lastPrimaryIp !== currentPrimaryIp) {
+      console.log(
+        `[mDNS] IP 변경 감지: ${this.lastPrimaryIp} -> ${currentPrimaryIp}`,
+      );
+
+      // 기존 IP에 대한 bye 응답 전송
+      this.sendByeForIp(this.lastPrimaryIp);
+
+      // 새 IP로 재광고
+      await this.respondAll();
+
+      // 마지막 IP 업데이트
+      this.lastPrimaryIp = currentPrimaryIp;
+    }
+  }
+
+  private sendByeForIp(ip: string): void {
+    try {
+      const recordType = ip.includes(':') ? 'AAAA' : 'A';
+      this.mdns.respond({
+        answers: [
+          {
+            name: this.targetHost,
+            type: recordType,
+            ttl: 0, // bye 응답
+            data: ip,
+          },
+        ],
+      });
+      console.log(`[mDNS] 기존 IP bye 응답 전송: ${ip} (${recordType})`);
+    } catch (error) {
+      console.error(`[mDNS] bye 응답 전송 실패:`, error);
+    }
   }
 
   private isDockerNetworkIp(ip: string): boolean {
