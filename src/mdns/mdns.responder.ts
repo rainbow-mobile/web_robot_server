@@ -415,7 +415,8 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     const model =
       (await this.variablesService.getVariable('robotType')) ?? 'S100';
     const id = process.env.ROBOT_ID ?? this.instanceId;
-    return [`model=${model}`, `robot_serial=${id}`];
+    // TODO: msa버전에는 api_mode=msa 추가
+    return [`model=${model}`, `robot_serial=${id}`, `api_mode=legacy`];
   }
 
   private async checkIpChange(): Promise<void> {
