@@ -1,5 +1,9 @@
 # Release log
 
+## [rrs-20251028195620] - 2025-10-28
+- Release App: RRS, Branch: samsung, Version: rrs-20251028195620] release 배포
+
+
 ## [rrs-20251028092951] - 2025-10-28
 - Release App: RRS, Branch: samsung, Version: rrs-20251028092951] release 배포
 
