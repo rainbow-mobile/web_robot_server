@@ -131,21 +131,43 @@ export class ControlService {
       httpLogger.debug(`[CONTROL] obsBoxRequest : ${JSON.stringify(dto)}`);
 
       /// 1) dto 검사
-      if( dto.command === ControlCommand.setObsBox) {
-        if(dto.minZ === undefined || dto.minZ < 0 || dto.minZ > 5) {
-          reject(new HttpException('minZ 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+      if (dto.command === ControlCommand.setObsBox) {
+        if (dto.minZ === undefined) {
+          reject(
+            new HttpException(
+              'minZ 값이 올바르지 않습니다.',
+              HttpStatus.BAD_REQUEST,
+            ),
+          );
         }
-        if(dto.maxZ === undefined || dto.maxZ < 0 || dto.maxZ > 5) {
-          reject(new HttpException('maxZ 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+        if (dto.maxZ === undefined ) {
+          reject(
+            new HttpException(
+              'maxZ 값이 올바르지 않습니다.',
+              HttpStatus.BAD_REQUEST,
+            ),
+          );
         }
-        if(dto.mapRange === undefined || dto.mapRange < 0 || dto.mapRange > 5) {
-          reject(new HttpException('mapRange 값이 올바르지 않습니다.', HttpStatus.BAD_REQUEST));
+        if (
+          dto.mapRange === undefined
+        ) {
+          reject(
+            new HttpException(
+              'mapRange 값이 올바르지 않습니다.',
+              HttpStatus.BAD_REQUEST,
+            ),
+          );
         }
       }
 
       /// 2) 소켓 연결 검사
-      if(this.socketGateway.slamnav == null) {
-        reject(new HttpException('프로그램이 연결되지 않았습니다', HttpStatus.GATEWAY_TIMEOUT));
+      if (this.socketGateway.slamnav == null) {
+        reject(
+          new HttpException(
+            '프로그램이 연결되지 않았습니다',
+            HttpStatus.GATEWAY_TIMEOUT,
+          ),
+        );
       }
 
       /// 3) 소켓 메시지 전송
@@ -169,7 +191,7 @@ export class ControlService {
           );
         }
       });
-      
+
       const timeoutId = setTimeout(() => {
         reject(
           new HttpException(

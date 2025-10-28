@@ -33,7 +33,11 @@ import { MotorControlDto } from './dto/motor.control.dto';
 import { ExternalCommandDto } from './dto/external.control.dto';
 import { SetSafetyFieldDto } from './dto/safetyfield.dto';
 import { ResetSafetyFlagDto } from './dto/safetyreset.dto';
-import { ControlCommand, ObsBoxRequestDto } from './dto/control-request.dto';
+import {
+  ControlCommand,
+  ObsBoxRequestDto,
+  SetDigitalIODto,
+} from './dto/control-request.dto';
 
 @ApiTags('SLAMNAV 명령 관련 (control)')
 @Controller('control')
@@ -338,6 +342,24 @@ export class ControlController {
       );
     }
   }
+
+  // @Get('dio')
+  // @ApiOperation({
+  //   summary: 'DIO 제어 조회',
+  //   description: 'DIO 제어 조회를 합니다',
+  // })
+  // async getDigitalIO() {
+  //   return this.controlService.dioControl({command: ControlCommand.getDigitalIO});
+  // }
+
+  // @Post('dio')
+  // @ApiOperation({
+  //   summary: 'DIO 제어 설정',
+  //   description: 'DIO 제어를 설정합니다',
+  // })
+  // async setDigitalIO(@Body() dto: SetDigitalIODto) {
+  //   return this.controlService.dioControl({command: ControlCommand.setDigitalIO, ...dto});
+  // }
 
   @Post('lidar')
   @ApiOperation({

@@ -41,6 +41,20 @@ export enum ControlCommand {
   getObsBox = 'getObsBox',
 }
 
+export class SetDigitalIODto {
+  @ApiProperty({
+    description: 'DIO 제어 설정',
+    example: [
+      [0, 0, 0, 0, 0, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0],
+    ],
+    required: true,
+  })
+  @IsArray()
+  @IsOptional()
+  mcuDio?: number[][];
+}
+
 export class ControlRequestDto {
   @ApiProperty({
     description: Description.COMMAND,
