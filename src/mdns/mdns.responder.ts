@@ -63,7 +63,11 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      // 클라가 우리 서비스 타입을 PTR/ANY로 물으면 응답 (대소문자 무시)
+      // 쿼리가 우리 서비스와 관련된 경우 응답 여부 확인
+      // 1) 서비스 열거 쿼리 (_services._dns-sd._udp.local)
+      // 2) 서비스 타입 쿼리 (_rainbow-robot._tcp.local, PTR/ANY)
+      // 3) 인스턴스 쿼리 (SRV/TXT/ANY)
+      // 4) 호스트 쿼리 (A/AAAA/ANY)
       const wants = this.wants(packet);
 
       if (!wants) {
