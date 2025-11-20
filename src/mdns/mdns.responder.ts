@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { VariablesService } from '../modules/apis/variables/variables.service';
 import * as mdns from 'multicast-dns';
-import type { Answer } from 'dns-packet';
+import type { Answer, Question } from 'dns-packet';
 import * as os from 'node:os';
 import * as crypto from 'node:crypto';
 
@@ -64,43 +64,7 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
       }
 
       // 클라가 우리 서비스 타입을 PTR/ANY로 물으면 응답 (대소문자 무시)
-      const wants = packet.questions?.some((q) => {
-        // 서비스 타입 쿼리
-        if (
-          q.name.toLowerCase() === this.serviceType.toLowerCase() &&
-          (q.type.toUpperCase() === 'PTR' ||
-            (q.type as string).toUpperCase() === 'ANY')
-        ) {
-          return true;
-        }
-        // 인스턴스 FQDN 쿼리
-        if (
-          q.name.toLowerCase() === this.instanceFqdn.toLowerCase() &&
-          (q.type.toUpperCase() === 'SRV' ||
-            q.type.toUpperCase() === 'TXT' ||
-            (q.type as string).toUpperCase() === 'ANY')
-        ) {
-          return true;
-        }
-        // 타겟 호스트 쿼리
-        if (
-          q.name.toLowerCase() === this.targetHost.toLowerCase() &&
-          (q.type.toUpperCase() === 'A' ||
-            q.type.toUpperCase() === 'AAAA' ||
-            (q.type as string).toUpperCase() === 'ANY')
-        ) {
-          return true;
-        }
-        // 와일드카드 쿼리 (모든 서비스 타입)
-        if (
-          q.name.toLowerCase() === '_services._dns-sd._udp.local' &&
-          (q.type.toUpperCase() === 'PTR' ||
-            (q.type as string).toUpperCase() === 'ANY')
-        ) {
-          return true;
-        }
-        return false;
-      });
+      const wants = this.wants(packet);
 
       if (!wants) {
         console.log(`[mDNS] 쿼리가 우리 서비스와 관련 없음, 무시`);
@@ -192,6 +156,54 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
     }
 
     this.mdns.destroy();
+  }
+
+  private isPtrOrAny(q: Question): boolean {
+    const t = String(q.type).toUpperCase();
+    return t === 'PTR' || t === 'ANY';
+  }
+
+  private isSrvTxtOrAny(q: Question): boolean {
+    const t = String(q.type).toUpperCase();
+    return t === 'SRV' || t === 'TXT' || t === 'ANY';
+  }
+
+  private isAaaaOrAny(q: Question): boolean {
+    const t = String(q.type).toUpperCase();
+    return t === 'A' || t === 'AAAA' || t === 'ANY';
+  }
+
+  private wantsThisQuestion(q: Question): boolean {
+    const qname = q.name.toLowerCase();
+    const serviceType = this.serviceType.toLowerCase();
+    const instanceFqdn = this.instanceFqdn.toLowerCase();
+    const targetHost = this.targetHost.toLowerCase();
+
+    // 1) 서비스 열거(_services._dns-sd._udp.local) → 내 서비스 타입 PTR 응답
+    if (qname === '_services._dns-sd._udp.local' && this.isPtrOrAny(q)) {
+      return true;
+    }
+
+    // 2) 내 서비스 타입 쿼리(_rainbow-robot._tcp.local) → 내 인스턴스 PTR 응답
+    if (qname === serviceType && this.isPtrOrAny(q)) {
+      return true;
+    }
+
+    // 3) 내 인스턴스 쿼리(SRV/TXT)
+    if (qname === instanceFqdn && this.isSrvTxtOrAny(q)) {
+      return true;
+    }
+
+    // 4) 내 호스트 쿼리(A/AAAA)
+    if (qname === targetHost && this.isAaaaOrAny(q)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private wants(packet: { questions?: Question[] }): boolean {
+    return packet.questions?.some((q) => this.wantsThisQuestion(q)) ?? false;
   }
 
   private async respondAll() {
