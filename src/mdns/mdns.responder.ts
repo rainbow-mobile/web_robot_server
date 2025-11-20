@@ -99,14 +99,6 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
         ) {
           return true;
         }
-        // 일반적인 서비스 검색 쿼리
-        if (
-          q.name.toLowerCase().includes('_tcp.local') &&
-          (q.type.toUpperCase() === 'PTR' ||
-            (q.type as string).toUpperCase() === 'ANY')
-        ) {
-          return true;
-        }
         return false;
       });
 
