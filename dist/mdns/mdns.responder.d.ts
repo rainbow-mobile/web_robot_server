@@ -1,0 +1,37 @@
+import { OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { VariablesService } from '../modules/apis/variables/variables.service';
+import { NetworkService } from '../modules/apis/network/network.service';
+export declare class MdnsResponder implements OnModuleInit, OnModuleDestroy {
+    private readonly variablesService;
+    private readonly networkService;
+    private mdns;
+    private readonly serviceType;
+    private readonly ttl;
+    private instanceId;
+    private instanceName;
+    private instanceFqdn;
+    private targetHost;
+    private readonly servicePort;
+    private announced;
+    private lastPrimaryIp?;
+    private ipCheckTimer?;
+    constructor(variablesService: VariablesService, networkService: NetworkService);
+    onModuleInit(): Promise<void>;
+    onModuleDestroy(): Promise<void>;
+    private isPtrOrAny;
+    private isSrvTxtOrAny;
+    private isAaaaOrAny;
+    private isStringAnswer;
+    private wantsThisQuestion;
+    private wants;
+    private respondAll;
+    private buildAnswers;
+    private buildAddressRecord;
+    private getCurrentWifiIp;
+    private findMatchingWifiInterface;
+    private buildTxtArray;
+    private checkIpChange;
+    private sendByeForIp;
+    private getInstanceId;
+    private getRobotSerialFromDB;
+}
