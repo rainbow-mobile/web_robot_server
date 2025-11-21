@@ -7,5 +7,6 @@ import { VariablesModule } from '../variables/variables.module';
   imports: [VariablesModule],
   controllers: [NetworkController],
   providers: [NetworkService],
+  exports: [NetworkService],
 })
 export class NetworkModule {}
