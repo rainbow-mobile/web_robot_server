@@ -3,8 +3,6 @@ import { VariablesService } from '../modules/apis/variables/variables.service';
 import { NetworkService } from '../modules/apis/network/network.service';
 import * as mdns from 'multicast-dns';
 import type { Answer, Question, StringAnswer } from 'dns-packet';
-import * as os from 'node:os';
-import * as crypto from 'node:crypto';
 import { NetworkPayload } from '@common/interface/network/network.interface';
 
 // dns-packet의 Answer 타입을 사용하여 응답 레코드를 엄격 타이핑합니다.
@@ -478,29 +476,15 @@ export class MdnsResponder implements OnModuleInit, OnModuleDestroy {
   }
 
   private async getInstanceId(): Promise<string> {
-    // 1. 환경변수에서 ROBOT_ID 확인
-    if (process.env.ROBOT_ID) {
-      return process.env.ROBOT_ID;
-    }
-
-    // 2. 전역 변수에서 robotSerial 확인
-    if (global.robotSerial) {
-      return global.robotSerial;
-    }
-
-    // 3. 데이터베이스에서 robotSerial 조회 (비동기)
     try {
-      // VariablesService를 주입받아 사용하거나
-      // 또는 직접 DB 조회
       const robotSerial = await this.getRobotSerialFromDB();
-      if (robotSerial) return robotSerial;
+      if (robotSerial) {
+        return robotSerial;
+      }
     } catch (error) {
       console.warn('[mDNS] DB에서 robotSerial 조회 실패:', error);
     }
-
-    // 4. 임시 ID 생성 (fallback)
-    const host = os.hostname() || 'unknown-host';
-    return `rb-${crypto.createHash('sha1').update(host).digest('hex').slice(0, 6)}`;
+    return '';
   }
 
   private async getRobotSerialFromDB(): Promise<string | null> {
